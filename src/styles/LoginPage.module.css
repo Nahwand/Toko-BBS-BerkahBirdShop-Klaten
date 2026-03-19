@@ -1,0 +1,215 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a4a1a 0%, #2d7a2d 40%, #1a4a1a 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.decor1 {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.03);
+  top: -100px;
+  right: -100px;
+}
+
+.decor2 {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.03);
+  bottom: -80px;
+  left: -80px;
+}
+
+.decor3 {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: rgba(168, 224, 99, 0.08);
+  top: 30%;
+  left: 10%;
+}
+
+.loginBox {
+  background: #fff;
+  border-radius: 20px;
+  padding: 40px 44px;
+  width: 420px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.4s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.logoContainer {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.logoCircle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1a4a1a, #2d7a2d);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  margin: 0 auto 14px;
+}
+
+.logoText {
+  font-size: 24px;
+  font-weight: 900;
+  color: #1a4a1a;
+  letter-spacing: 0.5px;
+}
+
+.logoSub {
+  font-size: 13px;
+  color: #888;
+  margin-top: 4px;
+}
+
+.logoLine {
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, #2d7a2d, #a8e063);
+  border-radius: 2px;
+  margin: 12px auto 0;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.errorBox {
+  background: #fff5f5;
+  border: 1px solid #fca5a5;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: fadeIn 0.2s ease;
+}
+
+.errorIcon {
+  font-size: 16px;
+}
+
+.formGroup {
+  margin-bottom: 16px;
+}
+
+.formGroupLarge {
+  margin-bottom: 24px;
+}
+
+.label {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  color: #555;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.inputGroup {
+  position: relative;
+}
+
+.inputIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+}
+
+.inputField {
+  width: 100%;
+  padding: 11px 12px 11px 38px;
+  border-radius: 10px;
+  border: 1.5px solid #d0e4d0;
+  font-size: 14px;
+  outline: none;
+  transition: border 0.2s;
+  box-sizing: border-box;
+}
+
+.inputField:focus {
+  border-color: #2d7a2d;
+}
+
+.inputFieldPass {
+  width: 100%;
+  padding: 11px 40px 11px 38px;
+  border-radius: 10px;
+  border: 1.5px solid #d0e4d0;
+  font-size: 14px;
+  outline: none;
+  transition: border 0.2s;
+  box-sizing: border-box;
+}
+
+.inputFieldPass:focus {
+  border-color: #2d7a2d;
+}
+
+.passToggleBtn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+}
+
+.submitBtn {
+  width: 100%;
+  padding: 13px;
+  background: linear-gradient(135deg, #1a4a1a, #2d7a2d);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: opacity 0.2s;
+}
+
+.submitBtn:disabled {
+  background: #aaa;
+  cursor: not-allowed;
+}
+
+.footerText {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 11px;
+  color: #ccc;
+}

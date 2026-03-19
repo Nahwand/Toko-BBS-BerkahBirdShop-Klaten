@@ -1,0 +1,328 @@
+.tabContainer {
+  display: flex;
+  gap: 0;
+  margin-bottom: 20px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 6px;
+  border: 1px solid #e4ede4;
+  width: fit-content;
+}
+
+.tabBtn {
+  padding: 9px 20px;
+  border-radius: 9px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: #666;
+}
+
+.tabBtnActive {
+  background: #2d7a2d;
+  color: #fff;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.countText {
+  font-size: 13px;
+  color: #666;
+}
+
+.btnPrimary {
+  padding: 7px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  border: none;
+  font-family: inherit;
+  background: #2d7a2d;
+  color: #fff;
+}
+
+.btnOutline {
+  padding: 4px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: inherit;
+  background: transparent;
+  color: #2d7a2d;
+  border: 1.5px solid #2d7a2d;
+  flex: 1;
+}
+
+.btnDanger {
+  padding: 4px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: inherit;
+  background: #dc3545;
+  color: #fff;
+  border: none;
+  flex: 1;
+}
+
+.btnDefault {
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  background: #e8f0e8;
+  color: #2d7a2d;
+  border: none;
+  flex: 1;
+}
+
+.saveBtn {
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  background: #2d7a2d;
+  color: #fff;
+  border: none;
+  flex: 1;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px 18px;
+  border: 1px solid #e4ede4;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.badge {
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.colorBox {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.actionBtns {
+  display: flex;
+  gap: 6px;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.modalKategori {
+  width: 420px;
+}
+
+.modalSatuan {
+  width: 380px;
+}
+
+.modalHeader {
+  font-size: 16px;
+  font-weight: 800;
+  margin-bottom: 18px;
+  color: #1a4a1a;
+}
+
+.formGroup {
+  margin-bottom: 16px;
+}
+
+.label {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  color: #555;
+  margin-bottom: 5px;
+}
+
+.labelHint {
+  font-size: 10px;
+  font-weight: 400;
+  color: #aaa;
+}
+
+.inputField {
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid #cde4cd;
+  font-size: 13px;
+  outline: none;
+  background: #fff;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.colorGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.colorOption {
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: border 0.1s;
+}
+
+.colorOptionText {
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.previewBox {
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  background: #f8fdf8;
+  border-radius: 10px;
+  border: 1px solid #e4ede4;
+}
+
+.previewLabel {
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 6px;
+}
+
+.previewText {
+  padding: 5px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.previewSubtext {
+  margin-left: 10px;
+  font-size: 12px;
+  color: #666;
+}
+
+.modalActions {
+  display: flex;
+  gap: 10px;
+}
+
+.tableContainer {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e4ede4;
+  overflow: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.th {
+  padding: 10px 16px;
+  background: #f0f5f0;
+  font-weight: 700;
+  text-align: left;
+  font-size: 11px;
+  color: #555;
+  border-bottom: 1px solid #e4ede4;
+}
+
+.td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f5f0;
+}
+
+.tdPadded {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f5f0;
+  font-size: 13px;
+  color: #666;
+}
+
+.satuanBadge {
+  background: #e8f0e8;
+  color: #2d7a2d;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.satuanActionBtns {
+  display: flex;
+  gap: 6px;
+}
+
+.satuanBtnOutline {
+  padding: 4px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: inherit;
+  background: transparent;
+  color: #2d7a2d;
+  border: 1.5px solid #2d7a2d;
+}
+
+.satuanBtnDanger {
+  padding: 4px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: inherit;
+  background: #dc3545;
+  color: #fff;
+  border: none;
+}

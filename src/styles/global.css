@@ -1,0 +1,256 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  background: #f4f7f2;
+}
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-thumb {
+  background: #a8d4a8;
+  border-radius: 3px;
+}
+input,
+select,
+button,
+textarea {
+  font-family: inherit;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── RESPONSIVE ── */
+.bbs-app {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+.bbs-sidebar {
+  width: 188px;
+  background: linear-gradient(180deg, #1b4d1b, #0e2e0e);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+.bbs-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.bbs-content {
+  flex: 1;
+  overflow: auto;
+  padding: 20px 24px;
+}
+.bbs-hamburger {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #1a4a1a;
+}
+.bbs-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 90;
+}
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.kasir-grid {
+  display: grid;
+  grid-template-columns: 1fr 330px;
+  gap: 18px;
+  align-items: start;
+}
+.prod-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(152px, 1fr));
+  gap: 10px;
+}
+.dash-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.rpt-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.rpt-bot-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.sup-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 14px;
+}
+.excel-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.master-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+.role-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+/* Tablet (≤ 1024px) */
+@media (max-width: 1024px) {
+  .bbs-sidebar {
+    width: 170px;
+  }
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .kasir-grid {
+    grid-template-columns: 1fr 300px;
+  }
+  .rpt-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Mobile (≤ 768px) */
+@media (max-width: 768px) {
+  .bbs-app {
+    position: relative;
+  }
+  .bbs-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 100;
+    transform: translateX(-100%);
+    width: 220px;
+  }
+  .bbs-sidebar.open {
+    transform: translateX(0);
+  }
+  .bbs-overlay.open {
+    display: block;
+  }
+  .bbs-hamburger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: #f0f5f0;
+  }
+  .bbs-content {
+    padding: 14px 16px;
+  }
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .kasir-grid {
+    grid-template-columns: 1fr;
+  }
+  .kasir-cart {
+    position: fixed !important;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+  .kasir-cart-toggle {
+    display: flex !important;
+  }
+  .dash-grid {
+    grid-template-columns: 1fr;
+  }
+  .rpt-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .rpt-bot-grid {
+    grid-template-columns: 1fr;
+  }
+  .sup-grid {
+    grid-template-columns: 1fr;
+  }
+  .excel-grid {
+    grid-template-columns: 1fr;
+  }
+  .role-grid {
+    grid-template-columns: 1fr;
+  }
+  .master-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .hide-mobile {
+    display: none !important;
+  }
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Small Mobile (≤ 480px) */
+@media (max-width: 480px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .master-grid {
+    grid-template-columns: 1fr;
+  }
+  .bbs-content {
+    padding: 12px;
+  }
+}

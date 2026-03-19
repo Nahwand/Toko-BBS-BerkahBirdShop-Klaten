@@ -1,0 +1,254 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.accountCount {
+  font-size: 13px;
+  color: #666;
+}
+
+.btnPrimary {
+  padding: 7px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  border: none;
+  font-family: inherit;
+  background: #2d7a2d;
+  color: #fff;
+}
+
+.btnOutline {
+  padding: 4px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: inherit;
+  background: transparent;
+  color: #2d7a2d;
+  border: 1.5px solid #2d7a2d;
+}
+
+.btnDanger {
+  padding: 4px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: inherit;
+  background: #dc3545;
+  color: #fff;
+  border: none;
+}
+
+.btnDefault {
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  background: #e8f0e8;
+  color: #2d7a2d;
+  border: none;
+  flex: 1;
+}
+
+.saveBtn {
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  background: #2d7a2d;
+  color: #fff;
+  border: none;
+  flex: 1;
+}
+
+.tableContainer {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e4ede4;
+  overflow: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.th {
+  padding: 10px 14px;
+  background: #f0f5f0;
+  font-weight: 700;
+  text-align: left;
+  font-size: 11px;
+  color: #555;
+  border-bottom: 1px solid #e4ede4;
+}
+
+.tr {
+  background: #fff;
+}
+
+.trCurrentUser {
+  background: #f0fff4;
+}
+
+.td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #f0f5f0;
+  font-size: 13px;
+}
+
+.youBadge {
+  margin-left: 6px;
+  font-size: 10px;
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.roleBadge {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.roleBadgeSuperAdmin {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.roleBadgeAdmin {
+  background: #fff8e1;
+  color: #e65100;
+}
+
+.roleBadgePegawai {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.statusBadge {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.statusBadgeAktif {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.statusBadgeNonaktif {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.actionBtns {
+  display: flex;
+  gap: 5px;
+}
+
+.roleGrid {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.roleCard {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px 18px;
+  border: 1px solid #e4ede4;
+}
+
+.roleCardTitle {
+  font-weight: 800;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.roleAccessList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.roleAccessBadge {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  width: 400px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.2s ease;
+}
+
+.modalHeader {
+  font-size: 16px;
+  font-weight: 800;
+  margin-bottom: 18px;
+  color: #1a4a1a;
+}
+
+.formGroup {
+  margin-bottom: 12px;
+}
+
+.formGroupSelect {
+  margin-bottom: 20px;
+}
+
+.label {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  color: #555;
+  margin-bottom: 4px;
+}
+
+.inputField {
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid #cde4cd;
+  font-size: 13px;
+  outline: none;
+  background: #fff;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.modalActions {
+  display: flex;
+  gap: 10px;
+}
