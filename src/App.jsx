@@ -10,31 +10,57 @@ import LoginPage from './pages/LoginPage';
 import UsersPage from './pages/UsersPage';
 import MasterDataPage from './pages/MasterDataPage';
 
-      function App() {
-        const [currentUser, setCurrentUser] = useState(() => {
-          try {
-            const s = sessionStorage.getItem("bbs_user");
-            return s ? JSON.parse(s) : null;
-          } catch {
-            return null;
-          }
+function App() {
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const s = sessionStorage.getItem("bbs_user");
+      return s ? JSON.parse(s) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const handleLogin = async (user) => {
+    try {
+      await sb.from("activity_logs").insert({
+        user_nama: user.nama,
+        user_role: user.role,
+        aksi: "Login",
+        kategori: "Sistem",
+        detail: `User ${user.nama} berhasil login`
+      });
+    } catch (e) {
+      console.error("Failed to log login:", e);
+    }
+    setCurrentUser(user);
+  };
+
+  const handleLogout = async () => {
+    if (currentUser) {
+      try {
+        await sb.from("activity_logs").insert({
+          user_nama: currentUser.nama,
+          user_role: currentUser.role,
+          aksi: "Logout",
+          kategori: "Sistem",
+          detail: `User ${currentUser.nama} berhasil logout`
         });
-
-        const handleLogin = (user) => {
-          setCurrentUser(user);
-        };
-        const handleLogout = () => {
-          sessionStorage.removeItem("bbs_user");
-          setCurrentUser(null);
-        };
-
-        if (!currentUser) return <LoginPage onLogin={handleLogin} />;
-        return <Main currentUser={currentUser} onLogout={handleLogout} />;
+      } catch (e) {
+        console.error("Failed to log logout:", e);
       }
+    }
+    sessionStorage.removeItem("bbs_user");
+    setCurrentUser(null);
+  };
 
-      function Main({ currentUser, onLogout }) {
-        const isSuperAdmin = currentUser.role === "superadmin";
-        const allowedPages = ACCESS[currentUser.role] || ACCESS.pegawai;
+  if (!currentUser) return <LoginPage onLogin={handleLogin} />;
+  return <Main currentUser={currentUser} onLogout={handleLogout} />;
+}
+
+function Main({ currentUser, onLogout }) {
+  const isSuperAdmin = currentUser.role === "superadmin";
+  const allowedPages = ACCESS[currentUser.role] || ACCESS.pegawai;
+
 
         const [page, setPage] = useState(allowedPages[0]);
         const [products, setProducts] = useState([]);
@@ -2694,7 +2720,7 @@ import MasterDataPage from './pages/MasterDataPage';
                             </div>
                           </div>
                           <button
-                            style={{ ...btn(e.color), flexShrink: 0 }}
+                            className={`${styles.btn} ${styles['btn' + e.color]}`} style={{ flexShrink: 0 }}
                             onClick={() => exportExcel(e.type)}
                           >
                             Download
