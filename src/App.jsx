@@ -184,7 +184,8 @@ function Main({ currentUser, onLogout }) {
           .slice(0, 10);
         const weekTrx = transactions.filter((t) => t.date >= weekStart);
         const weekRev = weekTrx.reduce((s, t) => s + t.total, 0);
-        const lowStock = products.filter((p) => p.stock <= p.min_stock);
+        const outStock = (products || []).filter((p) => Number(p.stock) === 0);
+        const lowStock = (products || []).filter((p) => Number(p.stock) > 0 && Number(p.stock) <= Number(p.min_stock));
 
         const filtProd = useMemo(() => {
           const s = searchProd.toLowerCase();
@@ -874,6 +875,33 @@ function Main({ currentUser, onLogout }) {
                 ))}
               </nav>
 
+              {outStock.length > 0 && (
+                <div
+                  style={{
+                    margin: "0 10px 10px",
+                    padding: "10px 12px",
+                    background: "rgba(239,68,68,0.18)",
+                    borderRadius: 8,
+                    borderLeft: "3px solid #ef4444",
+                  }}
+                >
+                  <div
+                    style={{ fontSize: 9, color: "#ef4444", fontWeight: 800 }}
+                  >
+                    ❌ STOK HABIS
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 10,
+                      color: "rgba(255,255,255,0.55)",
+                      marginTop: 2,
+                    }}
+                  >
+                    {outStock.length} produk
+                  </div>
+                </div>
+              )}
+
               {lowStock.length > 0 && (
                 <div
                   style={{
@@ -1011,6 +1039,13 @@ function Main({ currentUser, onLogout }) {
                           color: "#1565c0",
                         },
                         {
+                          label: "Stok Habis",
+                          value: fmtN(outStock.length),
+                          sub: "item kosong",
+                          bg: outStock.length > 0 ? "#ffebee" : "#f1f8e9",
+                          color: outStock.length > 0 ? "#c62828" : "#33691e",
+                        },
+                        {
                           label: "Stok Menipis",
                           value: fmtN(lowStock.length),
                           sub: "perlu restock",
@@ -1102,7 +1137,50 @@ function Main({ currentUser, onLogout }) {
                           </div>
                         ))}
                       </div>
-                      <div className={styles.card}>
+                      {outStock.length > 0 && (
+                          <div className={styles.card} style={{ marginBottom: 18, borderLeft: '4px solid #ef4444' }}>
+                            <div
+                              style={{
+                                fontWeight: 800,
+                                fontSize: 14,
+                                color: "#c62828",
+                                marginBottom: 14,
+                              }}
+                            >
+                              ❌ Stok Habis (Segera Restock!)
+                            </div>
+                            {outStock.slice(0, 10).map((p) => (
+                              <div
+                                key={p.id}
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  padding: "9px 0",
+                                  borderBottom: "1px solid #f9ecec",
+                                }}
+                              >
+                                <div>
+                                  <div style={{ fontWeight: 700, fontSize: 13, color: '#c62828' }}>
+                                    {p.name}
+                                  </div>
+                                  <div style={{ fontSize: 10, color: "#aaa" }}>
+                                    {p.category}
+                                  </div>
+                                </div>
+                                <div style={{ textAlign: "right" }}>
+                                  <div style={{ fontWeight: 800, color: "#c62828", fontSize: 12 }}>
+                                    Habis
+                                  </div>
+                                  <div style={{ fontSize: 9, color: "#ccc" }}>
+                                    min: {p.min_stock}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
+                        <div className={styles.card}>
                         <div
                           style={{
                             fontWeight: 800,
@@ -1152,7 +1230,7 @@ function Main({ currentUser, onLogout }) {
                                     fontSize: 15,
                                   }}
                                 >
-                                  {p.stock} {p.unit}
+                                  {p.stock} {(p.unit || "").split(",")[0]}
                                 </div>
                                 <div style={{ fontSize: 9, color: "#ccc" }}>
                                   min:{p.min_stock}
