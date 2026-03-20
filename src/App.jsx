@@ -3064,19 +3064,39 @@ function Main({ currentUser, onLogout }) {
                     >
                       Satuan
                     </label>
-                    <select
-                      className={styles.inp}
-                      value={prodForm.unit}
-                      onChange={(e) =>
-                        setProdForm((p) => ({ ...p, unit: e.target.value }))
-                      }
-                    >
-                      {satuans.map((s) => (
-                        <option key={s.id} value={s.nama}>
-                          {s.nama}
-                        </option>
-                      ))}
-                    </select>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      {satuans.map((s) => {
+                        const isSelected = prodForm.unit && prodForm.unit.split(", ").includes(s.nama);
+                        return (
+                          <div
+                            key={s.id}
+                            onClick={() => {
+                              let current = prodForm.unit ? prodForm.unit.split(", ").filter(Boolean) : [];
+                              if (isSelected) {
+                                current = current.filter((u) => u !== s.nama);
+                              } else {
+                                current.push(s.nama);
+                              }
+                              setProdForm((p) => ({ ...p, unit: current.join(", ") }));
+                            }}
+                            style={{
+                              padding: "6px 12px",
+                              border: "1px solid " + (isSelected ? "#2d7a2d" : "#ddd"),
+                              borderRadius: 6,
+                              background: isSelected ? "#e4ede4" : "#fff",
+                              color: isSelected ? "#1a4a1a" : "#666",
+                              fontSize: 13,
+                              cursor: "pointer",
+                              fontWeight: isSelected ? 700 : 500,
+                              userSelect: "none",
+                              transition: "all 0.15s ease",
+                            }}
+                          >
+                            {s.nama}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                   <div style={{ marginBottom: 20 }}>
                     <label
