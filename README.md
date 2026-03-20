@@ -9,9 +9,21 @@ Aplikasi web Sistem Kasir (*Point of Sale*) dan Manajemen Inventaris interaktif 
 - **Master Data:** Pencatatan rapi untuk *Supplier*, *Kategori*, *Satuan Produk*, dan *Manajemen Pengguna (Akun Kasir/Admin)*.
 - **Auto-Purge Aktvitas:** Log aktivitas pengguna pintar yang otomatis menghapus riwayat log lebih tua dari 31 hari tanpa memperlambat aplikasi.
 
-## 📸 Tampilan Aplikasi
-![Tampilan Dashboard](public/screenshot-dashboard.png)
-> *(Catatan: Simpan foto *screenshot* tampilan aplikasi Anda di dalam folder `public` dan beri nama `screenshot-dashboard.png` agar muncul di halaman ini).*
+## 📸 Tampilan Layar Aplikasi (Galeri)
+
+### 1. Halaman Login & Dashboard
+![Halaman Login](public/Screenshot-Login.png)
+![Halaman Dashboard](public/Screenshot-Dashboard.png)
+
+### 2. Sistem Transaksi & Stok
+![Fitur Kasir POS](public/Screenshot-Kasir.png)
+![Manajemen Produk](public/Screenshot-Produk.png)
+![Manajemen Stok](public/Screenshot-Stok.png)
+
+### 3. Administrasi & Laporan
+![Laporan Penjualan](public/Screenshot-Laporan.png)
+![Riwayat Aktivitas](public/Screenshot-Riwayat.png)
+![Kelola Akun & Role](public/Screenshot-Kelola%20Akun.png)
 
 ## 🛠️ Teknologi Pembuatan
 - **Frontend:** React.js + Vite (Cepat & Ringan)
