@@ -131,6 +131,15 @@ function Main({ currentUser, onLogout }) {
         const loadAll = useCallback(async () => {
           setLoading(true);
           try {
+            // Auto-delete aktivitas yang lebih tua dari 31 hari
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - 31);
+            sb.from("activity_logs")
+              .delete()
+              .lt("created_at", cutoffDate.toISOString())
+              .then(() => {})
+              .catch(e => console.error("Gagal menghapus log lama:", e));
+
             const [
               { data: prods },
               { data: sups },
