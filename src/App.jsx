@@ -186,17 +186,25 @@ function Main({ currentUser, onLogout }) {
         const weekRev = weekTrx.reduce((s, t) => s + t.total, 0);
         const lowStock = products.filter((p) => p.stock <= p.min_stock);
 
-        const filtProd = useMemo(
-          () =>
-            products.filter((p) => {
-              const mc = filterCat === "Semua" || p.category === filterCat;
-              const ms = p.name
-                .toLowerCase()
-                .includes(searchProd.toLowerCase());
-              return mc && ms;
-            }),
-          [products, filterCat, searchProd],
-        );
+        const filtProd = useMemo(() => {
+          const s = searchProd.toLowerCase();
+          return products.filter((p) => {
+            const mc = filterCat === "Semua" || p.category === filterCat;
+            if (!s) return mc;
+            
+            const supplier = suppliers.find(sup => sup.id === p.supplier_id);
+            const supplierName = supplier ? supplier.nama.toLowerCase() : "";
+
+            const ms =
+              p.name.toLowerCase().includes(s) ||
+              p.category.toLowerCase().includes(s) ||
+              p.unit.toLowerCase().includes(s) ||
+              p.price.toString().includes(s) ||
+              supplierName.includes(s);
+              
+            return mc && ms;
+          });
+        }, [products, filterCat, searchProd, suppliers]);
 
         const cartTotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
         const payNum = parseInt(paymentInput) || 0;
