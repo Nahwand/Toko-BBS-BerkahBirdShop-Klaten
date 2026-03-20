@@ -1137,7 +1137,8 @@ function Main({ currentUser, onLogout }) {
                           </div>
                         ))}
                       </div>
-                      {outStock.length > 0 && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+                        {outStock.length > 0 && (
                           <div className={styles.card} style={{ marginBottom: 18, borderLeft: '4px solid #ef4444' }}>
                             <div
                               style={{
@@ -1239,6 +1240,7 @@ function Main({ currentUser, onLogout }) {
                             </div>
                           ))
                         )}
+                      </div>
                       </div>
                     </div>
 
