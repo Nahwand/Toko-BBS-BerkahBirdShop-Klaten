@@ -100,6 +100,10 @@ textarea {
   gap: 18px;
   align-items: start;
 }
+.kasir-cart {
+  position: sticky;
+  top: 0;
+}
 .prod-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(152px, 1fr));
@@ -196,9 +200,11 @@ textarea {
   }
   .kasir-grid {
     grid-template-columns: 1fr;
+    padding-bottom: 260px;
   }
   .kasir-cart {
     position: fixed !important;
+    top: auto;
     bottom: 0;
     left: 0;
     right: 0;

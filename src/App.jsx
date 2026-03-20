@@ -1478,8 +1478,6 @@ function Main({ currentUser, onLogout }) {
                         borderRadius: 12,
                         padding: "18px 20px",
                         border: "1px solid #e4ede4",
-                        position: "sticky",
-                        top: 0,
                       }}
                     >
                       <div
