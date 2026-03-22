@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import bcrypt from "bcryptjs";
 import styles from "../styles/UsersPage.module.css";
 
 export default function UsersPage({ sb, showNotif, currentUser, logActivity }) {
@@ -22,14 +23,19 @@ export default function UsersPage({ sb, showNotif, currentUser, logActivity }) {
   }, []);
 
   const saveUser = async () => {
-    if (!form.username || !form.password || !form.nama) {
-      showNotif("Semua field wajib diisi!", "error");
+    if (!form.username || !form.nama) {
+      showNotif("Field username dan nama wajib diisi!", "error");
+      return;
+    }
+    if (modal === "add" && !form.password) {
+      showNotif("Password wajib diisi untuk akun baru!", "error");
       return;
     }
     setLoading(true);
     try {
       if (modal === "add") {
-        const { error } = await sb.from("users").insert(form);
+        const payload = { ...form, password: bcrypt.hashSync(form.password, 10) };
+        const { error } = await sb.from("users").insert(payload);
         if (error) throw error;
         if (logActivity)
           await logActivity(
@@ -40,9 +46,15 @@ export default function UsersPage({ sb, showNotif, currentUser, logActivity }) {
         showNotif("Akun berhasil ditambahkan!");
       } else {
         const oldUser = users.find((u) => u.id === modal.id);
+        const payload = { ...form };
+        if (payload.password) {
+          payload.password = bcrypt.hashSync(payload.password, 10);
+        } else {
+          delete payload.password; // Do not overwrite existing password if left empty
+        }
         const { error } = await sb
           .from("users")
-          .update(form)
+          .update(payload)
           .eq("id", modal.id);
         if (error) throw error;
         const akunChanges = [];
@@ -172,7 +184,7 @@ export default function UsersPage({ sb, showNotif, currentUser, logActivity }) {
                       onClick={() => {
                         setForm({
                           username: u.username,
-                          password: u.password,
+                          password: "", // Hide existing hash
                           nama: u.nama,
                           role: u.role,
                           status: u.status,
@@ -287,10 +299,10 @@ export default function UsersPage({ sb, showNotif, currentUser, logActivity }) {
                 p: "Username unik...",
               },
               {
-                l: "Password *",
+                l: modal === "add" ? "Password *" : "Ganti Password",
                 k: "password",
                 t: "text",
-                p: "Password...",
+                p: modal === "add" ? "Password..." : "Kosongkan jika tidak diubah...",
               },
             ].map((f) => (
               <div key={f.k} className={styles.formGroup}>

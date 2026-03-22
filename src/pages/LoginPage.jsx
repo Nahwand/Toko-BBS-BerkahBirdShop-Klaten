@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import bcrypt from "bcryptjs";
 import { sb } from "../config/supabase";
 import Spin from "../components/Spin";
 import styles from "../styles/LoginPage.module.css";
@@ -29,7 +30,13 @@ export default function LoginPage({ onLogin }) {
         setLoading(false);
         return;
       }
-      const data = rows.find((u) => u.password === password);
+      const data = rows.find((u) => {
+        // Fallback for unmigrated plain-text passwords during transition
+        if (!u.password.startsWith("$2a$") && !u.password.startsWith("$2b$")) {
+          return u.password === password;
+        }
+        return bcrypt.compareSync(password, u.password);
+      });
       if (!data) {
         setError("Username atau password salah!");
         setLoading(false);
