@@ -27,7 +27,23 @@ export default function UsersPage({ sb, showNotif, currentUser, logActivity }) {
       showNotif("Field username dan nama wajib diisi!", "error");
       return;
     }
-    if (modal === "add" && !form.password) {
+    
+    // Validasi Password Keamanan Tinggi
+    const pass = form.password;
+    if (pass) {
+        if (pass.length < 8) {
+            showNotif("Maaf, Password HARUS minimal 8 karakter panjangnya!", "error");
+            return;
+        }
+        if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])/.test(pass)) {
+            showNotif("Maaf, Password WAJIB mengandung kombinasi lengkap: huruf besar, huruf kecil, angka, dan simbol (seperti @#$%^&*)!", "error");
+            return;
+        }
+        if (modal !== "add" && bcrypt.compareSync(pass, modal.password)) {
+            showNotif("Keamanan: Anda tidak boleh menggunakan rutinitas password yang persis sama dengan password sebelumnya!", "error");
+            return;
+        }
+    } else if (modal === "add") {
       showNotif("Password wajib diisi untuk akun baru!", "error");
       return;
     }
@@ -98,6 +114,20 @@ export default function UsersPage({ sb, showNotif, currentUser, logActivity }) {
       await logActivity("Hapus Akun", "Akun", u?.nama || "");
     await loadUsers();
     showNotif("Akun dihapus!");
+  };
+
+  const getPasswordStrength = (pass) => {
+    if (!pass) return { score: 0, color: "transparent", text: "", pct: 0 };
+    let score = 0;
+    if (pass.length > 0) score += 1;
+    if (pass.length >= 8) score += 1;
+    if (/[A-Z]/.test(pass) && /[a-z]/.test(pass)) score += 1;
+    if (/[0-9]/.test(pass)) score += 1;
+    if (/[^A-Za-z0-9]/.test(pass)) score += 1;
+    
+    if (score <= 2) return { score, color: "#f44336", text: "Lemah", pct: 33 }; // Merah
+    if (score <= 4) return { score, color: "#ffc107", text: "Kurang Kuat", pct: 66 }; // Kuning
+    return { score, color: "#4caf50", text: "Sangat Kuat", pct: 100 }; // Hijau
   };
 
   return (
@@ -318,6 +348,23 @@ export default function UsersPage({ sb, showNotif, currentUser, logActivity }) {
                     setForm((x) => ({ ...x, [f.k]: e.target.value }))
                   }
                 />
+                {f.k === "password" && form.password && (() => {
+                  const strength = getPasswordStrength(form.password);
+                  return (
+                    <div style={{ marginTop: "8px" }}>
+                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", marginBottom: "4px" }}>
+                          <span style={{ color: "#555" }}>Indikator Kekuatan:</span>
+                          <span style={{ color: strength.color, fontWeight: "bold" }}>{strength.text}</span>
+                       </div>
+                       <div style={{ height: "6px", width: "100%", backgroundColor: "#e0e0e0", borderRadius: "4px", overflow: "hidden" }}>
+                          <div style={{ height: "100%", width: `${strength.pct}%`, backgroundColor: strength.color, transition: "all 0.4s ease" }}></div>
+                       </div>
+                       <div style={{ fontSize: "0.75rem", color: "#888", marginTop: "6px", fontStyle: "italic", lineHeight: "1.3" }}>
+                          Syarat Wajib: 8 Aksara, Huruf Besar (A-Z), Huruf Kecil (a-z), Angka (0-9), & Simbol (!@#$%).
+                       </div>
+                    </div>
+                  );
+                })()}
               </div>
             ))}
             <div className={styles.formGroupSelect}>
