@@ -213,3 +213,19 @@
   font-size: 11px;
   color: #ccc;
 }
+
+.copyrightLink {
+  display: block;
+  text-align: center;
+  margin-top: 6px;
+  font-size: 11px;
+  color: #a8e063;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s, text-decoration 0.2s;
+}
+
+.copyrightLink:hover {
+  color: #2d7a2d;
+  text-decoration: underline;
+}

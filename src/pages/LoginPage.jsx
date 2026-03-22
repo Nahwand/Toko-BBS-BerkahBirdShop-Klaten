@@ -122,6 +122,14 @@ export default function LoginPage({ onLogin }) {
         <div className={styles.footerText}>
           🌿 BBS · Sistem Manajemen Penjualan
         </div>
+        <a
+          href="https://github.com/Nahwand"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.copyrightLink}
+        >
+          © Copyright by Naha_Nidz
+        </a>
       </div>
     </div>
   );
