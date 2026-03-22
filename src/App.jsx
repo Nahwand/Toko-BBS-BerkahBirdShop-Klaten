@@ -86,6 +86,7 @@ function Main({ currentUser, onLogout }) {
           min_stock: "",
           supplier_id: "",
         });
+        const [prodImage, setProdImage] = useState(null);
         const [histSearch, setHistSearch] = useState("");
         const [filterDate, setFilterDate] = useState("");
         const [restockModal, setRestockModal] = useState(null);
@@ -341,6 +342,27 @@ function Main({ currentUser, onLogout }) {
             return;
           }
           setLoading(true);
+
+          let imageUrl = prodModal !== "add" ? prodModal.image_url : null;
+          if (prodImage) {
+            const ext = prodImage.name.split('.').pop();
+            const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
+            const { error: uploadError } = await sb.storage
+              .from("produk")
+              .upload(fileName, prodImage);
+              
+            if (uploadError) {
+              setLoading(false);
+              showNotif("Gagal upload gambar: " + uploadError.message, "error");
+              return;
+            }
+            
+            const { data: publicUrlData } = sb.storage
+              .from("produk")
+              .getPublicUrl(fileName);
+            imageUrl = publicUrlData.publicUrl;
+          }
+
           const payload = {
             name: prodForm.name,
             category: prodForm.category,
@@ -351,6 +373,7 @@ function Main({ currentUser, onLogout }) {
             supplier_id: prodForm.supplier_id
               ? parseInt(prodForm.supplier_id)
               : null,
+            image_url: imageUrl,
           };
           try {
             if (prodModal === "add") {
@@ -1529,6 +1552,17 @@ function Main({ currentUser, onLogout }) {
                             }}
                           >
                             <Badge cat={p.category} />
+                            <div style={{ 
+                               marginTop: 10,
+                               height: 100, 
+                               width: "100%",
+                               background: p.image_url ? `url(${p.image_url}) center/cover` : "#f5f5f5", 
+                               borderRadius: 8, 
+                               display: "flex",
+                               border: "1px solid #efefef"
+                            }}>
+                               {!p.image_url && <span style={{fontSize: 28, margin: "auto", opacity: 0.2}}>📦</span>}
+                            </div>
                             <div
                               style={{
                                 fontWeight: 700,
@@ -1816,6 +1850,7 @@ function Main({ currentUser, onLogout }) {
                             min_stock: "",
                             supplier_id: "",
                           });
+                          setProdImage(null);
                           setProdModal("add");
                         }}
                       >
@@ -1829,6 +1864,7 @@ function Main({ currentUser, onLogout }) {
                         <thead>
                           <tr>
                             {[
+                              "Foto",
                               "Nama",
                               "Kategori",
                               "Satuan",
@@ -1857,6 +1893,13 @@ function Main({ currentUser, onLogout }) {
                                     p.stock <= p.min_stock ? "#fffaf0" : "#fff",
                                 }}
                               >
+                                <td className={styles.td}>
+                                  {p.image_url ? (
+                                    <img src={p.image_url} alt={p.name} style={{ width: 44, height: 44, objectFit: "cover", borderRadius: 8, border: "1px solid #ddd" }} />
+                                  ) : (
+                                    <div style={{ width: 44, height: 44, background: "#f0f0f0", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>📦</div>
+                                  )}
+                                </td>
                                 <td className={styles.td}>
                                   <strong>{p.name}</strong>
                                 </td>
@@ -1906,6 +1949,7 @@ function Main({ currentUser, onLogout }) {
                                             p.supplier_id || "",
                                           ),
                                         });
+                                        setProdImage(null);
                                         setProdModal(p);
                                       }}
                                     >
@@ -2118,6 +2162,7 @@ function Main({ currentUser, onLogout }) {
                         <thead>
                           <tr>
                             {[
+                              "Foto",
                               "Nama Produk",
                               "Kategori",
                               "Satuan",
@@ -2157,6 +2202,13 @@ function Main({ currentUser, onLogout }) {
                                           : "#fff",
                                   }}
                                 >
+                                  <td className={styles.td}>
+                                    {p.image_url ? (
+                                      <img src={p.image_url} alt={p.name} style={{ width: 44, height: 44, objectFit: "cover", borderRadius: 8, border: "1px solid #ddd" }} />
+                                    ) : (
+                                      <div style={{ width: 44, height: 44, background: "#f0f0f0", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>📦</div>
+                                    )}
+                                  </td>
                                   <td className={styles.td}>
                                     <strong>{p.name}</strong>
                                   </td>
@@ -3086,6 +3138,18 @@ function Main({ currentUser, onLogout }) {
                     {prodModal === "add"
                       ? "➕ Tambah Produk"
                       : "✏️ Edit Produk"}
+                  </div>
+                  <div style={{ marginBottom: 16 }}>
+                     <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>
+                        Foto Produk (Opsional)
+                     </label>
+                     <input type="file" accept="image/*" onChange={(e) => setProdImage(e.target.files[0])} className={styles.inp} style={{ padding: "8px", width: "100%" }} />
+                     {prodModal !== "add" && prodModal?.image_url && !prodImage && (
+                        <div style={{ marginTop: 8 }}>
+                           <img src={prodModal.image_url} alt="Current" style={{ width: 64, height: 64, objectFit: "cover", borderRadius: 8, border: "2px solid #e4ede4" }} />
+                           <div style={{ fontSize: 10, color: "#888", marginTop: 4 }}>Foto saat ini, biarkan kosong untuk tidak mengubah.</div>
+                        </div>
+                     )}
                   </div>
                   {[
                     { l: "Nama *", k: "name", t: "text", p: "Nama produk..." },
