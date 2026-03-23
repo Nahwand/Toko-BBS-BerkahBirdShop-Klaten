@@ -171,11 +171,38 @@ function Main({ currentUser, onLogout, isOffline }) {
           } catch (e) {
             console.error("Log error:", e);
           }
-        };
-
-        const loadAll = useCallback(async () => {
+        };        const loadAll = useCallback(async () => {
           setLoading(true);
           try {
+            if (!isOffline && navigator.onLine) {
+              const queue = JSON.parse(localStorage.getItem('bbs_offline_queue') || "[]");
+              if (queue.length > 0) {
+                try {
+                  for (const q of queue) {
+                    const { trx, trxItems } = q;
+                    const { id, ...trxPayload } = trx;
+                    const { data: newTrx, error: e1 } = await sb.from("transactions").insert(trxPayload).select().single();
+                    if (!e1 && newTrx) {
+                      const itemsPayload = trxItems.map(ti => {
+                        const { transaction_id, ...rest } = ti;
+                        return { ...rest, transaction_id: newTrx.id };
+                      });
+                      await sb.from("transaction_items").insert(itemsPayload);
+                      for (const i of trxItems) {
+                        const { data: pData } = await sb.from("products").select("stock").eq("id", i.product_id).single();
+                        if (pData) {
+                          await sb.from("products").update({ stock: pData.stock - i.qty }).eq("id", i.product_id);
+                        }
+                      }
+                    }
+                  }
+                  localStorage.removeItem('bbs_offline_queue');
+                } catch (syncErr) {
+                  console.error("Sync error:", syncErr);
+                }
+              }
+            }
+
             // Auto-delete aktivitas yang lebih tua dari 31 hari
             const cutoffDate = new Date();
             cutoffDate.setDate(cutoffDate.getDate() - 31);
@@ -336,6 +363,55 @@ function Main({ currentUser, onLogout, isOffline }) {
             return;
           }
           setLoading(true);
+
+          if (isOffline) {
+            const trxCode = `OFF-${Date.now().toString().slice(-4)}`;
+            const trx = {
+              id: Date.now().toString(),
+              trx_code: trxCode,
+              date: TODAY,
+              customer: customerName || "Umum",
+              total: cartTotal,
+              payment: payNum,
+              change_amt: change,
+            };
+            const trxItems = cart.map((i) => ({
+              transaction_id: trx.id,
+              product_id: i.product_id,
+              product_name: i.name,
+              qty: i.qty,
+              unit: i.unit,
+              price: i.price,
+            }));
+            const queue = JSON.parse(localStorage.getItem('bbs_offline_queue') || "[]");
+            queue.push({ trx, trxItems });
+            localStorage.setItem('bbs_offline_queue', JSON.stringify(queue));
+
+            const newProducts = [...products];
+            for (const i of cart) {
+              const pIdx = newProducts.findIndex((x) => x.id === i.product_id);
+              if (pIdx > -1) newProducts[pIdx].stock -= i.qty;
+            }
+            setProducts(newProducts);
+            localStorage.setItem('bbs_offline_products', JSON.stringify(newProducts));
+
+            setReceipt({
+              ...trx,
+              items: cart.map((i) => ({
+                product_name: i.name,
+                qty: i.qty,
+                unit: i.unit,
+                price: i.price,
+              })),
+            });
+            setCart([]);
+            setCustomerName("");
+            setPaymentInput("");
+            showNotif("Berhasil: Transaksi Tersimpan Offline!");
+            setLoading(false);
+            return;
+          }
+
           try {
             const trxCode = `TRX${String(transactions.length + 1).padStart(4, "0")}`;
             const { data: trx, error: e1 } = await sb
