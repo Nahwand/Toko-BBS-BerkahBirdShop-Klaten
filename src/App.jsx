@@ -25,6 +25,18 @@ function App() {
       return null;
     }
   });
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const handleLogin = async (user) => {
     try {
@@ -59,8 +71,16 @@ function App() {
     setCurrentUser(null);
   };
 
-  if (!currentUser) return <LoginPage onLogin={handleLogin} />;
-  return <Main currentUser={currentUser} onLogout={handleLogout} />;
+  return (
+    <>
+      {isOffline && (
+        <div style={{ background: '#dc2626', color: '#fff', textAlign: 'center', padding: '8px 16px', fontSize: 13, fontWeight: 700, zIndex: 9999, position: 'relative', letterSpacing: 0.5 }}>
+          ⚠️ Koneksi Internet Terputus: Kasir Berjalan dalam Mode Offline
+        </div>
+      )}
+      {!currentUser ? <LoginPage onLogin={handleLogin} /> : <Main currentUser={currentUser} onLogout={handleLogout} />}
+    </>
+  );
 }
 
 function Main({ currentUser, onLogout }) {
