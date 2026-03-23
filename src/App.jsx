@@ -78,12 +78,12 @@ function App() {
           ⚠️ Koneksi Internet Terputus: Kasir Berjalan dalam Mode Offline
         </div>
       )}
-      {!currentUser ? <LoginPage onLogin={handleLogin} /> : <Main currentUser={currentUser} onLogout={handleLogout} />}
+      {!currentUser ? <LoginPage onLogin={handleLogin} /> : <Main currentUser={currentUser} onLogout={handleLogout} isOffline={isOffline} />}
     </>
   );
 }
 
-function Main({ currentUser, onLogout }) {
+function Main({ currentUser, onLogout, isOffline }) {
   const isSuperAdmin = currentUser.role === "superadmin";
   const allowedPages = ACCESS[currentUser.role] || ACCESS.pegawai;
 
@@ -118,6 +118,24 @@ function Main({ currentUser, onLogout }) {
         const [restockModal, setRestockModal] = useState(null);
         const [restockQty, setRestockQty] = useState("");
         const [notif, setNotif] = useState(null);
+        const [deferredPrompt, setDeferredPrompt] = useState(null);
+
+        useEffect(() => {
+          const handler = (e) => {
+            e.preventDefault();
+            setDeferredPrompt(e);
+          };
+          window.addEventListener('beforeinstallprompt', handler);
+          return () => window.removeEventListener('beforeinstallprompt', handler);
+        }, []);
+
+        const handleInstallClick = async () => {
+          if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') setDeferredPrompt(null);
+          }
+        };
         const [supModal, setSupModal] = useState(null);
         const [supForm, setSupForm] = useState({
           name: "",
@@ -203,11 +221,26 @@ function Main({ currentUser, onLogout }) {
                 items: (items || []).filter((i) => i.transaction_id === t.id),
               })),
             );
+
+            // Caching offline data
+            localStorage.setItem('bbs_offline_products', JSON.stringify(prods || []));
+            localStorage.setItem('bbs_offline_cats', JSON.stringify(kats || []));
+            localStorage.setItem('bbs_offline_units', JSON.stringify(sats || []));
           } catch (e) {
-            showNotif("Gagal load: " + e.message, "error");
+            console.error(e);
+            if (isOffline) {
+              showNotif("Mode Offline Aktif", "info");
+              try {
+                setProducts(JSON.parse(localStorage.getItem('bbs_offline_products') || "[]"));
+                setKategoris(JSON.parse(localStorage.getItem('bbs_offline_cats') || "[]"));
+                setSatuans(JSON.parse(localStorage.getItem('bbs_offline_units') || "[]"));
+              } catch(err) {}
+            } else {
+              showNotif("Gagal load: " + e.message, "error");
+            }
           }
           setLoading(false);
-        }, []);
+        }, [isOffline]);
 
         useEffect(() => {
           loadAll();
@@ -1031,6 +1064,19 @@ function Main({ currentUser, onLogout }) {
                   >
                     {lowStock.length} produk
                   </div>
+                </div>
+              )}
+
+              {deferredPrompt && (
+                <div style={{ padding: "0 12px 10px" }}>
+                  <button
+                    onClick={handleInstallClick}
+                    style={{
+                      width: "100%", padding: "9px", background: "#fff", color: "#1a4a1a", border: "1px solid #1a4a1a", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+                    }}
+                  >
+                    🚀 Install Aplikasi
+                  </button>
                 </div>
               )}
 
