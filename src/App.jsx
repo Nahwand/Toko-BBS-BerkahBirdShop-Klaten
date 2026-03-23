@@ -544,6 +544,8 @@ function Main({ currentUser, onLogout }) {
           .slice(0, 5);
 
         const [showExportPDFLoading, setShowExportPDFLoading] = useState(false);
+        const [exportingTitle, setExportingTitle] = useState(null);
+        const [importingState, setImportingState] = useState(null);
 
         const exportPDF = async () => {
           const reportNode = document.getElementById("laporan-container");
@@ -575,7 +577,9 @@ function Main({ currentUser, onLogout }) {
         };
 
         const exportExcel = async (type) => {
-          const wb = XL.utils.book_new();
+          setExportingTitle(type);
+          try {
+            const wb = XL.utils.book_new();
           if (type === "all" || type === "transaksi")
             XL.utils.book_append_sheet(
               wb,
@@ -725,11 +729,18 @@ function Main({ currentUser, onLogout }) {
             `${labelMap[type] || type} → ${fn}`,
           );
           showNotif("Export berhasil: " + fn);
+          } catch (e) {
+            console.error(e);
+            showNotif("Gagal melakukan export data", "error");
+          } finally {
+            setExportingTitle(null);
+          }
         };
 
         const handleImport = async (e) => {
           const file = e.target.files[0];
           if (!file) return;
+          setImportingState("Membaca file Excel...");
           const reader = new FileReader();
           reader.onload = async (ev) => {
             try {
@@ -740,7 +751,9 @@ function Main({ currentUser, onLogout }) {
                 const rows = XL.utils.sheet_to_json(wb.Sheets[sp]);
                 let added = 0,
                   updated = 0;
-                for (const r of rows) {
+                for (let i = 0; i < rows.length; i++) {
+                  const r = rows[i];
+                  setImportingState(`Memproses data ${i + 1} / ${rows.length}...`);
                   if (!r["Nama Produk"] || !r["Harga"]) continue;
                   const ex = products.find(
                     (p) =>
@@ -770,6 +783,7 @@ function Main({ currentUser, onLogout }) {
               if (!logs.length)
                 logs.push("⚠️ Sheet tidak ditemukan. Gunakan template.");
               setImportLog(logs);
+              setImportingState("Menyinkronkan data...");
               await loadAll();
               const summary = logs.join(" | ");
               await logActivity("Import Excel", "Import/Export", summary);
@@ -777,6 +791,8 @@ function Main({ currentUser, onLogout }) {
             } catch (err) {
               setImportLog([`❌ Error: ${err.message}`]);
               showNotif("Gagal import!", "error");
+            } finally {
+              setImportingState(null);
             }
           };
           reader.readAsArrayBuffer(file);
@@ -2818,10 +2834,11 @@ function Main({ currentUser, onLogout }) {
                             </div>
                           </div>
                           <button
-                            className={`${styles.btn} ${styles['btn' + e.color]}`} style={{ flexShrink: 0 }}
+                            className={`${styles.btn} ${styles['btn' + e.color]}`} style={{ flexShrink: 0, minWidth: 100 }}
                             onClick={() => exportExcel(e.type)}
+                            disabled={exportingTitle === e.type}
                           >
-                            Download
+                            {exportingTitle === e.type ? "⏳..." : "Download"}
                           </button>
                         </div>
                       ))}
@@ -2845,7 +2862,7 @@ function Main({ currentUser, onLogout }) {
                             marginBottom: 16,
                           }}
                         >
-                          Upload .xlsx untuk update data produk
+                          Upload .xlsx untuk update data produk massal
                         </div>
                         <div
                           style={{
@@ -2855,20 +2872,22 @@ function Main({ currentUser, onLogout }) {
                             marginBottom: 14,
                             border: "2px dashed #b8d4b8",
                             textAlign: "center",
+                            opacity: importingState ? 0.6 : 1,
+                            pointerEvents: importingState ? "none" : "auto"
                           }}
                         >
                           <div style={{ fontSize: 32, marginBottom: 8 }}>
-                            📂
+                            {importingState ? "⏳" : "📂"}
                           </div>
                           <div
                             style={{
-                              fontSize: 13,
-                              fontWeight: 800,
-                              color: "#333",
-                              marginBottom: 14,
-                            }}
+                               fontSize: 13,
+                               fontWeight: 800,
+                               color: importingState ? "#2d7a2d" : "#333",
+                               marginBottom: 14,
+                             }}
                           >
-                            Pilih File Excel
+                            {importingState ? importingState : "Pilih File Excel"}
                           </div>
                           <input
                             type="file"
@@ -2880,8 +2899,9 @@ function Main({ currentUser, onLogout }) {
                           <button
                             className={`${styles.btn} ${styles.btnprimary}`} style={{ padding: "10px 24px"  }}
                             onClick={() => fileRef.current.click()}
+                            disabled={!!importingState}
                           >
-                            📤 Upload File
+                            {importingState ? <Spin size={16} color="#fff" /> : "📤 Upload File"}
                           </button>
                         </div>
                         <div
