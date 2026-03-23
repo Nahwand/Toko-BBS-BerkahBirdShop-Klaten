@@ -4,6 +4,12 @@ import { sb } from './config/supabase';
 import styles from './styles/App.module.css';
 import { CATS, MONTHS, BADGE, ACCESS, TODAY, fmt, fmtN } from './utils/constants';
 
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, Legend, ResponsiveContainer,
+  BarChart, Bar, PieChart, Pie, Cell
+} from 'recharts';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import Badge from './components/Badge';
 import Spin from './components/Spin';
 import LoginPage from './pages/LoginPage';
@@ -536,6 +542,37 @@ function Main({ currentUser, onLogout }) {
         const topProds = Object.entries(prodSales)
           .sort((a, b) => b[1] - a[1])
           .slice(0, 5);
+
+        const [showExportPDFLoading, setShowExportPDFLoading] = useState(false);
+
+        const exportPDF = async () => {
+          const reportNode = document.getElementById("laporan-container");
+          if (!reportNode) return;
+          setShowExportPDFLoading(true);
+          try {
+            const actionsNode = document.getElementById("laporan-actions");
+            if (actionsNode) actionsNode.style.display = "none";
+
+            const canvas = await html2canvas(reportNode, { scale: 2, useCORS: true, logging: false });
+            
+            if (actionsNode) actionsNode.style.display = "flex";
+
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+            
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`Laporan_BBS_${MONTHS[rptMonth]}_${rptYear}.pdf`);
+          } catch (e) {
+            console.error(e);
+            alert("Gagal mencetak PDF");
+            const actionsNode = document.getElementById("laporan-actions");
+            if (actionsNode) actionsNode.style.display = "flex";
+          } finally {
+            setShowExportPDFLoading(false);
+          }
+        };
 
         const exportExcel = async (type) => {
           const wb = XL.utils.book_new();
@@ -2280,8 +2317,9 @@ function Main({ currentUser, onLogout }) {
 
                 {/* LAPORAN */}
                 {page === "laporan" && (
-                  <div>
+                  <div id="laporan-container" style={{ padding: 10, background: "#f8fdf8" }}>
                     <div
+                      id="laporan-actions"
                       style={{
                         display: "flex",
                         gap: 10,
@@ -2289,6 +2327,7 @@ function Main({ currentUser, onLogout }) {
                         alignItems: "center",
                         flexWrap: "wrap",
                       }}
+                      data-html2canvas-ignore="true"
                     >
                       <select
                         className={styles.inp} style={{ width: 140  }}
@@ -2316,8 +2355,22 @@ function Main({ currentUser, onLogout }) {
                       >
                         📥 Export Excel
                       </button>
+                      <button
+                        className={styles.btn}
+                        style={{ background: "#dc2626", color: "#fff", minWidth: 140 }}
+                        onClick={exportPDF}
+                        disabled={showExportPDFLoading}
+                      >
+                        {showExportPDFLoading ? "⏳ Memproses..." : "🖨️ Cetak Jurnal PDF"}
+                      </button>
                     </div>
-                    <div className="rpt-grid">
+
+                    <div style={{ textAlign: "center", marginBottom: 20 }}>
+                      <h2 style={{ color: "#1a4a1a", margin: 0, textTransform: "uppercase" }}>Laporan Performa Keuangan Toko BBS</h2>
+                      <p style={{ color: "#666", margin: "5px 0 0 0", fontWeight: 600 }}>Periode Pembukuan: {MONTHS[rptMonth]} {rptYear}</p>
+                    </div>
+
+                    <div className="rpt-grid" style={{ marginBottom: 20 }}>
                       {[
                         {
                           label: "Total Pendapatan",
@@ -2332,7 +2385,7 @@ function Main({ currentUser, onLogout }) {
                           bg: "#e3f2fd",
                         },
                         {
-                          label: "Rata-rata / Transaksi",
+                          label: "Rata-rata Pendapatan / Transaksi",
                           value: fmt(
                             rptTrx.length > 0
                               ? Math.round(rptRev / rptTrx.length)
@@ -2348,6 +2401,7 @@ function Main({ currentUser, onLogout }) {
                             background: s.bg,
                             borderRadius: 12,
                             padding: "16px 18px",
+                            border: `1px solid ${s.color}33`
                           }}
                         >
                           <div
@@ -2357,6 +2411,7 @@ function Main({ currentUser, onLogout }) {
                               fontWeight: 800,
                               marginBottom: 8,
                               textTransform: "uppercase",
+                              letterSpacing: 0.5
                             }}
                           >
                             {s.label}
@@ -2373,72 +2428,35 @@ function Main({ currentUser, onLogout }) {
                         </div>
                       ))}
                     </div>
-                    <div className={styles.card} style={{ marginBottom: 16  }}>
+                    
+                    <div className={styles.card} style={{ marginBottom: 20  }}>
                       <div
                         style={{
                           fontWeight: 800,
                           fontSize: 14,
                           color: "#1a4a1a",
                           marginBottom: 14,
+                          display: "flex",
+                          justifyContent: "space-between"
                         }}
                       >
-                        📊 Pendapatan Harian — {MONTHS[rptMonth]} {rptYear}
+                        <span>📈 Tren Pendapatan Harian</span>
+                        <span style={{ color: "#aaa", fontSize: 12, fontWeight: 500 }}>{MONTHS[rptMonth]} {rptYear}</span>
                       </div>
-                      <div style={{ overflowX: "auto" }}>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "flex-end",
-                            gap: 3,
-                            height: 130,
-                            minWidth: Math.max(480, daysInMonth * 24),
-                            paddingBottom: 24,
-                          }}
-                        >
-                          {dayData.map((d) => (
-                            <div
-                              key={d.day}
-                              style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "center",
-                                flex: 1,
-                                gap: 2,
-                              }}
-                            >
-                              <div
-                                style={{
-                                  width: "100%",
-                                  minWidth: 12,
-                                  background: d.rev > 0 ? "#2d7a2d" : "#e8f0e8",
-                                  borderRadius: "4px 4px 0 0",
-                                  height: `${d.rev > 0 ? Math.max(4, (d.rev / maxDayRev) * 100) : 3}px`,
-                                }}
-                                title={`Tgl ${d.day}: ${fmt(d.rev)}`}
-                                onMouseEnter={(e) =>
-                                  (e.currentTarget.style.opacity = "0.7")
-                                }
-                                onMouseLeave={(e) =>
-                                  (e.currentTarget.style.opacity = "1")
-                                }
-                              />
-                              <div
-                                style={{
-                                  fontSize: 9,
-                                  color: "#bbb",
-                                  transform: "rotate(-40deg)",
-                                  transformOrigin: "center top",
-                                  whiteSpace: "nowrap",
-                                }}
-                              >
-                                {d.day}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
+                      <div style={{ height: 260, width: "100%" }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={dayData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4ede4" />
+                            <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#666' }} axisLine={false} tickLine={false} tickMargin={10} />
+                            <YAxis tickFormatter={(val) => `Rp${val/1000}k`} tick={{ fontSize: 11, fill: '#666' }} axisLine={false} tickLine={false} tickMargin={10} />
+                            <RTooltip formatter={(value) => [fmt(value), "Pendapatan"]} labelFormatter={(label) => `Tanggal ${label}`} cursor={{ stroke: '#2d7a2d', strokeWidth: 1, strokeDasharray: '3 3' }} contentStyle={{ borderRadius: 8, border: "1px solid #e4ede4", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }} />
+                            <Line type="monotone" dataKey="rev" stroke="#2d7a2d" strokeWidth={3} dot={{ r: 3, fill: '#2d7a2d', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }} animationDuration={1200} />
+                          </LineChart>
+                        </ResponsiveContainer>
                       </div>
                     </div>
-                    <div className="rpt-bot-grid">
+                    
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
                       <div className={styles.card}>
                         <div
                           style={{
@@ -2448,62 +2466,38 @@ function Main({ currentUser, onLogout }) {
                             marginBottom: 14,
                           }}
                         >
-                          🛒 Per Kategori
+                          🧩 Distribusi Kategori
                         </div>
-                        {catData.length === 0 ? (
-                          <div
-                            style={{
-                              color: "#ccc",
-                              textAlign: "center",
-                              padding: 24,
-                            }}
-                          >
-                            Tidak ada data
-                          </div>
-                        ) : (
-                          catData.map((c, i) => {
-                            const pct = Math.round((c.rev / rptRev) * 100) || 0;
-                            const bc = BADGE[c.cat];
-                            return (
-                              <div key={i} style={{ marginBottom: 12 }}>
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    marginBottom: 5,
-                                  }}
+                        <div style={{ height: 240, width: "100%" }}>
+                          {catData.length === 0 ? (
+                            <div style={{ color: "#ccc", textAlign: "center", paddingTop: 80 }}>Tidak ada data</div>
+                          ) : (
+                            <ResponsiveContainer width="100%" height="100%">
+                              <PieChart>
+                                <Pie
+                                  data={catData}
+                                  dataKey="rev"
+                                  nameKey="cat"
+                                  cx="50%"
+                                  cy="50%"
+                                  innerRadius={55}
+                                  outerRadius={85}
+                                  paddingAngle={3}
+                                  animationDuration={1200}
                                 >
-                                  <Badge cat={c.cat} />
-                                  <span
-                                    style={{ fontSize: 12, fontWeight: 700 }}
-                                  >
-                                    {fmt(c.rev)}{" "}
-                                    <span style={{ color: "#aaa" }}>
-                                      ({pct}%)
-                                    </span>
-                                  </span>
-                                </div>
-                                <div
-                                  style={{
-                                    height: 7,
-                                    background: "#f0f0f0",
-                                    borderRadius: 4,
-                                  }}
-                                >
-                                  <div
-                                    style={{
-                                      height: "100%",
-                                      borderRadius: 4,
-                                      width: `${pct}%`,
-                                      background: bc?.c || "#2d7a2d",
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            );
-                          })
-                        )}
+                                  {catData.map((entry, index) => {
+                                    const COLORS = ['#2d7a2d', '#1565c0', '#e65100', '#7b1fa2', '#c2185b', '#00796b'];
+                                    return <Cell key={`cell-${index}`} fill={BADGE[entry.cat]?.c || COLORS[index % COLORS.length]} />;
+                                  })}
+                                </Pie>
+                                <RTooltip formatter={(value) => [fmt(value), "Total"]} contentStyle={{ borderRadius: 8, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} />
+                                <Legend layout="horizontal" verticalAlign="bottom" align="center" wrapperStyle={{ fontSize: 11, paddingTop: 10 }} />
+                              </PieChart>
+                            </ResponsiveContainer>
+                          )}
+                        </div>
                       </div>
+                      
                       <div className={styles.card}>
                         <div
                           style={{
@@ -2513,68 +2507,27 @@ function Main({ currentUser, onLogout }) {
                             marginBottom: 14,
                           }}
                         >
-                          🏆 Top 5 Terlaris
+                          🏆 Top 5 Produk Terlaris
                         </div>
-                        {topProds.length === 0 ? (
-                          <div
-                            style={{
-                              color: "#ccc",
-                              textAlign: "center",
-                              padding: 24,
-                            }}
-                          >
-                            Tidak ada data
-                          </div>
-                        ) : (
-                          topProds.map(([name, qty], i) => (
-                            <div
-                              key={i}
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 10,
-                                padding: "9px 0",
-                                borderBottom: "1px solid #f0f5f0",
-                              }}
-                            >
-                              <div
-                                style={{
-                                  width: 26,
-                                  height: 26,
-                                  borderRadius: "50%",
-                                  background: [
-                                    "#2d7a2d",
-                                    "#1565c0",
-                                    "#e65100",
-                                    "#7b1fa2",
-                                    "#c62828",
-                                  ][i],
-                                  color: "#fff",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  fontSize: 11,
-                                  fontWeight: 800,
-                                  flexShrink: 0,
-                                }}
-                              >
-                                {i + 1}
-                              </div>
-                              <div
-                                style={{
-                                  flex: 1,
-                                  fontWeight: 600,
-                                  fontSize: 13,
-                                }}
-                              >
-                                {name}
-                              </div>
-                              <strong style={{ color: "#2d7a2d" }}>
-                                {fmtN(qty)} terjual
-                              </strong>
-                            </div>
-                          ))
-                        )}
+                        <div style={{ height: 240, width: "100%" }}>
+                          {topProds.length === 0 ? (
+                            <div style={{ color: "#ccc", textAlign: "center", paddingTop: 80 }}>Tidak ada data</div>
+                          ) : (
+                            <ResponsiveContainer width="100%" height="100%">
+                              <BarChart data={topProds.map(([name, qty]) => ({ name, qty }))} layout="vertical" margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f0f0f0" />
+                                <XAxis type="number" hide />
+                                <YAxis dataKey="name" type="category" width={110} tick={{ fontSize: 11, fill: '#444' }} axisLine={false} tickLine={false} />
+                                <RTooltip formatter={(value) => [`${fmtN(value)} Terjual`, "Kuantitas"]} cursor={{fill: '#f8fdf8'}} contentStyle={{ borderRadius: 8, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} />
+                                <Bar dataKey="qty" fill="#1565c0" radius={[0, 6, 6, 0]} barSize={20} animationDuration={1200}>
+                                  {topProds.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={index === 0 ? '#ea580c' : '#2563eb'} />
+                                  ))}
+                                </Bar>
+                              </BarChart>
+                            </ResponsiveContainer>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
