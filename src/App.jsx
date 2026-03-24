@@ -180,10 +180,12 @@ function Main({ currentUser, onLogout, isOffline }) {
         const cachedProds = JSON.parse(localStorage.getItem('bbs_offline_products') || "[]");
         const cachedCats = JSON.parse(localStorage.getItem('bbs_offline_cats') || "[]");
         const cachedUnits = JSON.parse(localStorage.getItem('bbs_offline_units') || "[]");
+        const cachedSup = JSON.parse(localStorage.getItem('bbs_offline_suppliers') || "[]");
 
         setProducts(cachedProds);
         setKategoris(cachedCats);
         setSatuans(cachedUnits);
+        if (cachedSup.length > 0) setSuppliers(cachedSup);
 
         showNotif("Mode Offline Aktif", "info");
         setLoading(false);
@@ -265,7 +267,10 @@ function Main({ currentUser, onLogout, isOffline }) {
         setProducts(prods);
         localStorage.setItem('bbs_offline_products', JSON.stringify(prods));
       }
-      if (sups) setSuppliers(sups);
+      if (sups) {
+        setSuppliers(sups);
+        localStorage.setItem('bbs_offline_suppliers', JSON.stringify(sups));
+      }
       if (kats) {
         setKategoris(kats);
         localStorage.setItem('bbs_offline_cats', JSON.stringify(kats));
@@ -320,13 +325,18 @@ function Main({ currentUser, onLogout, isOffline }) {
       if (!s) return mc;
 
       const supplier = suppliers.find(sup => sup.id === p.supplier_id);
-      const supplierName = supplier ? supplier.nama.toLowerCase() : "";
+      const supplierName = supplier && supplier.name ? supplier.name.toLowerCase() : "";
+
+      const pName = p.name ? p.name.toLowerCase() : "";
+      const pCat = p.category ? p.category.toLowerCase() : "";
+      const pUnit = p.unit ? p.unit.toLowerCase() : "";
+      const pPrice = p.price ? p.price.toString() : "";
 
       const ms =
-        p.name.toLowerCase().includes(s) ||
-        p.category.toLowerCase().includes(s) ||
-        p.unit.toLowerCase().includes(s) ||
-        p.price.toString().includes(s) ||
+        pName.includes(s) ||
+        pCat.includes(s) ||
+        pUnit.includes(s) ||
+        pPrice.includes(s) ||
         supplierName.includes(s);
 
       return mc && ms;
@@ -1751,78 +1761,86 @@ function Main({ currentUser, onLogout, isOffline }) {
                   </select>
                 </div>
                 <div className="prod-grid">
-                  {filtProd.map((p) => (
-                    <div
-                      key={p.id}
-                      onClick={() => addToCart(p)}
-                      style={{
-                        background: "#fff",
-                        borderRadius: 10,
-                        padding: "13px",
-                        border: "1px solid #e4ede4",
-                        cursor: p.stock > 0 ? "pointer" : "not-allowed",
-                        opacity: p.stock <= 0 ? 0.5 : 1,
-                        transition: "border 0.1s,transform 0.1s",
-                      }}
-                      onMouseEnter={(e) => {
-                        if (p.stock > 0) {
-                          e.currentTarget.style.borderColor = "#2d7a2d";
-                          e.currentTarget.style.transform =
-                            "translateY(-2px)";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = "#e4ede4";
-                        e.currentTarget.style.transform = "";
-                      }}
-                    >
-                      <Badge cat={p.category} />
-                      <div style={{
-                        marginTop: 10,
-                        height: 100,
-                        width: "100%",
-                        background: p.image_url ? `url(${p.image_url}) center/cover` : "#f5f5f5",
-                        borderRadius: 8,
-                        display: "flex",
-                        border: "1px solid #efefef"
-                      }}>
-                        {!p.image_url && <span style={{ fontSize: 28, margin: "auto", opacity: 0.2 }}>📦</span>}
-                      </div>
-                      <div
-                        style={{
-                          fontWeight: 700,
-                          fontSize: 13,
-                          marginTop: 8,
-                          marginBottom: 3,
-                          lineHeight: 1.3,
-                        }}
-                      >
-                        {p.name}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 15,
-                          fontWeight: 800,
-                          color: "#2d7a2d",
-                        }}
-                      >
-                        {fmt(p.price)}
-                      </div>
-                      <div style={{ fontSize: 9, color: "#ccc" }}>
-                        /{p.unit}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 10,
-                          marginTop: 5,
-                          color:
-                            p.stock <= p.min_stock ? "#e65100" : "#aaa",
-                        }}
-                      >
-                        Stok: {p.stock} {p.unit}
-                      </div>
+                  {filtProd.length === 0 ? (
+                    <div style={{ padding: 30, textAlign: "center", color: "#888", gridColumn: "1 / -1" }}>
+                      {searchProd ? "Produk tidak ditemukan." : 
+                       isOffline ? "Belum ada produk di memori offline. Harap sambungkan internet sekali saja untuk menyinkronkan data produk." : 
+                       "Tidak ada produk."}
                     </div>
-                  ))}
+                  ) : (
+                    filtProd.map((p) => (
+                      <div
+                        key={p.id}
+                        onClick={() => addToCart(p)}
+                        style={{
+                          background: "#fff",
+                          borderRadius: 10,
+                          padding: "13px",
+                          border: "1px solid #e4ede4",
+                          cursor: p.stock > 0 ? "pointer" : "not-allowed",
+                          opacity: p.stock <= 0 ? 0.5 : 1,
+                          transition: "border 0.1s,transform 0.1s",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (p.stock > 0) {
+                            e.currentTarget.style.borderColor = "#2d7a2d";
+                            e.currentTarget.style.transform =
+                              "translateY(-2px)";
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = "#e4ede4";
+                          e.currentTarget.style.transform = "";
+                        }}
+                      >
+                        <Badge cat={p.category} />
+                        <div style={{
+                          marginTop: 10,
+                          height: 100,
+                          width: "100%",
+                          background: p.image_url ? `url(${p.image_url}) center/cover` : "#f5f5f5",
+                          borderRadius: 8,
+                          display: "flex",
+                          border: "1px solid #efefef"
+                        }}>
+                          {!p.image_url && <span style={{ fontSize: 28, margin: "auto", opacity: 0.2 }}>📦</span>}
+                        </div>
+                        <div
+                          style={{
+                            fontWeight: 700,
+                            fontSize: 13,
+                            marginTop: 8,
+                            marginBottom: 3,
+                            lineHeight: 1.3,
+                          }}
+                        >
+                          {p.name}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 15,
+                            fontWeight: 800,
+                            color: "#2d7a2d",
+                          }}
+                        >
+                          {fmt(p.price)}
+                        </div>
+                        <div style={{ fontSize: 9, color: "#ccc" }}>
+                          /{p.unit}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 10,
+                            marginTop: 5,
+                            color:
+                              p.stock <= p.min_stock ? "#e65100" : "#aaa",
+                          }}
+                        >
+                          Stok: {p.stock} {p.unit}
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
               <div
