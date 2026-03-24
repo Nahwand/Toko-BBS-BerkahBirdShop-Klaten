@@ -88,3641 +88,3686 @@ function Main({ currentUser, onLogout, isOffline }) {
   const allowedPages = ACCESS[currentUser.role] || ACCESS.pegawai;
 
 
-        const [page, setPage] = useState(allowedPages[0]);
-        const [products, setProducts] = useState([]);
-        const [transactions, setTransactions] = useState([]);
-        const [suppliers, setSuppliers] = useState([]);
-        const [kategoris, setKategoris] = useState([]);
-        const [satuans, setSatuans] = useState([]);
-        const [activityLogs, setActivityLogs] = useState([]);
-        const [loading, setLoading] = useState(true);
-        const [cart, setCart] = useState([]);
-        const [searchProd, setSearchProd] = useState("");
-        const [filterCat, setFilterCat] = useState("Semua");
-        const [customerName, setCustomerName] = useState("");
-        const [paymentInput, setPaymentInput] = useState("");
-        const [receipt, setReceipt] = useState(null);
-        const [prodModal, setProdModal] = useState(null);
-        const [prodForm, setProdForm] = useState({
-          name: "",
-          category: "Pakan Jadi",
-          unit: "kg",
-          price: "",
-          stock: "",
-          min_stock: "",
-          supplier_id: "",
-        });
-        const [prodImage, setProdImage] = useState(null);
-        const [histSearch, setHistSearch] = useState("");
-        const [filterDate, setFilterDate] = useState("");
-        const [restockModal, setRestockModal] = useState(null);
-        const [restockQty, setRestockQty] = useState("");
-        const [notif, setNotif] = useState(null);
-        const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [page, setPage] = useState(allowedPages[0]);
+  const [products, setProducts] = useState([]);
+  const [transactions, setTransactions] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  const [kategoris, setKategoris] = useState([]);
+  const [satuans, setSatuans] = useState([]);
+  const [activityLogs, setActivityLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [cart, setCart] = useState([]);
+  const [searchProd, setSearchProd] = useState("");
+  const [filterCat, setFilterCat] = useState("Semua");
+  const [customerName, setCustomerName] = useState("");
+  const [paymentInput, setPaymentInput] = useState("");
+  const [receipt, setReceipt] = useState(null);
+  const [prodModal, setProdModal] = useState(null);
+  const [prodForm, setProdForm] = useState({
+    name: "",
+    category: "Pakan Jadi",
+    unit: "kg",
+    price: "",
+    stock: "",
+    min_stock: "",
+    supplier_id: "",
+  });
+  const [prodImage, setProdImage] = useState(null);
+  const [histSearch, setHistSearch] = useState("");
+  const [filterDate, setFilterDate] = useState("");
+  const [restockModal, setRestockModal] = useState(null);
+  const [restockQty, setRestockQty] = useState("");
+  const [notif, setNotif] = useState(null);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
 
-        useEffect(() => {
-          const handler = (e) => {
-            e.preventDefault();
-            setDeferredPrompt(e);
-          };
-          window.addEventListener('beforeinstallprompt', handler);
-          return () => window.removeEventListener('beforeinstallprompt', handler);
-        }, []);
+  useEffect(() => {
+    const handler = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
 
-        const handleInstallClick = async () => {
-          if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') setDeferredPrompt(null);
-          }
-        };
-        const [supModal, setSupModal] = useState(null);
-        const [supForm, setSupForm] = useState({
-          name: "",
-          contact: "",
-          phone: "",
-          email: "",
-          address: "",
-          category: "",
-          status: "Aktif",
-          notes: "",
-        });
-        const [rptMonth, setRptMonth] = useState(new Date().getMonth());
-        const [rptYear, setRptYear] = useState(new Date().getFullYear());
-        const [importLog, setImportLog] = useState([]);
-        const [showLogout, setShowLogout] = useState(false);
-        const [sidebarOpen, setSidebarOpen] = useState(false);
-        const fileRef = useRef();
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') setDeferredPrompt(null);
+    }
+  };
+  const [supModal, setSupModal] = useState(null);
+  const [supForm, setSupForm] = useState({
+    name: "",
+    contact: "",
+    phone: "",
+    email: "",
+    address: "",
+    category: "",
+    status: "Aktif",
+    notes: "",
+  });
+  const [rptMonth, setRptMonth] = useState(new Date().getMonth());
+  const [rptYear, setRptYear] = useState(new Date().getFullYear());
+  const [importLog, setImportLog] = useState([]);
+  const [showLogout, setShowLogout] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const fileRef = useRef();
 
-        const showNotif = (msg, type = "success") => {
-          setNotif({ msg, type });
-          setTimeout(() => setNotif(null), 3200);
-        };
+  const showNotif = (msg, type = "success") => {
+    setNotif({ msg, type });
+    setTimeout(() => setNotif(null), 3200);
+  };
 
-        const logActivity = async (aksi, kategori, detail = "") => {
+  const logActivity = async (aksi, kategori, detail = "") => {
+    try {
+      await sb.from("activity_logs").insert({
+        user_nama: currentUser.nama,
+        user_role: currentUser.role,
+        aksi,
+        kategori,
+        detail,
+      });
+    } catch (e) {
+      console.error("Log error:", e);
+    }
+  }; const loadAll = useCallback(async () => {
+    setLoading(true);
+
+    // 1. Prioritas Mode Offline: Jika offline, langsung ambil dari cache
+    if (isOffline) {
+      try {
+        const cachedProds = JSON.parse(localStorage.getItem('bbs_offline_products') || "[]");
+        const cachedCats = JSON.parse(localStorage.getItem('bbs_offline_cats') || "[]");
+        const cachedUnits = JSON.parse(localStorage.getItem('bbs_offline_units') || "[]");
+
+        setProducts(cachedProds);
+        setKategoris(cachedCats);
+        setSatuans(cachedUnits);
+
+        showNotif("Mode Offline Aktif", "info");
+        setLoading(false);
+        return; // Selesai, jangan coba-coba fetch ke server
+      } catch (err) {
+        console.error("Gagal load cache:", err);
+      }
+    }
+
+    try {
+      // 2. Sync Offline Queue (Hanya jika Online)
+      if (navigator.onLine) {
+        const queue = JSON.parse(localStorage.getItem('bbs_offline_queue') || "[]");
+        if (queue.length > 0) {
           try {
-            await sb.from("activity_logs").insert({
-              user_nama: currentUser.nama,
-              user_role: currentUser.role,
-              aksi,
-              kategori,
-              detail,
-            });
-          } catch (e) {
-            console.error("Log error:", e);
-          }
-        };        const loadAll = useCallback(async () => {
-          setLoading(true);
-          try {
-            if (!isOffline && navigator.onLine) {
-              const queue = JSON.parse(localStorage.getItem('bbs_offline_queue') || "[]");
-              if (queue.length > 0) {
-                try {
-                  for (const q of queue) {
-                    const { trx, trxItems } = q;
-                    const { id, ...trxPayload } = trx;
-                    const { data: newTrx, error: e1 } = await sb.from("transactions").insert(trxPayload).select().single();
-                    if (!e1 && newTrx) {
-                      const itemsPayload = trxItems.map(ti => {
-                        const { transaction_id, ...rest } = ti;
-                        return { ...rest, transaction_id: newTrx.id };
-                      });
-                      await sb.from("transaction_items").insert(itemsPayload);
-                      for (const i of trxItems) {
-                        const { data: pData } = await sb.from("products").select("stock").eq("id", i.product_id).single();
-                        if (pData) {
-                          await sb.from("products").update({ stock: pData.stock - i.qty }).eq("id", i.product_id);
-                        }
-                      }
-                    }
+            for (const q of queue) {
+              const { trx, trxItems } = q;
+              const { id, ...trxPayload } = trx;
+              const { data: newTrx, error: e1 } = await sb.from("transactions").insert(trxPayload).select().single();
+              if (!e1 && newTrx) {
+                const itemsPayload = trxItems.map(ti => {
+                  const { transaction_id, ...rest } = ti;
+                  return { ...rest, transaction_id: newTrx.id };
+                });
+                await sb.from("transaction_items").insert(itemsPayload);
+                for (const i of trxItems) {
+                  const { data: pData } = await sb.from("products").select("stock").eq("id", i.product_id).single();
+                  if (pData) {
+                    await sb.from("products").update({ stock: pData.stock - i.qty }).eq("id", i.product_id);
                   }
-                  localStorage.removeItem('bbs_offline_queue');
-                } catch (syncErr) {
-                  console.error("Sync error:", syncErr);
                 }
               }
             }
-
-            // Auto-delete aktivitas yang lebih tua dari 31 hari
-            const cutoffDate = new Date();
-            cutoffDate.setDate(cutoffDate.getDate() - 31);
-            sb.from("activity_logs")
-              .delete()
-              .lt("created_at", cutoffDate.toISOString())
-              .then(() => {})
-              .catch(e => console.error("Gagal menghapus log lama:", e));
-
-            const [
-              { data: prods },
-              { data: sups },
-              { data: trxs },
-              { data: items },
-              { data: kats },
-              { data: sats },
-              { data: acts },
-            ] = await Promise.all([
-              sb.from("products").select("*").order("name"),
-              sb.from("suppliers").select("*").order("name"),
-              sb
-                .from("transactions")
-                .select("*")
-                .order("date", { ascending: false })
-                .order("id", { ascending: false }),
-              sb.from("transaction_items").select("*"),
-              sb.from("kategoris").select("*").order("nama"),
-              sb.from("satuans").select("*").order("nama"),
-              sb
-                .from("activity_logs")
-                .select("*")
-                .order("created_at", { ascending: false })
-                .limit(30),
-            ]);
-            setProducts(prods || []);
-            setSuppliers(sups || []);
-            setKategoris(kats || []);
-            setSatuans(sats || []);
-            setActivityLogs(acts || []);
-            setTransactions(
-              (trxs || []).map((t) => ({
-                ...t,
-                items: (items || []).filter((i) => i.transaction_id === t.id),
-              })),
-            );
-
-            // Caching offline data
-            localStorage.setItem('bbs_offline_products', JSON.stringify(prods || []));
-            localStorage.setItem('bbs_offline_cats', JSON.stringify(kats || []));
-            localStorage.setItem('bbs_offline_units', JSON.stringify(sats || []));
-          } catch (e) {
-            console.error(e);
-            if (isOffline) {
-              showNotif("Mode Offline Aktif", "info");
-              try {
-                setProducts(JSON.parse(localStorage.getItem('bbs_offline_products') || "[]"));
-                setKategoris(JSON.parse(localStorage.getItem('bbs_offline_cats') || "[]"));
-                setSatuans(JSON.parse(localStorage.getItem('bbs_offline_units') || "[]"));
-              } catch(err) {}
-            } else {
-              showNotif("Gagal load: " + e.message, "error");
-            }
+            localStorage.removeItem('bbs_offline_queue');
+          } catch (syncErr) {
+            console.error("Sync error:", syncErr);
           }
-          setLoading(false);
-        }, [isOffline]);
+        }
+      }
 
-        useEffect(() => {
-          loadAll();
-        }, [loadAll]);
+      // 3. Auto-delete aktivitas yang lebih tua dari 31 hari
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - 31);
+      sb.from("activity_logs")
+        .delete()
+        .lt("created_at", cutoffDate.toISOString())
+        .then(() => { })
+        .catch(e => console.error("Gagal menghapus log lama:", e));
 
-        const todayTrx = transactions.filter((t) => t.date === TODAY);
-        const todayRev = todayTrx.reduce((s, t) => s + t.total, 0);
-        const weekStart = new Date(Date.now() - 7 * 86400000)
-          .toISOString()
-          .slice(0, 10);
-        const weekTrx = transactions.filter((t) => t.date >= weekStart);
-        const weekRev = weekTrx.reduce((s, t) => s + t.total, 0);
-        const outStock = (products || []).filter((p) => Number(p.stock) === 0);
-        const lowStock = (products || []).filter((p) => Number(p.stock) > 0 && Number(p.stock) <= Number(p.min_stock));
+      // 4. Fetch data dari server
+      const [
+        { data: prods },
+        { data: sups },
+        { data: trxs },
+        { data: items },
+        { data: kats },
+        { data: sats },
+        { data: acts },
+      ] = await Promise.all([
+        sb.from("products").select("*").order("name"),
+        sb.from("suppliers").select("*").order("name"),
+        sb
+          .from("transactions")
+          .select("*")
+          .order("date", { ascending: false })
+          .order("id", { ascending: false }),
+        sb.from("transaction_items").select("*"),
+        sb.from("kategoris").select("*").order("nama"),
+        sb.from("satuans").select("*").order("nama"),
+        sb
+          .from("activity_logs")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(30),
+      ]);
 
-        const filtProd = useMemo(() => {
-          const s = searchProd.toLowerCase();
-          return products.filter((p) => {
-            const mc = filterCat === "Semua" || p.category === filterCat;
-            if (!s) return mc;
-            
-            const supplier = suppliers.find(sup => sup.id === p.supplier_id);
-            const supplierName = supplier ? supplier.nama.toLowerCase() : "";
-
-            const ms =
-              p.name.toLowerCase().includes(s) ||
-              p.category.toLowerCase().includes(s) ||
-              p.unit.toLowerCase().includes(s) ||
-              p.price.toString().includes(s) ||
-              supplierName.includes(s);
-              
-            return mc && ms;
-          });
-        }, [products, filterCat, searchProd, suppliers]);
-
-        const cartTotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-        const payNum = parseInt(paymentInput) || 0;
-        const change = payNum - cartTotal;
-
-        const addToCart = (prod) => {
-          if (prod.stock <= 0) {
-            showNotif("Stok habis!", "error");
-            return;
-          }
-          setCart((c) => {
-            const ex = c.find((x) => x.product_id === prod.id);
-            if (ex) {
-              if (ex.qty >= prod.stock) {
-                showNotif("Stok tidak mencukupi!", "error");
-                return c;
-              }
-              return c.map((x) =>
-                x.product_id === prod.id ? { ...x, qty: x.qty + 1 } : x,
-              );
-            }
-            return [
-              ...c,
-              {
-                product_id: prod.id,
-                name: prod.name,
-                price: prod.price,
-                unit: prod.unit,
-                qty: 1,
-              },
-            ];
-          });
-        };
-        const updCart = (pid, qty) => {
-          if (qty <= 0) {
-            setCart((c) => c.filter((x) => x.product_id !== pid));
-            return;
-          }
-          const p = products.find((p) => p.id === pid);
-          if (qty > p.stock) {
-            showNotif("Stok tidak mencukupi!", "error");
-            return;
-          }
-          setCart((c) =>
-            c.map((x) => (x.product_id === pid ? { ...x, qty } : x)),
-          );
-        };
-        const processPayment = async () => {
-          if (!cart.length) {
-            showNotif("Keranjang kosong!", "error");
-            return;
-          }
-          if (change < 0) {
-            showNotif("Pembayaran kurang!", "error");
-            return;
-          }
-          if (payNum <= 0) {
-            showNotif("Masukkan nominal pembayaran!", "error");
-            return;
-          }
-          setLoading(true);
-
-          if (isOffline) {
-            const trxCode = `OFF-${Date.now().toString().slice(-4)}`;
-            const trx = {
-              id: Date.now().toString(),
-              trx_code: trxCode,
-              date: TODAY,
-              customer: customerName || "Umum",
-              total: cartTotal,
-              payment: payNum,
-              change_amt: change,
-            };
-            const trxItems = cart.map((i) => ({
-              transaction_id: trx.id,
-              product_id: i.product_id,
-              product_name: i.name,
-              qty: i.qty,
-              unit: i.unit,
-              price: i.price,
-            }));
-            const queue = JSON.parse(localStorage.getItem('bbs_offline_queue') || "[]");
-            queue.push({ trx, trxItems });
-            localStorage.setItem('bbs_offline_queue', JSON.stringify(queue));
-
-            const newProducts = [...products];
-            for (const i of cart) {
-              const pIdx = newProducts.findIndex((x) => x.id === i.product_id);
-              if (pIdx > -1) newProducts[pIdx].stock -= i.qty;
-            }
-            setProducts(newProducts);
-            localStorage.setItem('bbs_offline_products', JSON.stringify(newProducts));
-
-            setReceipt({
-              ...trx,
-              items: cart.map((i) => ({
-                product_name: i.name,
-                qty: i.qty,
-                unit: i.unit,
-                price: i.price,
-              })),
-            });
-            setCart([]);
-            setCustomerName("");
-            setPaymentInput("");
-            showNotif("Berhasil: Transaksi Tersimpan Offline!");
-            setLoading(false);
-            return;
-          }
-
-          try {
-            const trxCode = `TRX${String(transactions.length + 1).padStart(4, "0")}`;
-            const { data: trx, error: e1 } = await sb
-              .from("transactions")
-              .insert({
-                trx_code: trxCode,
-                date: TODAY,
-                customer: customerName || "Umum",
-                total: cartTotal,
-                payment: payNum,
-                change_amt: change,
-              })
-              .select()
-              .single();
-            if (e1) throw e1;
-            const { error: e2 } = await sb
-              .from("transaction_items")
-              .insert(
-                cart.map((i) => ({
-                  transaction_id: trx.id,
-                  product_id: i.product_id,
-                  product_name: i.name,
-                  qty: i.qty,
-                  unit: i.unit,
-                  price: i.price,
-                })),
-              );
-            if (e2) throw e2;
-            for (const i of cart) {
-              const p = products.find((x) => x.id === i.product_id);
-              await sb
-                .from("products")
-                .update({ stock: p.stock - i.qty })
-                .eq("id", i.product_id);
-            }
-            await loadAll();
-            setReceipt({
-              ...trx,
-              items: cart.map((i) => ({
-                product_name: i.name,
-                qty: i.qty,
-                unit: i.unit,
-                price: i.price,
-              })),
-            });
-            setCart([]);
-            setCustomerName("");
-            setPaymentInput("");
-            await logActivity(
-              "Transaksi Baru",
-              "Kasir",
-              `${trxCode} - ${customerName || "Umum"} - ${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(cartTotal)}`,
-            );
-            showNotif("Transaksi berhasil!");
-          } catch (e) {
-            showNotif("Gagal: " + e.message, "error");
-          }
-          setLoading(false);
-        };
-        const saveProd = async () => {
-          if (!prodForm.name || !prodForm.price || !prodForm.stock) {
-            showNotif("Lengkapi semua field!", "error");
-            return;
-          }
-          setLoading(true);
-
-          let imageUrl = prodModal !== "add" ? prodModal.image_url : null;
-          if (prodImage) {
-            const ext = prodImage.name.split('.').pop();
-            const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
-            const { error: uploadError } = await sb.storage
-              .from("produk")
-              .upload(fileName, prodImage);
-              
-            if (uploadError) {
-              setLoading(false);
-              showNotif("Gagal upload gambar: " + uploadError.message, "error");
-              return;
-            }
-            
-            const { data: publicUrlData } = sb.storage
-              .from("produk")
-              .getPublicUrl(fileName);
-            imageUrl = publicUrlData.publicUrl;
-          }
-
-          const payload = {
-            name: prodForm.name,
-            category: prodForm.category,
-            unit: prodForm.unit,
-            price: parseInt(prodForm.price),
-            stock: parseInt(prodForm.stock),
-            min_stock: parseInt(prodForm.min_stock) || 5,
-            supplier_id: prodForm.supplier_id
-              ? parseInt(prodForm.supplier_id)
-              : null,
-            image_url: imageUrl,
-          };
-          try {
-            if (prodModal === "add") {
-              await sb.from("products").insert(payload);
-              await logActivity(
-                "Tambah Produk",
-                "Produk",
-                `${prodForm.name} - ${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(parseInt(prodForm.price))}`,
-              );
-              showNotif("Produk ditambahkan!");
-            } else {
-              await sb.from("products").update(payload).eq("id", prodModal.id);
-              const fmtRp = (n) =>
-                new Intl.NumberFormat("id-ID", {
-                  style: "currency",
-                  currency: "IDR",
-                  minimumFractionDigits: 0,
-                }).format(n);
-              const changes = [];
-              if (prodModal.name !== prodForm.name)
-                changes.push(`nama: "${prodModal.name}" → "${prodForm.name}"`);
-              if (String(prodModal.price) !== String(prodForm.price))
-                changes.push(
-                  `harga: ${fmtRp(prodModal.price)} → ${fmtRp(parseInt(prodForm.price))}`,
-                );
-              if (prodModal.category !== prodForm.category)
-                changes.push(
-                  `kategori: ${prodModal.category} → ${prodForm.category}`,
-                );
-              if (prodModal.unit !== prodForm.unit)
-                changes.push(`satuan: ${prodModal.unit} → ${prodForm.unit}`);
-              if (String(prodModal.stock) !== String(prodForm.stock))
-                changes.push(`stok: ${prodModal.stock} → ${prodForm.stock}`);
-              if (String(prodModal.min_stock) !== String(prodForm.min_stock))
-                changes.push(
-                  `min stok: ${prodModal.min_stock} → ${prodForm.min_stock}`,
-                );
-              const detail =
-                changes.length > 0
-                  ? `${prodForm.name}: ${changes.join(", ")}`
-                  : `${prodForm.name} (tidak ada perubahan)`;
-              await logActivity("Edit Produk", "Produk", detail);
-              showNotif("Produk diperbarui!");
-            }
-            await loadAll();
-          } catch (e) {
-            showNotif("Error: " + e.message, "error");
-          }
-          setProdModal(null);
-          setLoading(false);
-        };
-        const delProd = async (id) => {
-          if (!window.confirm("Hapus produk ini?")) return;
-          const p = products.find((x) => x.id === id);
-          await sb.from("products").delete().eq("id", id);
-          await logActivity("Hapus Produk", "Produk", p?.name || "");
-          await loadAll();
-          showNotif("Produk dihapus!");
-        };
-        const doRestock = async () => {
-          if (!restockQty || parseInt(restockQty) <= 0) {
-            showNotif("Masukkan jumlah valid!", "error");
-            return;
-          }
-          const p = products.find((x) => x.id === restockModal.id);
-          await sb
-            .from("products")
-            .update({ stock: p.stock + parseInt(restockQty) })
-            .eq("id", restockModal.id);
-          await logActivity(
-            "Restock Stok",
-            "Stok",
-            `${restockModal.name} +${restockQty} ${restockModal.unit} (${p.stock} → ${p.stock + parseInt(restockQty)})`,
-          );
-          await loadAll();
-          showNotif(`Restock ${restockModal.name} berhasil!`);
-          setRestockModal(null);
-          setRestockQty("");
-        };
-        const saveSup = async () => {
-          if (!supForm.name || !supForm.phone) {
-            showNotif("Nama & Telepon wajib!", "error");
-            return;
-          }
-          setLoading(true);
-          try {
-            if (supModal === "add") {
-              await sb.from("suppliers").insert(supForm);
-              await logActivity("Tambah Supplier", "Supplier", supForm.name);
-              showNotif("Supplier ditambahkan!");
-            } else {
-              const oldSup = suppliers.find((s) => s.id === supModal.id);
-              await sb.from("suppliers").update(supForm).eq("id", supModal.id);
-              const supChanges = [];
-              if (oldSup?.name !== supForm.name)
-                supChanges.push(`nama: "${oldSup?.name}" → "${supForm.name}"`);
-              if (oldSup?.phone !== supForm.phone)
-                supChanges.push(`telepon: ${oldSup?.phone} → ${supForm.phone}`);
-              if (oldSup?.contact !== supForm.contact)
-                supChanges.push(`PIC: ${oldSup?.contact} → ${supForm.contact}`);
-              if (oldSup?.status !== supForm.status)
-                supChanges.push(
-                  `status: ${oldSup?.status} → ${supForm.status}`,
-                );
-              const supDetail =
-                supChanges.length > 0
-                  ? `${supForm.name}: ${supChanges.join(", ")}`
-                  : `${supForm.name} (tidak ada perubahan)`;
-              await logActivity("Edit Supplier", "Supplier", supDetail);
-              showNotif("Supplier diperbarui!");
-            }
-            await loadAll();
-          } catch (e) {
-            showNotif("Error: " + e.message, "error");
-          }
-          setSupModal(null);
-          setLoading(false);
-        };
-        const delSup = async (id) => {
-          if (!window.confirm("Hapus supplier?")) return;
-          const sup = suppliers.find((x) => x.id === id);
-          await sb.from("suppliers").delete().eq("id", id);
-          await logActivity("Hapus Supplier", "Supplier", sup?.name || "");
-          await loadAll();
-          showNotif("Supplier dihapus!");
-        };
-
-        const rptTrx = transactions.filter((t) => {
-          const [y, m] = t.date.split("-").map(Number);
-          return y === rptYear && m === rptMonth + 1;
-        });
-        const rptRev = rptTrx.reduce((s, t) => s + t.total, 0);
-        const daysInMonth = new Date(rptYear, rptMonth + 1, 0).getDate();
-        const dayData = Array.from({ length: daysInMonth }, (_, i) => {
-          const ds = `${rptYear}-${String(rptMonth + 1).padStart(2, "0")}-${String(i + 1).padStart(2, "0")}`;
-          const tt = rptTrx.filter((t) => t.date === ds);
-          return { day: i + 1, rev: tt.reduce((s, t) => s + t.total, 0) };
-        });
-        const maxDayRev = Math.max(...dayData.map((d) => d.rev), 1);
-        const catData = CATS.filter((c) => c !== "Semua")
-          .map((cat) => {
-            let rev = 0;
-            rptTrx.forEach((t) =>
-              (t.items || []).forEach((i) => {
-                const p = products.find((pr) => pr.id === i.product_id);
-                if (p && p.category === cat) rev += i.price * i.qty;
-              }),
-            );
-            return { cat, rev };
-          })
-          .filter((c) => c.rev > 0)
-          .sort((a, b) => b.rev - a.rev);
-        const prodSales = {};
-        rptTrx.forEach((t) =>
-          (t.items || []).forEach((i) => {
-            prodSales[i.product_name] =
-              (prodSales[i.product_name] || 0) + i.qty;
-          }),
+      // 5. Update state & Caching (HANYA jika data berhasil di-fetch)
+      if (prods) {
+        setProducts(prods);
+        localStorage.setItem('bbs_offline_products', JSON.stringify(prods));
+      }
+      if (sups) setSuppliers(sups);
+      if (kats) {
+        setKategoris(kats);
+        localStorage.setItem('bbs_offline_cats', JSON.stringify(kats));
+      }
+      if (sats) {
+        setSatuans(sats);
+        localStorage.setItem('bbs_offline_units', JSON.stringify(sats));
+      }
+      if (acts) setActivityLogs(acts);
+      if (trxs) {
+        setTransactions(
+          trxs.map((t) => ({
+            ...t,
+            items: (items || []).filter((i) => i.transaction_id === t.id),
+          })),
         );
-        const topProds = Object.entries(prodSales)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 5);
+      }
+    } catch (e) {
+      console.error("LoadAll Error:", e);
+      // Fallback terakhir jika catch error (misal network error tiba-tiba)
+      if (isOffline || !navigator.onLine) {
+        const cp = JSON.parse(localStorage.getItem('bbs_offline_products') || "[]");
+        if (cp.length > 0) setProducts(cp);
+        setKategoris(JSON.parse(localStorage.getItem('bbs_offline_cats') || "[]"));
+        setSatuans(JSON.parse(localStorage.getItem('bbs_offline_units') || "[]"));
+      } else {
+        showNotif("Gagal terhubung ke server. Periksa koneksi Anda.", "error");
+      }
+    }
+    setLoading(false);
+  }, [isOffline]);
 
-        const [showExportPDFLoading, setShowExportPDFLoading] = useState(false);
-        const [exportingTitle, setExportingTitle] = useState(null);
-        const [importingState, setImportingState] = useState(null);
 
-        const exportPDF = async () => {
-          const reportNode = document.getElementById("laporan-container");
-          if (!reportNode) return;
-          setShowExportPDFLoading(true);
-          try {
-            const actionsNode = document.getElementById("laporan-actions");
-            if (actionsNode) actionsNode.style.display = "none";
+  useEffect(() => {
+    loadAll();
+  }, [loadAll]);
 
-            const canvas = await html2canvas(reportNode, { scale: 2, useCORS: true, logging: false });
-            
-            if (actionsNode) actionsNode.style.display = "flex";
+  const todayTrx = transactions.filter((t) => t.date === TODAY);
+  const todayRev = todayTrx.reduce((s, t) => s + t.total, 0);
+  const weekStart = new Date(Date.now() - 7 * 86400000)
+    .toISOString()
+    .slice(0, 10);
+  const weekTrx = transactions.filter((t) => t.date >= weekStart);
+  const weekRev = weekTrx.reduce((s, t) => s + t.total, 0);
+  const outStock = (products || []).filter((p) => Number(p.stock) === 0);
+  const lowStock = (products || []).filter((p) => Number(p.stock) > 0 && Number(p.stock) <= Number(p.min_stock));
 
-            const imgData = canvas.toDataURL('image/png');
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-            
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-            pdf.save(`Laporan_BBS_${MONTHS[rptMonth]}_${rptYear}.pdf`);
-          } catch (e) {
-            console.error(e);
-            alert("Gagal mencetak PDF");
-            const actionsNode = document.getElementById("laporan-actions");
-            if (actionsNode) actionsNode.style.display = "flex";
-          } finally {
-            setShowExportPDFLoading(false);
-          }
-        };
+  const filtProd = useMemo(() => {
+    const s = searchProd.toLowerCase();
+    return products.filter((p) => {
+      const mc = filterCat === "Semua" || p.category === filterCat;
+      if (!s) return mc;
 
-        const exportExcel = async (type) => {
-          setExportingTitle(type);
-          try {
-            const wb = XL.utils.book_new();
-          if (type === "all" || type === "transaksi")
-            XL.utils.book_append_sheet(
-              wb,
-              XL.utils.json_to_sheet(
-                transactions.map((t) => ({
-                  ID: t.trx_code,
-                  Tanggal: t.date,
-                  Pelanggan: t.customer,
-                  Item: (t.items || [])
-                    .map((i) => `${i.product_name}(${i.qty})`)
-                    .join("; "),
-                  Total: t.total,
-                  Pembayaran: t.payment,
-                  Kembalian: t.change_amt,
-                })),
-              ),
-              "Transaksi",
-            );
-          if (type === "all" || type === "produk")
-            XL.utils.book_append_sheet(
-              wb,
-              XL.utils.json_to_sheet(
-                products.map((p) => {
-                  const s = suppliers.find((s) => s.id === p.supplier_id);
-                  return {
-                    Nama: p.name,
-                    Kategori: p.category,
-                    Satuan: p.unit,
-                    Harga: p.price,
-                    Stok: p.stock,
-                    Min: p.min_stock,
-                    Supplier: s?.name || "-",
-                  };
-                }),
-              ),
-              "Produk",
-            );
-          if (type === "all" || type === "stok")
-            XL.utils.book_append_sheet(
-              wb,
-              XL.utils.json_to_sheet(
-                products.map((p) => ({
-                  Nama: p.name,
-                  Kategori: p.category,
-                  Stok: p.stock,
-                  Min: p.min_stock,
-                  Status:
-                    p.stock === 0
-                      ? "Habis"
-                      : p.stock <= p.min_stock
-                        ? "Menipis"
-                        : "Aman",
-                })),
-              ),
-              "Stok",
-            );
-          if (type === "all" || type === "supplier")
-            XL.utils.book_append_sheet(
-              wb,
-              XL.utils.json_to_sheet(
-                suppliers.map((s) => ({
-                  Nama: s.name,
-                  PIC: s.contact,
-                  Telepon: s.phone,
-                  Email: s.email,
-                  Alamat: s.address,
-                  Status: s.status,
-                })),
-              ),
-              "Supplier",
-            );
-          if (type === "laporan") {
-            XL.utils.book_append_sheet(
-              wb,
-              XL.utils.json_to_sheet(
-                rptTrx.map((t) => ({
-                  ID: t.trx_code,
-                  Tanggal: t.date,
-                  Pelanggan: t.customer,
-                  Total: t.total,
-                })),
-              ),
-              "Transaksi",
-            );
-            XL.utils.book_append_sheet(
-              wb,
-              XL.utils.json_to_sheet([
-                { Keterangan: "Total Pendapatan", Nilai: rptRev },
-                { Keterangan: "Jumlah Transaksi", Nilai: rptTrx.length },
-                {
-                  Keterangan: "Rata-rata",
-                  Nilai: rptTrx.length ? Math.round(rptRev / rptTrx.length) : 0,
-                },
-              ]),
-              "Ringkasan",
-            );
-          }
-          if (type === "template") {
-            XL.utils.book_append_sheet(
-              wb,
-              XL.utils.json_to_sheet([
-                {
-                  "Nama Produk": "",
-                  Kategori: "Pakan Jadi",
-                  Satuan: "kg",
-                  Harga: 0,
-                  Stok: 0,
-                  "Min Stok": 5,
-                },
-              ]),
-              "Produk",
-            );
-            XL.utils.book_append_sheet(
-              wb,
-              XL.utils.json_to_sheet([
-                {
-                  "Nama Supplier": "",
-                  "Kontak PIC": "",
-                  Telepon: "",
-                  Email: "",
-                  Alamat: "",
-                  Status: "Aktif",
-                },
-              ]),
-              "Supplier",
-            );
-          }
-          const fn =
-            type === "laporan"
-              ? `BBS_Laporan_${MONTHS[rptMonth]}_${rptYear}.xlsx`
-              : type === "template"
-                ? "BBS_Template.xlsx"
-                : `BBS_${type}_${TODAY}.xlsx`;
-          XL.writeFile(wb, fn);
-          const labelMap = {
-            all: "Semua Data",
-            laporan: "Laporan Bulanan",
-            transaksi: "Transaksi",
-            produk: "Produk",
-            stok: "Stok",
-            supplier: "Supplier",
-            template: "Template Import",
-          };
-          await logActivity(
-            "Export Excel",
-            "Import/Export",
-            `${labelMap[type] || type} → ${fn}`,
+      const supplier = suppliers.find(sup => sup.id === p.supplier_id);
+      const supplierName = supplier ? supplier.nama.toLowerCase() : "";
+
+      const ms =
+        p.name.toLowerCase().includes(s) ||
+        p.category.toLowerCase().includes(s) ||
+        p.unit.toLowerCase().includes(s) ||
+        p.price.toString().includes(s) ||
+        supplierName.includes(s);
+
+      return mc && ms;
+    });
+  }, [products, filterCat, searchProd, suppliers]);
+
+  const cartTotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  const payNum = parseInt(paymentInput) || 0;
+  const change = payNum - cartTotal;
+
+  const addToCart = (prod) => {
+    if (prod.stock <= 0) {
+      showNotif("Stok habis!", "error");
+      return;
+    }
+    setCart((c) => {
+      const ex = c.find((x) => x.product_id === prod.id);
+      if (ex) {
+        if (ex.qty >= prod.stock) {
+          showNotif("Stok tidak mencukupi!", "error");
+          return c;
+        }
+        return c.map((x) =>
+          x.product_id === prod.id ? { ...x, qty: x.qty + 1 } : x,
+        );
+      }
+      return [
+        ...c,
+        {
+          product_id: prod.id,
+          name: prod.name,
+          price: prod.price,
+          unit: prod.unit,
+          qty: 1,
+        },
+      ];
+    });
+  };
+  const updCart = (pid, qty) => {
+    if (qty <= 0) {
+      setCart((c) => c.filter((x) => x.product_id !== pid));
+      return;
+    }
+    const p = products.find((p) => p.id === pid);
+    if (qty > p.stock) {
+      showNotif("Stok tidak mencukupi!", "error");
+      return;
+    }
+    setCart((c) =>
+      c.map((x) => (x.product_id === pid ? { ...x, qty } : x)),
+    );
+  };
+  const processPayment = async () => {
+    if (!cart.length) {
+      showNotif("Keranjang kosong!", "error");
+      return;
+    }
+    if (change < 0) {
+      showNotif("Pembayaran kurang!", "error");
+      return;
+    }
+    if (payNum <= 0) {
+      showNotif("Masukkan nominal pembayaran!", "error");
+      return;
+    }
+    setLoading(true);
+
+    if (isOffline) {
+      const trxCode = `OFF-${Date.now().toString().slice(-4)}`;
+      const trx = {
+        id: Date.now().toString(),
+        trx_code: trxCode,
+        date: TODAY,
+        customer: customerName || "Umum",
+        total: cartTotal,
+        payment: payNum,
+        change_amt: change,
+      };
+      const trxItems = cart.map((i) => ({
+        transaction_id: trx.id,
+        product_id: i.product_id,
+        product_name: i.name,
+        qty: i.qty,
+        unit: i.unit,
+        price: i.price,
+      }));
+      const queue = JSON.parse(localStorage.getItem('bbs_offline_queue') || "[]");
+      queue.push({ trx, trxItems });
+      localStorage.setItem('bbs_offline_queue', JSON.stringify(queue));
+
+      const newProducts = [...products];
+      for (const i of cart) {
+        const pIdx = newProducts.findIndex((x) => x.id === i.product_id);
+        if (pIdx > -1) newProducts[pIdx].stock -= i.qty;
+      }
+      setProducts(newProducts);
+      localStorage.setItem('bbs_offline_products', JSON.stringify(newProducts));
+
+      setReceipt({
+        ...trx,
+        items: cart.map((i) => ({
+          product_name: i.name,
+          qty: i.qty,
+          unit: i.unit,
+          price: i.price,
+        })),
+      });
+      setCart([]);
+      setCustomerName("");
+      setPaymentInput("");
+      showNotif("Berhasil: Transaksi Tersimpan Offline!");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const trxCode = `TRX${String(transactions.length + 1).padStart(4, "0")}`;
+      const { data: trx, error: e1 } = await sb
+        .from("transactions")
+        .insert({
+          trx_code: trxCode,
+          date: TODAY,
+          customer: customerName || "Umum",
+          total: cartTotal,
+          payment: payNum,
+          change_amt: change,
+        })
+        .select()
+        .single();
+      if (e1) throw e1;
+      const { error: e2 } = await sb
+        .from("transaction_items")
+        .insert(
+          cart.map((i) => ({
+            transaction_id: trx.id,
+            product_id: i.product_id,
+            product_name: i.name,
+            qty: i.qty,
+            unit: i.unit,
+            price: i.price,
+          })),
+        );
+      if (e2) throw e2;
+      for (const i of cart) {
+        const p = products.find((x) => x.id === i.product_id);
+        await sb
+          .from("products")
+          .update({ stock: p.stock - i.qty })
+          .eq("id", i.product_id);
+      }
+      await loadAll();
+      setReceipt({
+        ...trx,
+        items: cart.map((i) => ({
+          product_name: i.name,
+          qty: i.qty,
+          unit: i.unit,
+          price: i.price,
+        })),
+      });
+      setCart([]);
+      setCustomerName("");
+      setPaymentInput("");
+      await logActivity(
+        "Transaksi Baru",
+        "Kasir",
+        `${trxCode} - ${customerName || "Umum"} - ${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(cartTotal)}`,
+      );
+      showNotif("Transaksi berhasil!");
+    } catch (e) {
+      showNotif("Gagal: " + e.message, "error");
+    }
+    setLoading(false);
+  };
+  const saveProd = async () => {
+    if (!prodForm.name || !prodForm.price || !prodForm.stock) {
+      showNotif("Lengkapi semua field!", "error");
+      return;
+    }
+    setLoading(true);
+
+    let imageUrl = prodModal !== "add" ? prodModal.image_url : null;
+    if (prodImage) {
+      const ext = prodImage.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
+      const { error: uploadError } = await sb.storage
+        .from("produk")
+        .upload(fileName, prodImage);
+
+      if (uploadError) {
+        setLoading(false);
+        showNotif("Gagal upload gambar: " + uploadError.message, "error");
+        return;
+      }
+
+      const { data: publicUrlData } = sb.storage
+        .from("produk")
+        .getPublicUrl(fileName);
+      imageUrl = publicUrlData.publicUrl;
+    }
+
+    const payload = {
+      name: prodForm.name,
+      category: prodForm.category,
+      unit: prodForm.unit,
+      price: parseInt(prodForm.price),
+      stock: parseInt(prodForm.stock),
+      min_stock: parseInt(prodForm.min_stock) || 5,
+      supplier_id: prodForm.supplier_id
+        ? parseInt(prodForm.supplier_id)
+        : null,
+      image_url: imageUrl,
+    };
+    try {
+      if (prodModal === "add") {
+        await sb.from("products").insert(payload);
+        await logActivity(
+          "Tambah Produk",
+          "Produk",
+          `${prodForm.name} - ${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(parseInt(prodForm.price))}`,
+        );
+        showNotif("Produk ditambahkan!");
+      } else {
+        await sb.from("products").update(payload).eq("id", prodModal.id);
+        const fmtRp = (n) =>
+          new Intl.NumberFormat("id-ID", {
+            style: "currency",
+            currency: "IDR",
+            minimumFractionDigits: 0,
+          }).format(n);
+        const changes = [];
+        if (prodModal.name !== prodForm.name)
+          changes.push(`nama: "${prodModal.name}" → "${prodForm.name}"`);
+        if (String(prodModal.price) !== String(prodForm.price))
+          changes.push(
+            `harga: ${fmtRp(prodModal.price)} → ${fmtRp(parseInt(prodForm.price))}`,
           );
-          showNotif("Export berhasil: " + fn);
-          } catch (e) {
-            console.error(e);
-            showNotif("Gagal melakukan export data", "error");
-          } finally {
-            setExportingTitle(null);
-          }
-        };
+        if (prodModal.category !== prodForm.category)
+          changes.push(
+            `kategori: ${prodModal.category} → ${prodForm.category}`,
+          );
+        if (prodModal.unit !== prodForm.unit)
+          changes.push(`satuan: ${prodModal.unit} → ${prodForm.unit}`);
+        if (String(prodModal.stock) !== String(prodForm.stock))
+          changes.push(`stok: ${prodModal.stock} → ${prodForm.stock}`);
+        if (String(prodModal.min_stock) !== String(prodForm.min_stock))
+          changes.push(
+            `min stok: ${prodModal.min_stock} → ${prodForm.min_stock}`,
+          );
+        const detail =
+          changes.length > 0
+            ? `${prodForm.name}: ${changes.join(", ")}`
+            : `${prodForm.name} (tidak ada perubahan)`;
+        await logActivity("Edit Produk", "Produk", detail);
+        showNotif("Produk diperbarui!");
+      }
+      await loadAll();
+    } catch (e) {
+      showNotif("Error: " + e.message, "error");
+    }
+    setProdModal(null);
+    setLoading(false);
+  };
+  const delProd = async (id) => {
+    if (!window.confirm("Hapus produk ini?")) return;
+    const p = products.find((x) => x.id === id);
+    await sb.from("products").delete().eq("id", id);
+    await logActivity("Hapus Produk", "Produk", p?.name || "");
+    await loadAll();
+    showNotif("Produk dihapus!");
+  };
+  const doRestock = async () => {
+    if (!restockQty || parseInt(restockQty) <= 0) {
+      showNotif("Masukkan jumlah valid!", "error");
+      return;
+    }
+    const p = products.find((x) => x.id === restockModal.id);
+    await sb
+      .from("products")
+      .update({ stock: p.stock + parseInt(restockQty) })
+      .eq("id", restockModal.id);
+    await logActivity(
+      "Restock Stok",
+      "Stok",
+      `${restockModal.name} +${restockQty} ${restockModal.unit} (${p.stock} → ${p.stock + parseInt(restockQty)})`,
+    );
+    await loadAll();
+    showNotif(`Restock ${restockModal.name} berhasil!`);
+    setRestockModal(null);
+    setRestockQty("");
+  };
+  const saveSup = async () => {
+    if (!supForm.name || !supForm.phone) {
+      showNotif("Nama & Telepon wajib!", "error");
+      return;
+    }
+    setLoading(true);
+    try {
+      if (supModal === "add") {
+        await sb.from("suppliers").insert(supForm);
+        await logActivity("Tambah Supplier", "Supplier", supForm.name);
+        showNotif("Supplier ditambahkan!");
+      } else {
+        const oldSup = suppliers.find((s) => s.id === supModal.id);
+        await sb.from("suppliers").update(supForm).eq("id", supModal.id);
+        const supChanges = [];
+        if (oldSup?.name !== supForm.name)
+          supChanges.push(`nama: "${oldSup?.name}" → "${supForm.name}"`);
+        if (oldSup?.phone !== supForm.phone)
+          supChanges.push(`telepon: ${oldSup?.phone} → ${supForm.phone}`);
+        if (oldSup?.contact !== supForm.contact)
+          supChanges.push(`PIC: ${oldSup?.contact} → ${supForm.contact}`);
+        if (oldSup?.status !== supForm.status)
+          supChanges.push(
+            `status: ${oldSup?.status} → ${supForm.status}`,
+          );
+        const supDetail =
+          supChanges.length > 0
+            ? `${supForm.name}: ${supChanges.join(", ")}`
+            : `${supForm.name} (tidak ada perubahan)`;
+        await logActivity("Edit Supplier", "Supplier", supDetail);
+        showNotif("Supplier diperbarui!");
+      }
+      await loadAll();
+    } catch (e) {
+      showNotif("Error: " + e.message, "error");
+    }
+    setSupModal(null);
+    setLoading(false);
+  };
+  const delSup = async (id) => {
+    if (!window.confirm("Hapus supplier?")) return;
+    const sup = suppliers.find((x) => x.id === id);
+    await sb.from("suppliers").delete().eq("id", id);
+    await logActivity("Hapus Supplier", "Supplier", sup?.name || "");
+    await loadAll();
+    showNotif("Supplier dihapus!");
+  };
 
-        const handleImport = async (e) => {
-          const file = e.target.files[0];
-          if (!file) return;
-          setImportingState("Membaca file Excel...");
-          const reader = new FileReader();
-          reader.onload = async (ev) => {
-            try {
-              const wb = XL.read(ev.target.result, { type: "array" });
-              const logs = [];
-              const sp = wb.SheetNames.find((n) => n === "Produk");
-              if (sp) {
-                const rows = XL.utils.sheet_to_json(wb.Sheets[sp]);
-                let added = 0,
-                  updated = 0;
-                for (let i = 0; i < rows.length; i++) {
-                  const r = rows[i];
-                  setImportingState(`Memproses data ${i + 1} / ${rows.length}...`);
-                  if (!r["Nama Produk"] || !r["Harga"]) continue;
-                  const ex = products.find(
-                    (p) =>
-                      p.name.toLowerCase() ===
-                      String(r["Nama Produk"]).toLowerCase(),
-                  );
-                  const payload = {
-                    name: String(r["Nama Produk"]),
-                    category: r["Kategori"] || "Pakan Jadi",
-                    unit: r["Satuan"] || "pcs",
-                    price: parseInt(r["Harga"]) || 0,
-                    stock: parseInt(r["Stok"]) || 0,
-                    min_stock: parseInt(r["Min Stok"]) || 5,
-                  };
-                  if (ex) {
-                    await sb.from("products").update(payload).eq("id", ex.id);
-                    updated++;
-                  } else {
-                    await sb.from("products").insert(payload);
-                    added++;
-                  }
-                }
-                logs.push(
-                  `✅ Produk: ${added} ditambahkan, ${updated} diperbarui`,
-                );
-              }
-              if (!logs.length)
-                logs.push("⚠️ Sheet tidak ditemukan. Gunakan template.");
-              setImportLog(logs);
-              setImportingState("Menyinkronkan data...");
-              await loadAll();
-              const summary = logs.join(" | ");
-              await logActivity("Import Excel", "Import/Export", summary);
-              showNotif("Import selesai!");
-            } catch (err) {
-              setImportLog([`❌ Error: ${err.message}`]);
-              showNotif("Gagal import!", "error");
-            } finally {
-              setImportingState(null);
+  const rptTrx = transactions.filter((t) => {
+    const [y, m] = t.date.split("-").map(Number);
+    return y === rptYear && m === rptMonth + 1;
+  });
+  const rptRev = rptTrx.reduce((s, t) => s + t.total, 0);
+  const daysInMonth = new Date(rptYear, rptMonth + 1, 0).getDate();
+  const dayData = Array.from({ length: daysInMonth }, (_, i) => {
+    const ds = `${rptYear}-${String(rptMonth + 1).padStart(2, "0")}-${String(i + 1).padStart(2, "0")}`;
+    const tt = rptTrx.filter((t) => t.date === ds);
+    return { day: i + 1, rev: tt.reduce((s, t) => s + t.total, 0) };
+  });
+  const maxDayRev = Math.max(...dayData.map((d) => d.rev), 1);
+  const catData = CATS.filter((c) => c !== "Semua")
+    .map((cat) => {
+      let rev = 0;
+      rptTrx.forEach((t) =>
+        (t.items || []).forEach((i) => {
+          const p = products.find((pr) => pr.id === i.product_id);
+          if (p && p.category === cat) rev += i.price * i.qty;
+        }),
+      );
+      return { cat, rev };
+    })
+    .filter((c) => c.rev > 0)
+    .sort((a, b) => b.rev - a.rev);
+  const prodSales = {};
+  rptTrx.forEach((t) =>
+    (t.items || []).forEach((i) => {
+      prodSales[i.product_name] =
+        (prodSales[i.product_name] || 0) + i.qty;
+    }),
+  );
+  const topProds = Object.entries(prodSales)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+
+  const [showExportPDFLoading, setShowExportPDFLoading] = useState(false);
+  const [exportingTitle, setExportingTitle] = useState(null);
+  const [importingState, setImportingState] = useState(null);
+
+  const exportPDF = async () => {
+    const reportNode = document.getElementById("laporan-container");
+    if (!reportNode) return;
+    setShowExportPDFLoading(true);
+    try {
+      const actionsNode = document.getElementById("laporan-actions");
+      if (actionsNode) actionsNode.style.display = "none";
+
+      const canvas = await html2canvas(reportNode, { scale: 2, useCORS: true, logging: false });
+
+      if (actionsNode) actionsNode.style.display = "flex";
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Laporan_BBS_${MONTHS[rptMonth]}_${rptYear}.pdf`);
+    } catch (e) {
+      console.error(e);
+      alert("Gagal mencetak PDF");
+      const actionsNode = document.getElementById("laporan-actions");
+      if (actionsNode) actionsNode.style.display = "flex";
+    } finally {
+      setShowExportPDFLoading(false);
+    }
+  };
+
+  const exportExcel = async (type) => {
+    setExportingTitle(type);
+    try {
+      const wb = XL.utils.book_new();
+      if (type === "all" || type === "transaksi")
+        XL.utils.book_append_sheet(
+          wb,
+          XL.utils.json_to_sheet(
+            transactions.map((t) => ({
+              ID: t.trx_code,
+              Tanggal: t.date,
+              Pelanggan: t.customer,
+              Item: (t.items || [])
+                .map((i) => `${i.product_name}(${i.qty})`)
+                .join("; "),
+              Total: t.total,
+              Pembayaran: t.payment,
+              Kembalian: t.change_amt,
+            })),
+          ),
+          "Transaksi",
+        );
+      if (type === "all" || type === "produk")
+        XL.utils.book_append_sheet(
+          wb,
+          XL.utils.json_to_sheet(
+            products.map((p) => {
+              const s = suppliers.find((s) => s.id === p.supplier_id);
+              return {
+                Nama: p.name,
+                Kategori: p.category,
+                Satuan: p.unit,
+                Harga: p.price,
+                Stok: p.stock,
+                Min: p.min_stock,
+                Supplier: s?.name || "-",
+              };
+            }),
+          ),
+          "Produk",
+        );
+      if (type === "all" || type === "stok")
+        XL.utils.book_append_sheet(
+          wb,
+          XL.utils.json_to_sheet(
+            products.map((p) => ({
+              Nama: p.name,
+              Kategori: p.category,
+              Stok: p.stock,
+              Min: p.min_stock,
+              Status:
+                p.stock === 0
+                  ? "Habis"
+                  : p.stock <= p.min_stock
+                    ? "Menipis"
+                    : "Aman",
+            })),
+          ),
+          "Stok",
+        );
+      if (type === "all" || type === "supplier")
+        XL.utils.book_append_sheet(
+          wb,
+          XL.utils.json_to_sheet(
+            suppliers.map((s) => ({
+              Nama: s.name,
+              PIC: s.contact,
+              Telepon: s.phone,
+              Email: s.email,
+              Alamat: s.address,
+              Status: s.status,
+            })),
+          ),
+          "Supplier",
+        );
+      if (type === "laporan") {
+        XL.utils.book_append_sheet(
+          wb,
+          XL.utils.json_to_sheet(
+            rptTrx.map((t) => ({
+              ID: t.trx_code,
+              Tanggal: t.date,
+              Pelanggan: t.customer,
+              Total: t.total,
+            })),
+          ),
+          "Transaksi",
+        );
+        XL.utils.book_append_sheet(
+          wb,
+          XL.utils.json_to_sheet([
+            { Keterangan: "Total Pendapatan", Nilai: rptRev },
+            { Keterangan: "Jumlah Transaksi", Nilai: rptTrx.length },
+            {
+              Keterangan: "Rata-rata",
+              Nilai: rptTrx.length ? Math.round(rptRev / rptTrx.length) : 0,
+            },
+          ]),
+          "Ringkasan",
+        );
+      }
+      if (type === "template") {
+        XL.utils.book_append_sheet(
+          wb,
+          XL.utils.json_to_sheet([
+            {
+              "Nama Produk": "",
+              Kategori: "Pakan Jadi",
+              Satuan: "kg",
+              Harga: 0,
+              Stok: 0,
+              "Min Stok": 5,
+            },
+          ]),
+          "Produk",
+        );
+        XL.utils.book_append_sheet(
+          wb,
+          XL.utils.json_to_sheet([
+            {
+              "Nama Supplier": "",
+              "Kontak PIC": "",
+              Telepon: "",
+              Email: "",
+              Alamat: "",
+              Status: "Aktif",
+            },
+          ]),
+          "Supplier",
+        );
+      }
+      const fn =
+        type === "laporan"
+          ? `BBS_Laporan_${MONTHS[rptMonth]}_${rptYear}.xlsx`
+          : type === "template"
+            ? "BBS_Template.xlsx"
+            : `BBS_${type}_${TODAY}.xlsx`;
+      XL.writeFile(wb, fn);
+      const labelMap = {
+        all: "Semua Data",
+        laporan: "Laporan Bulanan",
+        transaksi: "Transaksi",
+        produk: "Produk",
+        stok: "Stok",
+        supplier: "Supplier",
+        template: "Template Import",
+      };
+      await logActivity(
+        "Export Excel",
+        "Import/Export",
+        `${labelMap[type] || type} → ${fn}`,
+      );
+      showNotif("Export berhasil: " + fn);
+    } catch (e) {
+      console.error(e);
+      showNotif("Gagal melakukan export data", "error");
+    } finally {
+      setExportingTitle(null);
+    }
+  };
+
+  const handleImport = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setImportingState("Membaca file Excel...");
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      try {
+        const wb = XL.read(ev.target.result, { type: "array" });
+        const logs = [];
+        const sp = wb.SheetNames.find((n) => n === "Produk");
+        if (sp) {
+          const rows = XL.utils.sheet_to_json(wb.Sheets[sp]);
+          let added = 0,
+            updated = 0;
+          for (let i = 0; i < rows.length; i++) {
+            const r = rows[i];
+            setImportingState(`Memproses data ${i + 1} / ${rows.length}...`);
+            if (!r["Nama Produk"] || !r["Harga"]) continue;
+            const ex = products.find(
+              (p) =>
+                p.name.toLowerCase() ===
+                String(r["Nama Produk"]).toLowerCase(),
+            );
+            const payload = {
+              name: String(r["Nama Produk"]),
+              category: r["Kategori"] || "Pakan Jadi",
+              unit: r["Satuan"] || "pcs",
+              price: parseInt(r["Harga"]) || 0,
+              stock: parseInt(r["Stok"]) || 0,
+              min_stock: parseInt(r["Min Stok"]) || 5,
+            };
+            if (ex) {
+              await sb.from("products").update(payload).eq("id", ex.id);
+              updated++;
+            } else {
+              await sb.from("products").insert(payload);
+              added++;
             }
-          };
-          reader.readAsArrayBuffer(file);
-          e.target.value = "";
-        };
+          }
+          logs.push(
+            `✅ Produk: ${added} ditambahkan, ${updated} diperbarui`,
+          );
+        }
+        if (!logs.length)
+          logs.push("⚠️ Sheet tidak ditemukan. Gunakan template.");
+        setImportLog(logs);
+        setImportingState("Menyinkronkan data...");
+        await loadAll();
+        const summary = logs.join(" | ");
+        await logActivity("Import Excel", "Import/Export", summary);
+        showNotif("Import selesai!");
+      } catch (err) {
+        setImportLog([`❌ Error: ${err.message}`]);
+        showNotif("Gagal import!", "error");
+      } finally {
+        setImportingState(null);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+    e.target.value = "";
+  };
 
-        const filtHist = transactions.filter((t) => {
-          const md = !filterDate || t.date === filterDate;
-          const ms =
-            t.trx_code?.toLowerCase().includes(histSearch.toLowerCase()) ||
-            t.customer?.toLowerCase().includes(histSearch.toLowerCase());
-          return md && ms;
-        });
+  const filtHist = transactions.filter((t) => {
+    const md = !filterDate || t.date === filterDate;
+    const ms =
+      t.trx_code?.toLowerCase().includes(histSearch.toLowerCase()) ||
+      t.customer?.toLowerCase().includes(histSearch.toLowerCase());
+    return md && ms;
+  });
 
-        const allNavs = [
-          { id: "dashboard", icon: "⊞", label: "Dashboard" },
-          { id: "kasir", icon: "🤝", label: "Kasir" },
-          { id: "produk", icon: "📦", label: "Produk" },
-          { id: "riwayat", icon: "📋", label: "Riwayat" },
-          { id: "stok", icon: "📊", label: "Stok" },
-          { id: "laporan", icon: "📈", label: "Laporan" },
-          { id: "supplier", icon: "🤝", label: "Supplier" },
-          { id: "excel", icon: "📗", label: "Import/Export" },
-          { id: "users", icon: "👥", label: "Kelola Akun" },
-          { id: "masterdata", icon: "🗂️", label: "Master Data" },
-        ];
-        const navs = allNavs.filter((n) => allowedPages.includes(n.id));
+  const allNavs = [
+    { id: "dashboard", icon: "⊞", label: "Dashboard" },
+    { id: "kasir", icon: "🤝", label: "Kasir" },
+    { id: "produk", icon: "📦", label: "Produk" },
+    { id: "riwayat", icon: "📋", label: "Riwayat" },
+    { id: "stok", icon: "📊", label: "Stok" },
+    { id: "laporan", icon: "📈", label: "Laporan" },
+    { id: "supplier", icon: "🤝", label: "Supplier" },
+    { id: "excel", icon: "📗", label: "Import/Export" },
+    { id: "users", icon: "👥", label: "Kelola Akun" },
+    { id: "masterdata", icon: "🗂️", label: "Master Data" },
+  ];
+  const navs = allNavs.filter((n) => allowedPages.includes(n.id));
 
-        return (
+  return (
+    <div
+      className="bbs-app"
+      style={{ display: "flex", height: "100vh", overflow: "hidden" }}
+    >
+      {sidebarOpen && (
+        <div
+          className="bbs-overlay open"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      {loading && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(255,255,255,0.75)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "column",
+            gap: 12,
+          }}
+        >
+          <Spin />
           <div
-            className="bbs-app"
-            style={{ display: "flex", height: "100vh", overflow: "hidden" }}
+            style={{ fontSize: 13, color: "#2d7a2d", fontWeight: 700 }}
           >
-            {sidebarOpen && (
-              <div
-                className="bbs-overlay open"
-                onClick={() => setSidebarOpen(false)}
-              />
-            )}
-            {loading && (
-              <div
-                style={{
-                  position: "fixed",
-                  inset: 0,
-                  background: "rgba(255,255,255,0.75)",
-                  zIndex: 9999,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexDirection: "column",
-                  gap: 12,
-                }}
-              >
-                <Spin />
-                <div
-                  style={{ fontSize: 13, color: "#2d7a2d", fontWeight: 700 }}
-                >
-                  Memuat data...
-                </div>
-              </div>
-            )}
+            Memuat data...
+          </div>
+        </div>
+      )}
 
-            {/* SIDEBAR */}
-            <aside
-              className={`bbs-sidebar${sidebarOpen ? " open" : ""}`}
+      {/* SIDEBAR */}
+      <aside
+        className={`bbs-sidebar${sidebarOpen ? " open" : ""}`}
+        style={{
+          background: "linear-gradient(180deg,#1b4d1b,#0e2e0e)",
+          color: "#fff",
+          display: "flex",
+          flexDirection: "column",
+          flexShrink: 0,
+        }}
+      >
+        <div
+          style={{
+            padding: "16px 14px 14px",
+            borderBottom: "1px solid rgba(255,255,255,0.1)",
+          }}
+        >
+          <div
+            style={{ fontSize: 20, fontWeight: 900, color: "#a8e063" }}
+          >
+            🌿 BBS
+          </div>
+          <div
+            style={{ fontSize: 11, color: "#a8e063", fontWeight: 700 }}
+          >
+            BerkahBirdShop
+          </div>
+          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)" }}>
+            Klaten · 🟢 Online
+          </div>
+        </div>
+
+        {/* Info user login */}
+        <div
+          style={{
+            padding: "12px 14px",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            background: "rgba(255,255,255,0.05)",
+          }}
+        >
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>
+            {currentUser.nama}
+          </div>
+          <div style={{ marginTop: 3 }}>
+            <span
               style={{
-                background: "linear-gradient(180deg,#1b4d1b,#0e2e0e)",
-                color: "#fff",
-                display: "flex",
-                flexDirection: "column",
-                flexShrink: 0,
+                fontSize: 10,
+                padding: "2px 8px",
+                borderRadius: 10,
+                fontWeight: 800,
+                background:
+                  currentUser.role === "superadmin"
+                    ? "rgba(168,224,99,0.2)"
+                    : currentUser.role === "admin"
+                      ? "rgba(255,200,100,0.2)"
+                      : "rgba(100,160,255,0.2)",
+                color:
+                  currentUser.role === "superadmin"
+                    ? "#a8e063"
+                    : currentUser.role === "admin"
+                      ? "#ffc864"
+                      : "#7eb8ff",
               }}
             >
-              <div
-                style={{
-                  padding: "16px 14px 14px",
-                  borderBottom: "1px solid rgba(255,255,255,0.1)",
-                }}
-              >
-                <div
-                  style={{ fontSize: 20, fontWeight: 900, color: "#a8e063" }}
-                >
-                  🌿 BBS
-                </div>
-                <div
-                  style={{ fontSize: 11, color: "#a8e063", fontWeight: 700 }}
-                >
-                  BerkahBirdShop
-                </div>
-                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)" }}>
-                  Klaten · 🟢 Online
-                </div>
-              </div>
+              {currentUser.role === "superadmin"
+                ? "👑 Super Admin"
+                : currentUser.role === "admin"
+                  ? "🛡️ Admin"
+                  : "👤 Pegawai"}
+            </span>
+          </div>
+        </div>
 
-              {/* Info user login */}
-              <div
-                style={{
-                  padding: "12px 14px",
-                  borderBottom: "1px solid rgba(255,255,255,0.08)",
-                  background: "rgba(255,255,255,0.05)",
-                }}
-              >
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>
-                  {currentUser.nama}
-                </div>
-                <div style={{ marginTop: 3 }}>
-                  <span
-                    style={{
-                      fontSize: 10,
-                      padding: "2px 8px",
-                      borderRadius: 10,
-                      fontWeight: 800,
-                      background:
-                        currentUser.role === "superadmin"
-                          ? "rgba(168,224,99,0.2)"
-                          : currentUser.role === "admin"
-                            ? "rgba(255,200,100,0.2)"
-                            : "rgba(100,160,255,0.2)",
-                      color:
-                        currentUser.role === "superadmin"
-                          ? "#a8e063"
-                          : currentUser.role === "admin"
-                            ? "#ffc864"
-                            : "#7eb8ff",
-                    }}
-                  >
-                    {currentUser.role === "superadmin"
-                      ? "👑 Super Admin"
-                      : currentUser.role === "admin"
-                        ? "🛡️ Admin"
-                        : "👤 Pegawai"}
-                  </span>
-                </div>
-              </div>
+        <nav style={{ padding: "8px 0", flex: 1, overflowY: "auto" }}>
+          {navs.map((n) => (
+            <div
+              key={n.id}
+              onClick={() => {
+                setPage(n.id);
+                setSidebarOpen(false);
+              }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "10px 14px",
+                cursor: "pointer",
+                borderLeft:
+                  page === n.id
+                    ? "3px solid #a8e063"
+                    : "3px solid transparent",
+                background:
+                  page === n.id ? "rgba(168,224,99,0.12)" : "transparent",
+                color:
+                  page === n.id ? "#a8e063" : "rgba(255,255,255,0.65)",
+                fontSize: 12,
+                fontWeight: page === n.id ? 700 : 400,
+              }}
+            >
+              <span style={{ fontSize: 15 }}>{n.icon}</span>
+              {n.label}
+            </div>
+          ))}
+        </nav>
 
-              <nav style={{ padding: "8px 0", flex: 1, overflowY: "auto" }}>
-                {navs.map((n) => (
+        {outStock.length > 0 && (
+          <div
+            style={{
+              margin: "0 10px 10px",
+              padding: "10px 12px",
+              background: "rgba(239,68,68,0.18)",
+              borderRadius: 8,
+              borderLeft: "3px solid #ef4444",
+            }}
+          >
+            <div
+              style={{ fontSize: 9, color: "#ef4444", fontWeight: 800 }}
+            >
+              ❌ STOK HABIS
+            </div>
+            <div
+              style={{
+                fontSize: 10,
+                color: "rgba(255,255,255,0.55)",
+                marginTop: 2,
+              }}
+            >
+              {outStock.length} produk
+            </div>
+          </div>
+        )}
+
+        {lowStock.length > 0 && (
+          <div
+            style={{
+              margin: "0 10px 10px",
+              padding: "10px 12px",
+              background: "rgba(245,158,11,0.18)",
+              borderRadius: 8,
+              borderLeft: "3px solid #f59e0b",
+            }}
+          >
+            <div
+              style={{ fontSize: 9, color: "#f59e0b", fontWeight: 800 }}
+            >
+              ⚠ STOK MENIPIS
+            </div>
+            <div
+              style={{
+                fontSize: 10,
+                color: "rgba(255,255,255,0.55)",
+                marginTop: 2,
+              }}
+            >
+              {lowStock.length} produk
+            </div>
+          </div>
+        )}
+
+        {deferredPrompt && (
+          <div style={{ padding: "0 12px 10px" }}>
+            <button
+              onClick={handleInstallClick}
+              style={{
+                width: "100%", padding: "9px", background: "#fff", color: "#1a4a1a", border: "1px solid #1a4a1a", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+              }}
+            >
+              🚀 Install Aplikasi
+            </button>
+          </div>
+        )}
+
+        {/* Tombol Logout */}
+        <div style={{ padding: "10px 12px 14px" }}>
+          <button
+            onClick={() => setShowLogout(true)}
+            style={{
+              width: "100%",
+              padding: "9px",
+              background: "rgba(220,53,69,0.15)",
+              color: "#ff8080",
+              border: "1px solid rgba(220,53,69,0.3)",
+              borderRadius: 8,
+              cursor: "pointer",
+              fontSize: 12,
+              fontWeight: 700,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+            }}
+          >
+            🚪 Keluar
+          </button>
+        </div>
+      </aside>
+
+      {/* MAIN */}
+      <div
+        className="bbs-main"
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
+        <header
+          style={{
+            background: "#fff",
+            padding: "11px 16px",
+            borderBottom: "1px solid #e4ede4",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexShrink: 0,
+            boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <button
+              className="bbs-hamburger"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+            >
+              <span style={{ fontSize: 20, lineHeight: 1 }}>☰</span>
+            </button>
+            <div
+              style={{ fontSize: 16, fontWeight: 800, color: "#1a4a1a" }}
+            >
+              {allNavs.find((n) => n.id === page)?.icon}{" "}
+              {allNavs.find((n) => n.id === page)?.label}
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button
+              className={styles.btndefault} style={{ padding: "5px 10px", fontSize: 11 }}
+              onClick={loadAll}
+            >
+              🔄 Refresh
+            </button>
+            <div
+              className="hide-mobile"
+              style={{ fontSize: 11, color: "#888" }}
+            >
+              {new Date().toLocaleDateString("id-ID", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </div>
+          </div>
+        </header>
+
+        <div className="bbs-content">
+          {/* DASHBOARD */}
+          {page === "dashboard" && (
+            <div>
+              <div className="stat-grid">
+                {[
+                  {
+                    label: "Pendapatan Hari Ini",
+                    value: fmt(todayRev),
+                    sub: `${todayTrx.length} transaksi`,
+                    bg: "#e8f5e9",
+                    color: "#2e7d32",
+                  },
+                  {
+                    label: "Pendapatan Minggu Ini",
+                    value: fmt(weekRev),
+                    sub: `${weekTrx.length} transaksi`,
+                    bg: "#fff8e1",
+                    color: "#e65100",
+                  },
+                  {
+                    label: "Total Produk",
+                    value: fmtN(products.length),
+                    sub: "jenis produk",
+                    bg: "#e3f2fd",
+                    color: "#1565c0",
+                  },
+                  {
+                    label: "Stok Habis",
+                    value: fmtN(outStock.length),
+                    sub: "item kosong",
+                    bg: outStock.length > 0 ? "#ffebee" : "#f1f8e9",
+                    color: outStock.length > 0 ? "#c62828" : "#33691e",
+                  },
+                  {
+                    label: "Stok Menipis",
+                    value: fmtN(lowStock.length),
+                    sub: "perlu restock",
+                    bg: lowStock.length > 0 ? "#fff3e0" : "#f1f8e9",
+                    color: lowStock.length > 0 ? "#e65100" : "#33691e",
+                  },
+                ].map((s, i) => (
                   <div
-                    key={n.id}
-                    onClick={() => {
-                      setPage(n.id);
-                      setSidebarOpen(false);
-                    }}
+                    key={i}
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      padding: "10px 14px",
-                      cursor: "pointer",
-                      borderLeft:
-                        page === n.id
-                          ? "3px solid #a8e063"
-                          : "3px solid transparent",
-                      background:
-                        page === n.id ? "rgba(168,224,99,0.12)" : "transparent",
-                      color:
-                        page === n.id ? "#a8e063" : "rgba(255,255,255,0.65)",
-                      fontSize: 12,
-                      fontWeight: page === n.id ? 700 : 400,
+                      background: s.bg,
+                      borderRadius: 12,
+                      padding: "16px 18px",
+                      border: `1px solid ${s.color}22`,
                     }}
                   >
-                    <span style={{ fontSize: 15 }}>{n.icon}</span>
-                    {n.label}
+                    <div
+                      style={{
+                        fontSize: 10,
+                        color: s.color,
+                        fontWeight: 800,
+                        marginBottom: 8,
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {s.label}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 24,
+                        fontWeight: 900,
+                        color: s.color,
+                      }}
+                    >
+                      {s.value}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: "#999",
+                        marginTop: 4,
+                      }}
+                    >
+                      {s.sub}
+                    </div>
                   </div>
                 ))}
-              </nav>
-
-              {outStock.length > 0 && (
-                <div
-                  style={{
-                    margin: "0 10px 10px",
-                    padding: "10px 12px",
-                    background: "rgba(239,68,68,0.18)",
-                    borderRadius: 8,
-                    borderLeft: "3px solid #ef4444",
-                  }}
-                >
-                  <div
-                    style={{ fontSize: 9, color: "#ef4444", fontWeight: 800 }}
-                  >
-                    ❌ STOK HABIS
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 10,
-                      color: "rgba(255,255,255,0.55)",
-                      marginTop: 2,
-                    }}
-                  >
-                    {outStock.length} produk
-                  </div>
-                </div>
-              )}
-
-              {lowStock.length > 0 && (
-                <div
-                  style={{
-                    margin: "0 10px 10px",
-                    padding: "10px 12px",
-                    background: "rgba(245,158,11,0.18)",
-                    borderRadius: 8,
-                    borderLeft: "3px solid #f59e0b",
-                  }}
-                >
-                  <div
-                    style={{ fontSize: 9, color: "#f59e0b", fontWeight: 800 }}
-                  >
-                    ⚠ STOK MENIPIS
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 10,
-                      color: "rgba(255,255,255,0.55)",
-                      marginTop: 2,
-                    }}
-                  >
-                    {lowStock.length} produk
-                  </div>
-                </div>
-              )}
-
-              {deferredPrompt && (
-                <div style={{ padding: "0 12px 10px" }}>
-                  <button
-                    onClick={handleInstallClick}
-                    style={{
-                      width: "100%", padding: "9px", background: "#fff", color: "#1a4a1a", border: "1px solid #1a4a1a", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
-                    }}
-                  >
-                    🚀 Install Aplikasi
-                  </button>
-                </div>
-              )}
-
-              {/* Tombol Logout */}
-              <div style={{ padding: "10px 12px 14px" }}>
-                <button
-                  onClick={() => setShowLogout(true)}
-                  style={{
-                    width: "100%",
-                    padding: "9px",
-                    background: "rgba(220,53,69,0.15)",
-                    color: "#ff8080",
-                    border: "1px solid rgba(220,53,69,0.3)",
-                    borderRadius: 8,
-                    cursor: "pointer",
-                    fontSize: 12,
-                    fontWeight: 700,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 6,
-                  }}
-                >
-                  🚪 Keluar
-                </button>
               </div>
-            </aside>
+              <div className="dash-grid">
+                <div className={styles.card}>
+                  <div
+                    style={{
+                      fontWeight: 800,
+                      fontSize: 14,
+                      color: "#1a4a1a",
+                      marginBottom: 14,
+                    }}
+                  >
+                    Transaksi Terbaru
+                  </div>
+                  {transactions.slice(0, 7).map((t) => (
+                    <div
+                      key={t.id}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        padding: "9px 0",
+                        borderBottom: "1px solid #f0f5f0",
+                        alignItems: "center",
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: 13 }}>
+                          {t.trx_code} — {t.customer}
+                        </div>
+                        <div style={{ fontSize: 10, color: "#aaa" }}>
+                          {t.date} · {(t.items || []).length} item
+                        </div>
+                      </div>
+                      <span
+                        style={{
+                          fontWeight: 800,
+                          color: "#2d7a2d",
+                          fontSize: 13,
+                        }}
+                      >
+                        {fmt(t.total)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                {outStock.length > 0 && (
+                  <div className={styles.card} style={{ borderLeft: '4px solid #ef4444' }}>
+                    <div
+                      style={{
+                        fontWeight: 800,
+                        fontSize: 14,
+                        color: "#c62828",
+                        marginBottom: 14,
+                      }}
+                    >
+                      ❌ Stok Habis (Segera Restock!)
+                    </div>
+                    {outStock.slice(0, 10).map((p) => (
+                      <div
+                        key={p.id}
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          padding: "9px 0",
+                          borderBottom: "1px solid #f9ecec",
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: 13, color: '#c62828' }}>
+                            {p.name}
+                          </div>
+                          <div style={{ fontSize: 10, color: "#aaa" }}>
+                            {p.category}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: "right" }}>
+                          <div style={{ fontWeight: 800, color: "#c62828", fontSize: 12 }}>
+                            Habis
+                          </div>
+                          <div style={{ fontSize: 9, color: "#ccc" }}>
+                            min: {p.min_stock}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
-            {/* MAIN */}
-            <div
-              className="bbs-main"
-              style={{
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                overflow: "hidden",
-              }}
-            >
-              <header
+                <div className={styles.card}>
+                  <div
+                    style={{
+                      fontWeight: 800,
+                      fontSize: 14,
+                      color: "#1a4a1a",
+                      marginBottom: 14,
+                    }}
+                  >
+                    ⚠ Stok Menipis
+                  </div>
+                  {lowStock.length === 0 ? (
+                    <div
+                      style={{
+                        color: "#bbb",
+                        fontSize: 13,
+                        textAlign: "center",
+                        padding: "20px 0",
+                      }}
+                    >
+                      ✅ Semua stok aman
+                    </div>
+                  ) : (
+                    lowStock.slice(0, 7).map((p) => (
+                      <div
+                        key={p.id}
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          padding: "9px 0",
+                          borderBottom: "1px solid #f0f5f0",
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: 13 }}>
+                            {p.name}
+                          </div>
+                          <div style={{ fontSize: 10, color: "#aaa" }}>
+                            {p.category}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: "right" }}>
+                          <div
+                            style={{
+                              fontWeight: 800,
+                              color:
+                                p.stock === 0 ? "#dc3545" : "#e65100",
+                              fontSize: 15,
+                            }}
+                          >
+                            {p.stock} {(p.unit || "").split(",")[0]}
+                          </div>
+                          <div style={{ fontSize: 9, color: "#ccc" }}>
+                            min:{p.min_stock}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* ACTIVITY LOG */}
+              <div
                 style={{
+                  marginTop: 18,
                   background: "#fff",
-                  padding: "11px 16px",
-                  borderBottom: "1px solid #e4ede4",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  flexShrink: 0,
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                  borderRadius: 12,
+                  border: "1px solid #e4ede4",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <button
-                    className="bbs-hamburger"
-                    onClick={() => setSidebarOpen(!sidebarOpen)}
-                  >
-                    <span style={{ fontSize: 20, lineHeight: 1 }}>☰</span>
-                  </button>
+                <div
+                  style={{
+                    padding: "16px 20px",
+                    borderBottom: "1px solid #e4ede4",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
                   <div
-                    style={{ fontSize: 16, fontWeight: 800, color: "#1a4a1a" }}
+                    style={{
+                      fontWeight: 800,
+                      fontSize: 14,
+                      color: "#1a4a1a",
+                    }}
                   >
-                    {allNavs.find((n) => n.id === page)?.icon}{" "}
-                    {allNavs.find((n) => n.id === page)?.label}
+                    📋 Aktivitas Terbaru
+                  </div>
+                  <div style={{ fontSize: 11, color: "#aaa" }}>
+                    30 aktivitas terakhir
                   </div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <button
-                    className={styles.btndefault} style={{ padding: "5px 10px", fontSize: 11  }}
-                    onClick={loadAll}
-                  >
-                    🔄 Refresh
-                  </button>
+                {activityLogs.length === 0 ? (
                   <div
-                    className="hide-mobile"
-                    style={{ fontSize: 11, color: "#888" }}
+                    style={{
+                      padding: "24px",
+                      textAlign: "center",
+                      color: "#bbb",
+                      fontSize: 13,
+                    }}
                   >
-                    {new Date().toLocaleDateString("id-ID", {
-                      weekday: "long",
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
+                    Belum ada aktivitas tercatat
                   </div>
-                </div>
-              </header>
-
-              <div className="bbs-content">
-                {/* DASHBOARD */}
-                {page === "dashboard" && (
-                  <div>
-                    <div className="stat-grid">
-                      {[
-                        {
-                          label: "Pendapatan Hari Ini",
-                          value: fmt(todayRev),
-                          sub: `${todayTrx.length} transaksi`,
-                          bg: "#e8f5e9",
-                          color: "#2e7d32",
-                        },
-                        {
-                          label: "Pendapatan Minggu Ini",
-                          value: fmt(weekRev),
-                          sub: `${weekTrx.length} transaksi`,
-                          bg: "#fff8e1",
-                          color: "#e65100",
-                        },
-                        {
-                          label: "Total Produk",
-                          value: fmtN(products.length),
-                          sub: "jenis produk",
+                ) : (
+                  <div style={{ maxHeight: 320, overflowY: "auto" }}>
+                    {activityLogs.map((log, i) => {
+                      const ICONS = {
+                        Kasir: "🤝",
+                        Produk: "📦",
+                        Stok: "📊",
+                        Supplier: "🤝",
+                        Akun: "👥",
+                        "Master Data": "🗂️",
+                        "Import/Export": "📗",
+                      };
+                      const COLORS = {
+                        "Transaksi Baru": { bg: "#e8f5e9", c: "#2e7d32" },
+                        "Tambah Produk": { bg: "#e3f2fd", c: "#1565c0" },
+                        "Edit Produk": { bg: "#fff8e1", c: "#e65100" },
+                        "Hapus Produk": { bg: "#fee2e2", c: "#dc2626" },
+                        "Restock Stok": { bg: "#f3e5f5", c: "#6a1b9a" },
+                        "Tambah Supplier": {
                           bg: "#e3f2fd",
-                          color: "#1565c0",
+                          c: "#1565c0",
                         },
-                        {
-                          label: "Stok Habis",
-                          value: fmtN(outStock.length),
-                          sub: "item kosong",
-                          bg: outStock.length > 0 ? "#ffebee" : "#f1f8e9",
-                          color: outStock.length > 0 ? "#c62828" : "#33691e",
+                        "Edit Supplier": { bg: "#fff8e1", c: "#e65100" },
+                        "Hapus Supplier": { bg: "#fee2e2", c: "#dc2626" },
+                        "Tambah Akun": { bg: "#e3f2fd", c: "#1565c0" },
+                        "Edit Akun": { bg: "#fff8e1", c: "#e65100" },
+                        "Hapus Akun": { bg: "#fee2e2", c: "#dc2626" },
+                        "Export Excel": { bg: "#e3f2fd", c: "#1565c0" },
+                        "Import Excel": { bg: "#f3e5f5", c: "#6a1b9a" },
+                        "Tambah Kategori": {
+                          bg: "#e0f2f1",
+                          c: "#00695c",
                         },
-                        {
-                          label: "Stok Menipis",
-                          value: fmtN(lowStock.length),
-                          sub: "perlu restock",
-                          bg: lowStock.length > 0 ? "#fff3e0" : "#f1f8e9",
-                          color: lowStock.length > 0 ? "#e65100" : "#33691e",
-                        },
-                      ].map((s, i) => (
+                        "Edit Kategori": { bg: "#fff8e1", c: "#e65100" },
+                        "Hapus Kategori": { bg: "#fee2e2", c: "#dc2626" },
+                        "Tambah Satuan": { bg: "#e0f2f1", c: "#00695c" },
+                        "Edit Satuan": { bg: "#fff8e1", c: "#e65100" },
+                        "Hapus Satuan": { bg: "#fee2e2", c: "#dc2626" },
+                      };
+                      const clr = COLORS[log.aksi] || {
+                        bg: "#f5f5f5",
+                        c: "#666",
+                      };
+                      const tgl = new Date(log.created_at);
+                      const tglStr = tgl.toLocaleDateString("id-ID", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      });
+                      const jamStr = tgl.toLocaleTimeString("id-ID", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      });
+                      const roleClr =
+                        log.user_role === "superadmin"
+                          ? "#7b1fa2"
+                          : log.user_role === "admin"
+                            ? "#e65100"
+                            : "#1565c0";
+                      const roleBg =
+                        log.user_role === "superadmin"
+                          ? "#f3e5f5"
+                          : log.user_role === "admin"
+                            ? "#fff8e1"
+                            : "#e3f2fd";
+                      return (
                         <div
-                          key={i}
+                          key={log.id}
                           style={{
-                            background: s.bg,
-                            borderRadius: 12,
-                            padding: "16px 18px",
-                            border: `1px solid ${s.color}22`,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
+                            padding: "11px 20px",
+                            borderBottom: "1px solid #f8f8f8",
+                            transition: "background 0.1s",
                           }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.background = "#f9fdf9")
+                          }
+                          onMouseLeave={(e) =>
+                          (e.currentTarget.style.background =
+                            "transparent")
+                          }
                         >
                           <div
                             style={{
-                              fontSize: 10,
-                              color: s.color,
-                              fontWeight: 800,
-                              marginBottom: 8,
-                              textTransform: "uppercase",
+                              width: 36,
+                              height: 36,
+                              borderRadius: 10,
+                              background: clr.bg,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: 16,
+                              flexShrink: 0,
                             }}
                           >
-                            {s.label}
+                            {ICONS[log.kategori] || "📝"}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 8,
+                                marginBottom: 3,
+                                flexWrap: "wrap",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  background: clr.bg,
+                                  color: clr.c,
+                                  padding: "2px 9px",
+                                  borderRadius: 20,
+                                  fontSize: 11,
+                                  fontWeight: 800,
+                                }}
+                              >
+                                {log.aksi}
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: 12,
+                                  fontWeight: 700,
+                                  color: "#333",
+                                }}
+                              >
+                                {log.user_nama}
+                              </span>
+                              <span
+                                style={{
+                                  background: roleBg,
+                                  color: roleClr,
+                                  padding: "1px 7px",
+                                  borderRadius: 20,
+                                  fontSize: 10,
+                                  fontWeight: 700,
+                                }}
+                              >
+                                {log.user_role === "superadmin"
+                                  ? "👑 Super Admin"
+                                  : log.user_role === "admin"
+                                    ? "🛡️ Admin"
+                                    : "👤 Pegawai"}
+                              </span>
+                            </div>
+                            {log.detail && (
+                              <div
+                                style={{
+                                  fontSize: 12,
+                                  color: "#888",
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                }}
+                              >
+                                {log.detail}
+                              </div>
+                            )}
+                          </div>
+                          <div
+                            style={{ textAlign: "right", flexShrink: 0 }}
+                          >
+                            <div
+                              style={{
+                                fontSize: 11,
+                                color: "#555",
+                                fontWeight: 600,
+                              }}
+                            >
+                              {jamStr}
+                            </div>
+                            <div style={{ fontSize: 10, color: "#bbb" }}>
+                              {tglStr}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* KASIR */}
+          {page === "kasir" && (
+            <div className="kasir-grid">
+              <div>
+                <div
+                  style={{ display: "flex", gap: 8, marginBottom: 14 }}
+                >
+                  <input
+                    className={styles.inp} style={{ flex: 1 }}
+                    placeholder="🔍 Cari produk..."
+                    value={searchProd}
+                    onChange={(e) => setSearchProd(e.target.value)}
+                  />
+                  <select
+                    className={styles.inp} style={{ width: 150 }}
+                    value={filterCat}
+                    onChange={(e) => setFilterCat(e.target.value)}
+                  >
+                    {CATS.map((c) => (
+                      <option key={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="prod-grid">
+                  {filtProd.map((p) => (
+                    <div
+                      key={p.id}
+                      onClick={() => addToCart(p)}
+                      style={{
+                        background: "#fff",
+                        borderRadius: 10,
+                        padding: "13px",
+                        border: "1px solid #e4ede4",
+                        cursor: p.stock > 0 ? "pointer" : "not-allowed",
+                        opacity: p.stock <= 0 ? 0.5 : 1,
+                        transition: "border 0.1s,transform 0.1s",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (p.stock > 0) {
+                          e.currentTarget.style.borderColor = "#2d7a2d";
+                          e.currentTarget.style.transform =
+                            "translateY(-2px)";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = "#e4ede4";
+                        e.currentTarget.style.transform = "";
+                      }}
+                    >
+                      <Badge cat={p.category} />
+                      <div style={{
+                        marginTop: 10,
+                        height: 100,
+                        width: "100%",
+                        background: p.image_url ? `url(${p.image_url}) center/cover` : "#f5f5f5",
+                        borderRadius: 8,
+                        display: "flex",
+                        border: "1px solid #efefef"
+                      }}>
+                        {!p.image_url && <span style={{ fontSize: 28, margin: "auto", opacity: 0.2 }}>📦</span>}
+                      </div>
+                      <div
+                        style={{
+                          fontWeight: 700,
+                          fontSize: 13,
+                          marginTop: 8,
+                          marginBottom: 3,
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        {p.name}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 15,
+                          fontWeight: 800,
+                          color: "#2d7a2d",
+                        }}
+                      >
+                        {fmt(p.price)}
+                      </div>
+                      <div style={{ fontSize: 9, color: "#ccc" }}>
+                        /{p.unit}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 10,
+                          marginTop: 5,
+                          color:
+                            p.stock <= p.min_stock ? "#e65100" : "#aaa",
+                        }}
+                      >
+                        Stok: {p.stock} {p.unit}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div
+                className="kasir-cart"
+                style={{
+                  background: "#fff",
+                  borderRadius: 12,
+                  padding: "18px 20px",
+                  border: "1px solid #e4ede4",
+                }}
+              >
+                <div
+                  style={{
+                    fontWeight: 800,
+                    fontSize: 14,
+                    color: "#1a4a1a",
+                    marginBottom: 14,
+                  }}
+                >
+                  🤝 Keranjang
+                </div>
+                <input
+                  className={styles.inp} style={{ marginBottom: 10 }}
+                  placeholder="Nama pelanggan..."
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                />
+                {cart.length === 0 ? (
+                  <div
+                    style={{
+                      color: "#ccc",
+                      textAlign: "center",
+                      padding: "28px 0",
+                      fontSize: 13,
+                    }}
+                  >
+                    Ketuk produk untuk menambahkan
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ maxHeight: 250, overflowY: "auto" }}>
+                      {cart.map((item) => (
+                        <div
+                          key={item.product_id}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "7px 0",
+                            borderBottom: "1px solid #f0f5f0",
+                          }}
+                        >
+                          <div style={{ flex: 1 }}>
+                            <div
+                              style={{ fontSize: 12, fontWeight: 700 }}
+                            >
+                              {item.name}
+                            </div>
+                            <div style={{ fontSize: 10, color: "#aaa" }}>
+                              {fmt(item.price)}/{item.unit}
+                            </div>
                           </div>
                           <div
                             style={{
-                              fontSize: 24,
-                              fontWeight: 900,
-                              color: s.color,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 4,
                             }}
                           >
-                            {s.value}
+                            <button
+                              onClick={() =>
+                                updCart(item.product_id, item.qty - 1)
+                              }
+                              style={{
+                                width: 24,
+                                height: 24,
+                                borderRadius: 6,
+                                border: "1px solid #ddd",
+                                cursor: "pointer",
+                                background: "#f5f5f5",
+                                fontWeight: 800,
+                                fontSize: 16,
+                                lineHeight: 1,
+                              }}
+                            >
+                              −
+                            </button>
+                            <span
+                              style={{
+                                fontSize: 13,
+                                fontWeight: 800,
+                                minWidth: 22,
+                                textAlign: "center",
+                              }}
+                            >
+                              {item.qty}
+                            </span>
+                            <button
+                              onClick={() =>
+                                updCart(item.product_id, item.qty + 1)
+                              }
+                              style={{
+                                width: 24,
+                                height: 24,
+                                borderRadius: 6,
+                                border: "1px solid #ddd",
+                                cursor: "pointer",
+                                background: "#f5f5f5",
+                                fontWeight: 800,
+                                fontSize: 16,
+                                lineHeight: 1,
+                              }}
+                            >
+                              +
+                            </button>
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 800,
+                              color: "#2d7a2d",
+                              minWidth: 62,
+                              textAlign: "right",
+                            }}
+                          >
+                            {fmt(item.price * item.qty)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 12,
+                        paddingTop: 12,
+                        borderTop: "2px solid #e4ede4",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          marginBottom: 10,
+                        }}
+                      >
+                        <span style={{ fontWeight: 800, fontSize: 15 }}>
+                          TOTAL
+                        </span>
+                        <span
+                          style={{
+                            fontWeight: 900,
+                            fontSize: 18,
+                            color: "#2d7a2d",
+                          }}
+                        >
+                          {fmt(cartTotal)}
+                        </span>
+                      </div>
+                      <input
+                        className={styles.inp} style={{
+                          marginBottom: 8,
+                          fontSize: 15,
+                          fontWeight: 700,
+                        }}
+                        type="number"
+                        placeholder="Nominal pembayaran..."
+                        value={paymentInput}
+                        onChange={(e) => setPaymentInput(e.target.value)}
+                      />
+                      {payNum > 0 && (
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            fontSize: 13,
+                            marginBottom: 10,
+                            color: change >= 0 ? "#2d7a2d" : "#dc3545",
+                            fontWeight: 800,
+                          }}
+                        >
+                          <span>Kembalian</span>
+                          <span>
+                            {change >= 0
+                              ? fmt(change)
+                              : "Kurang " + fmt(Math.abs(change))}
+                          </span>
+                        </div>
+                      )}
+                      <button
+                        className={`${styles.btn} ${styles.btnprimary}`} style={{
+                          width: "100%",
+                          padding: "11px",
+                          fontSize: 14,
+                          borderRadius: 10,
+                        }}
+                        onClick={processPayment}
+                      >
+                        ✅ Proses Pembayaran
+                      </button>
+                      <button
+                        className={styles.btndefault} style={{
+                          width: "100%",
+                          marginTop: 8,
+                          padding: "9px",
+                          fontSize: 12,
+                          borderRadius: 10,
+                        }}
+                        onClick={() => setCart([])}
+                      >
+                        🗑 Kosongkan
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* PRODUK */}
+          {page === "produk" && (
+            <div>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 8,
+                  marginBottom: 16,
+                  flexWrap: "wrap",
+                }}
+              >
+                <input
+                  className={styles.inp} style={{ maxWidth: 250 }}
+                  placeholder="🔍 Cari produk..."
+                  value={searchProd}
+                  onChange={(e) => setSearchProd(e.target.value)}
+                />
+                <select
+                  className={styles.inp} style={{ width: 150 }}
+                  value={filterCat}
+                  onChange={(e) => setFilterCat(e.target.value)}
+                >
+                  {CATS.map((c) => (
+                    <option key={c}>{c}</option>
+                  ))}
+                </select>
+                <button
+                  className={`${styles.btn} ${styles.btnprimary}`} style={{ marginLeft: "auto" }}
+                  onClick={() => {
+                    setProdForm({
+                      name: "",
+                      category: "Pakan Jadi",
+                      unit: "kg",
+                      price: "",
+                      stock: "",
+                      min_stock: "",
+                      supplier_id: "",
+                    });
+                    setProdImage(null);
+                    setProdModal("add");
+                  }}
+                >
+                  + Tambah Produk
+                </button>
+              </div>
+              <div className={styles.card} style={{ padding: 0, overflow: "auto" }}>
+                <table
+                  style={{ width: "100%", borderCollapse: "collapse" }}
+                >
+                  <thead>
+                    <tr>
+                      {[
+                        "Foto",
+                        "Nama",
+                        "Kategori",
+                        "Satuan",
+                        "Harga",
+                        "Stok",
+                        "Min",
+                        "Supplier",
+                        "Aksi",
+                      ].map((h) => (
+                        <th key={h} className={styles.th}>
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtProd.map((p) => {
+                      const s = suppliers.find(
+                        (s) => s.id === p.supplier_id,
+                      );
+                      return (
+                        <tr
+                          key={p.id}
+                          style={{
+                            background:
+                              p.stock <= p.min_stock ? "#fffaf0" : "#fff",
+                          }}
+                        >
+                          <td className={styles.td}>
+                            {p.image_url ? (
+                              <img src={p.image_url} alt={p.name} style={{ width: 44, height: 44, objectFit: "cover", borderRadius: 8, border: "1px solid #ddd" }} />
+                            ) : (
+                              <div style={{ width: 44, height: 44, background: "#f0f0f0", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>📦</div>
+                            )}
+                          </td>
+                          <td className={styles.td}>
+                            <strong>{p.name}</strong>
+                          </td>
+                          <td className={styles.td}>
+                            <Badge cat={p.category} />
+                          </td>
+                          <td className={styles.td}>{p.unit}</td>
+                          <td className={styles.td}>
+                            <strong style={{ color: "#2d7a2d" }}>
+                              {fmt(p.price)}
+                            </strong>
+                          </td>
+                          <td className={styles.td}>
+                            <strong
+                              style={{
+                                color:
+                                  p.stock <= p.min_stock
+                                    ? "#e65100"
+                                    : "#333",
+                                fontSize: 15,
+                              }}
+                            >
+                              {p.stock}
+                            </strong>
+                          </td>
+                          <td className={styles.td}>{p.min_stock}</td>
+                          <td className={styles.td}>
+                            <span style={{ fontSize: 11, color: "#666" }}>
+                              {s?.name || "—"}
+                            </span>
+                          </td>
+                          <td className={styles.td}>
+                            <div style={{ display: "flex", gap: 5 }}>
+                              <button
+                                className={`${styles.btn} ${styles.btnoutline}`} style={{
+                                  padding: "4px 10px",
+                                  fontSize: 11,
+                                }}
+                                onClick={() => {
+                                  setProdForm({
+                                    name: p.name,
+                                    category: p.category,
+                                    unit: p.unit,
+                                    price: String(p.price),
+                                    stock: String(p.stock),
+                                    min_stock: String(p.min_stock),
+                                    supplier_id: String(
+                                      p.supplier_id || "",
+                                    ),
+                                  });
+                                  setProdImage(null);
+                                  setProdModal(p);
+                                }}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                className={`${styles.btn} ${styles.btndanger}`} style={{
+                                  padding: "4px 10px",
+                                  fontSize: 11,
+                                }}
+                                onClick={() => delProd(p.id)}
+                              >
+                                Hapus
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* RIWAYAT */}
+          {page === "riwayat" && (
+            <div>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 8,
+                  marginBottom: 16,
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                }}
+              >
+                <input
+                  className={styles.inp} style={{ maxWidth: 230 }}
+                  placeholder="🔍 ID / pelanggan..."
+                  value={histSearch}
+                  onChange={(e) => setHistSearch(e.target.value)}
+                />
+                <input
+                  className={styles.inp} style={{ width: 150 }}
+                  type="date"
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                />
+                {filterDate && (
+                  <button className={styles.btndefault} onClick={() => setFilterDate("")}>
+                    ✕ Reset
+                  </button>
+                )}
+                <button
+                  className={`${styles.btn} ${styles.btnblue}`} style={{ marginLeft: "auto" }}
+                  onClick={() => exportExcel("transaksi")}
+                >
+                  📥 Export Excel
+                </button>
+              </div>
+              <div
+                className="table-wrap"
+                style={{
+                  background: "#fff",
+                  borderRadius: 12,
+                  border: "1px solid #e4ede4",
+                  overflow: "auto",
+                }}
+              >
+                <table
+                  style={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    minWidth: 650,
+                  }}
+                >
+                  <thead>
+                    <tr>
+                      {[
+                        "ID",
+                        "Tanggal",
+                        "Pelanggan",
+                        "Item",
+                        "Total",
+                        "Bayar",
+                        "Kembalian",
+                      ].map((h) => (
+                        <th key={h} className={styles.th}>
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtHist.slice(0, 60).map((t) => (
+                      <tr key={t.id}>
+                        <td className={styles.td}>
+                          <strong style={{ color: "#2d7a2d" }}>
+                            {t.trx_code}
+                          </strong>
+                        </td>
+                        <td className={styles.td}>{t.date}</td>
+                        <td className={styles.td}>{t.customer}</td>
+                        <td className={styles.td}>
+                          {(t.items || []).map((i, idx) => (
+                            <div
+                              key={idx}
+                              style={{ fontSize: 10, color: "#666" }}
+                            >
+                              {i.product_name} ×{i.qty}
+                            </div>
+                          ))}
+                        </td>
+                        <td className={styles.td}>
+                          <strong style={{ color: "#2d7a2d" }}>
+                            {fmt(t.total)}
+                          </strong>
+                        </td>
+                        <td className={styles.td}>{fmt(t.payment)}</td>
+                        <td className={styles.td}>{fmt(t.change_amt)}</td>
+                      </tr>
+                    ))}
+                    {filtHist.length === 0 && (
+                      <tr>
+                        <td
+                          colSpan={7}
+                          className={styles.td} style={{
+                            textAlign: "center",
+                            color: "#bbb",
+                            padding: 32,
+                          }}
+                        >
+                          Tidak ada transaksi
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+                <div
+                  style={{
+                    padding: "11px 16px",
+                    borderTop: "1px solid #e4ede4",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    fontSize: 13,
+                  }}
+                >
+                  <span style={{ color: "#888" }}>
+                    {filtHist.length} transaksi
+                  </span>
+                  <strong style={{ color: "#2d7a2d" }}>
+                    Total:{" "}
+                    {fmt(filtHist.reduce((s, t) => s + t.total, 0))}
+                  </strong>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* STOK */}
+          {page === "stok" && (
+            <div>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 8,
+                  marginBottom: 16,
+                  alignItems: "center",
+                }}
+              >
+                <input
+                  className={styles.inp} style={{ maxWidth: 250 }}
+                  placeholder="🔍 Cari produk..."
+                  value={searchProd}
+                  onChange={(e) => setSearchProd(e.target.value)}
+                />
+                <select
+                  className={styles.inp} style={{ width: 150 }}
+                  value={filterCat}
+                  onChange={(e) => setFilterCat(e.target.value)}
+                >
+                  {CATS.map((c) => (
+                    <option key={c}>{c}</option>
+                  ))}
+                </select>
+                {isSuperAdmin && (
+                  <button
+                    className={`${styles.btn} ${styles.btnblue}`} style={{ marginLeft: "auto" }}
+                    onClick={() => exportExcel("stok")}
+                  >
+                    📥 Export Stok
+                  </button>
+                )}
+              </div>
+              <div
+                className="table-wrap"
+                style={{
+                  background: "#fff",
+                  borderRadius: 12,
+                  border: "1px solid #e4ede4",
+                  overflow: "auto",
+                }}
+              >
+                <table
+                  style={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    minWidth: 600,
+                  }}
+                >
+                  <thead>
+                    <tr>
+                      {[
+                        "Foto",
+                        "Nama Produk",
+                        "Kategori",
+                        "Satuan",
+                        "Stok",
+                        "Min",
+                        "Status",
+                        "Aksi",
+                      ].map((h) => (
+                        <th key={h} className={styles.th}>
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...filtProd]
+                      .sort(
+                        (a, b) =>
+                          a.stock / a.min_stock - b.stock / b.min_stock,
+                      )
+                      .map((p) => {
+                        const st =
+                          p.stock === 0
+                            ? "Habis"
+                            : p.stock <= p.min_stock
+                              ? "Menipis"
+                              : "Aman";
+                        return (
+                          <tr
+                            key={p.id}
+                            style={{
+                              background:
+                                p.stock === 0
+                                  ? "#fff5f5"
+                                  : p.stock <= p.min_stock
+                                    ? "#fffaf0"
+                                    : "#fff",
+                            }}
+                          >
+                            <td className={styles.td}>
+                              {p.image_url ? (
+                                <img src={p.image_url} alt={p.name} style={{ width: 44, height: 44, objectFit: "cover", borderRadius: 8, border: "1px solid #ddd" }} />
+                              ) : (
+                                <div style={{ width: 44, height: 44, background: "#f0f0f0", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>📦</div>
+                              )}
+                            </td>
+                            <td className={styles.td}>
+                              <strong>{p.name}</strong>
+                            </td>
+                            <td className={styles.td}>
+                              <Badge cat={p.category} />
+                            </td>
+                            <td className={styles.td}>{p.unit}</td>
+                            <td className={styles.td}>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 8,
+                                }}
+                              >
+                                <strong style={{ fontSize: 16 }}>
+                                  {p.stock}
+                                </strong>
+                                <div
+                                  style={{
+                                    flex: 1,
+                                    height: 6,
+                                    background: "#eee",
+                                    borderRadius: 3,
+                                    maxWidth: 80,
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      height: "100%",
+                                      borderRadius: 3,
+                                      width: `${Math.min(100, (p.stock / (p.min_stock * 3)) * 100)}%`,
+                                      background:
+                                        p.stock === 0
+                                          ? "#dc2626"
+                                          : p.stock <= p.min_stock
+                                            ? "#ea580c"
+                                            : "#16a34a",
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            </td>
+                            <td className={styles.td}>{p.min_stock}</td>
+                            <td className={styles.td}>
+                              <span className={`${styles.stChip} ${styles['stChip' + st]}`}>{st}</span>
+                            </td>
+                            <td className={styles.td}>
+                              <button
+                                className={`${styles.btn} ${styles.btnwarning}`} style={{
+                                  padding: "5px 12px",
+                                  fontSize: 11,
+                                }}
+                                onClick={() => {
+                                  setRestockModal(p);
+                                  setRestockQty("");
+                                }}
+                              >
+                                + Restock
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* LAPORAN */}
+          {page === "laporan" && (
+            <div id="laporan-container" style={{ padding: 10, background: "#f8fdf8" }}>
+              <div
+                id="laporan-actions"
+                style={{
+                  display: "flex",
+                  gap: 10,
+                  marginBottom: 18,
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                }}
+                data-html2canvas-ignore="true"
+              >
+                <select
+                  className={styles.inp} style={{ width: 140 }}
+                  value={rptMonth}
+                  onChange={(e) => setRptMonth(parseInt(e.target.value))}
+                >
+                  {MONTHS.map((m, i) => (
+                    <option key={i} value={i}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  className={styles.inp} style={{ width: 90 }}
+                  value={rptYear}
+                  onChange={(e) => setRptYear(parseInt(e.target.value))}
+                >
+                  {[2024, 2025, 2026, 2027].map((y) => (
+                    <option key={y}>{y}</option>
+                  ))}
+                </select>
+                <button
+                  className={`${styles.btn} ${styles.btnblue}`}
+                  onClick={() => exportExcel("laporan")}
+                >
+                  📥 Export Excel
+                </button>
+                <button
+                  className={styles.btn}
+                  style={{ background: "#dc2626", color: "#fff", minWidth: 140 }}
+                  onClick={exportPDF}
+                  disabled={showExportPDFLoading}
+                >
+                  {showExportPDFLoading ? "⏳ Memproses..." : "🖨️ Cetak Jurnal PDF"}
+                </button>
+              </div>
+
+              <div style={{ textAlign: "center", marginBottom: 20 }}>
+                <h2 style={{ color: "#1a4a1a", margin: 0, textTransform: "uppercase" }}>Laporan Performa Keuangan Toko BBS</h2>
+                <p style={{ color: "#666", margin: "5px 0 0 0", fontWeight: 600 }}>Periode Pembukuan: {MONTHS[rptMonth]} {rptYear}</p>
+              </div>
+
+              <div className="rpt-grid" style={{ marginBottom: 20 }}>
+                {[
+                  {
+                    label: "Total Pendapatan",
+                    value: fmt(rptRev),
+                    color: "#2d7a2d",
+                    bg: "#e8f5e9",
+                  },
+                  {
+                    label: "Jumlah Transaksi",
+                    value: fmtN(rptTrx.length),
+                    color: "#1565c0",
+                    bg: "#e3f2fd",
+                  },
+                  {
+                    label: "Rata-rata Pendapatan / Transaksi",
+                    value: fmt(
+                      rptTrx.length > 0
+                        ? Math.round(rptRev / rptTrx.length)
+                        : 0,
+                    ),
+                    color: "#7b1fa2",
+                    bg: "#f3e5f5",
+                  },
+                ].map((s, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      background: s.bg,
+                      borderRadius: 12,
+                      padding: "16px 18px",
+                      border: `1px solid ${s.color}33`
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 10,
+                        color: s.color,
+                        fontWeight: 800,
+                        marginBottom: 8,
+                        textTransform: "uppercase",
+                        letterSpacing: 0.5
+                      }}
+                    >
+                      {s.label}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 22,
+                        fontWeight: 900,
+                        color: s.color,
+                      }}
+                    >
+                      {s.value}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className={styles.card} style={{ marginBottom: 20 }}>
+                <div
+                  style={{
+                    fontWeight: 800,
+                    fontSize: 14,
+                    color: "#1a4a1a",
+                    marginBottom: 14,
+                    display: "flex",
+                    justifyContent: "space-between"
+                  }}
+                >
+                  <span>📈 Tren Pendapatan Harian</span>
+                  <span style={{ color: "#aaa", fontSize: 12, fontWeight: 500 }}>{MONTHS[rptMonth]} {rptYear}</span>
+                </div>
+                <div style={{ height: 260, width: "100%" }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={dayData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4ede4" />
+                      <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#666' }} axisLine={false} tickLine={false} tickMargin={10} />
+                      <YAxis tickFormatter={(val) => `Rp${val / 1000}k`} tick={{ fontSize: 11, fill: '#666' }} axisLine={false} tickLine={false} tickMargin={10} />
+                      <RTooltip formatter={(value) => [fmt(value), "Pendapatan"]} labelFormatter={(label) => `Tanggal ${label}`} cursor={{ stroke: '#2d7a2d', strokeWidth: 1, strokeDasharray: '3 3' }} contentStyle={{ borderRadius: 8, border: "1px solid #e4ede4", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }} />
+                      <Line type="monotone" dataKey="rev" stroke="#2d7a2d" strokeWidth={3} dot={{ r: 3, fill: '#2d7a2d', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }} animationDuration={1200} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
+                <div className={styles.card}>
+                  <div
+                    style={{
+                      fontWeight: 800,
+                      fontSize: 14,
+                      color: "#1a4a1a",
+                      marginBottom: 14,
+                    }}
+                  >
+                    🧩 Distribusi Kategori
+                  </div>
+                  <div style={{ height: 240, width: "100%" }}>
+                    {catData.length === 0 ? (
+                      <div style={{ color: "#ccc", textAlign: "center", paddingTop: 80 }}>Tidak ada data</div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={catData}
+                            dataKey="rev"
+                            nameKey="cat"
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={55}
+                            outerRadius={85}
+                            paddingAngle={3}
+                            animationDuration={1200}
+                          >
+                            {catData.map((entry, index) => {
+                              const COLORS = ['#2d7a2d', '#1565c0', '#e65100', '#7b1fa2', '#c2185b', '#00796b'];
+                              return <Cell key={`cell-${index}`} fill={BADGE[entry.cat]?.c || COLORS[index % COLORS.length]} />;
+                            })}
+                          </Pie>
+                          <RTooltip formatter={(value) => [fmt(value), "Total"]} contentStyle={{ borderRadius: 8, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} />
+                          <Legend layout="horizontal" verticalAlign="bottom" align="center" wrapperStyle={{ fontSize: 11, paddingTop: 10 }} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+                </div>
+
+                <div className={styles.card}>
+                  <div
+                    style={{
+                      fontWeight: 800,
+                      fontSize: 14,
+                      color: "#1a4a1a",
+                      marginBottom: 14,
+                    }}
+                  >
+                    🏆 Top 5 Produk Terlaris
+                  </div>
+                  <div style={{ height: 240, width: "100%" }}>
+                    {topProds.length === 0 ? (
+                      <div style={{ color: "#ccc", textAlign: "center", paddingTop: 80 }}>Tidak ada data</div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={topProds.map(([name, qty]) => ({ name, qty }))} layout="vertical" margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f0f0f0" />
+                          <XAxis type="number" hide />
+                          <YAxis dataKey="name" type="category" width={110} tick={{ fontSize: 11, fill: '#444' }} axisLine={false} tickLine={false} />
+                          <RTooltip formatter={(value) => [`${fmtN(value)} Terjual`, "Kuantitas"]} cursor={{ fill: '#f8fdf8' }} contentStyle={{ borderRadius: 8, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} />
+                          <Bar dataKey="qty" fill="#1565c0" radius={[0, 6, 6, 0]} barSize={20} animationDuration={1200}>
+                            {topProds.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={index === 0 ? '#ea580c' : '#2563eb'} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* SUPPLIER */}
+          {page === "supplier" && (
+            <div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 16,
+                  flexWrap: "wrap",
+                  gap: 8,
+                }}
+              >
+                <span style={{ fontSize: 13, color: "#666" }}>
+                  {suppliers.length} supplier
+                </span>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    className={`${styles.btn} ${styles.btnblue}`}
+                    onClick={() => exportExcel("supplier")}
+                  >
+                    📥 Export
+                  </button>
+                  <button
+                    className={`${styles.btn} ${styles.btnprimary}`}
+                    onClick={() => {
+                      setSupForm({
+                        name: "",
+                        contact: "",
+                        phone: "",
+                        email: "",
+                        address: "",
+                        category: "",
+                        status: "Aktif",
+                        notes: "",
+                      });
+                      setSupModal("add");
+                    }}
+                  >
+                    + Tambah
+                  </button>
+                </div>
+              </div>
+              <div className="sup-grid">
+                {suppliers.map((s) => {
+                  const spProds = products.filter(
+                    (p) => p.supplier_id === s.id,
+                  );
+                  return (
+                    <div
+                      key={s.id}
+                      className={styles.card} style={{ padding: "16px 18px" }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                          marginBottom: 10,
+                        }}
+                      >
+                        <div style={{ flex: 1 }}>
+                          <div
+                            style={{
+                              fontWeight: 800,
+                              fontSize: 14,
+                              color: "#1a4a1a",
+                            }}
+                          >
+                            {s.name}
                           </div>
                           <div
                             style={{
                               fontSize: 11,
-                              color: "#999",
-                              marginTop: 4,
+                              color: "#888",
+                              marginTop: 2,
                             }}
                           >
-                            {s.sub}
+                            👤 {s.contact}
                           </div>
                         </div>
-                      ))}
-                    </div>
-                    <div className="dash-grid">
-                      <div className={styles.card}>
-                        <div
+                        <span
                           style={{
+                            padding: "3px 10px",
+                            borderRadius: 20,
+                            fontSize: 10,
                             fontWeight: 800,
-                            fontSize: 14,
-                            color: "#1a4a1a",
-                            marginBottom: 14,
+                            background:
+                              s.status === "Aktif"
+                                ? "#e8f5e9"
+                                : "#fee2e2",
+                            color:
+                              s.status === "Aktif"
+                                ? "#2e7d32"
+                                : "#dc2626",
+                            flexShrink: 0,
                           }}
                         >
-                          Transaksi Terbaru
-                        </div>
-                        {transactions.slice(0, 7).map((t) => (
-                          <div
-                            key={t.id}
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              padding: "9px 0",
-                              borderBottom: "1px solid #f0f5f0",
-                              alignItems: "center",
-                            }}
-                          >
-                            <div>
-                              <div style={{ fontWeight: 700, fontSize: 13 }}>
-                                {t.trx_code} — {t.customer}
-                              </div>
-                              <div style={{ fontSize: 10, color: "#aaa" }}>
-                                {t.date} · {(t.items || []).length} item
-                              </div>
-                            </div>
-                            <span
-                              style={{
-                                fontWeight: 800,
-                                color: "#2d7a2d",
-                                fontSize: 13,
-                              }}
-                            >
-                              {fmt(t.total)}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                      {outStock.length > 0 && (
-                          <div className={styles.card} style={{ borderLeft: '4px solid #ef4444' }}>
-                            <div
-                              style={{
-                                fontWeight: 800,
-                                fontSize: 14,
-                                color: "#c62828",
-                                marginBottom: 14,
-                              }}
-                            >
-                              ❌ Stok Habis (Segera Restock!)
-                            </div>
-                            {outStock.slice(0, 10).map((p) => (
-                              <div
-                                key={p.id}
-                                style={{
-                                  display: "flex",
-                                  justifyContent: "space-between",
-                                  padding: "9px 0",
-                                  borderBottom: "1px solid #f9ecec",
-                                }}
-                              >
-                                <div>
-                                  <div style={{ fontWeight: 700, fontSize: 13, color: '#c62828' }}>
-                                    {p.name}
-                                  </div>
-                                  <div style={{ fontSize: 10, color: "#aaa" }}>
-                                    {p.category}
-                                  </div>
-                                </div>
-                                <div style={{ textAlign: "right" }}>
-                                  <div style={{ fontWeight: 800, color: "#c62828", fontSize: 12 }}>
-                                    Habis
-                                  </div>
-                                  <div style={{ fontSize: 9, color: "#ccc" }}>
-                                    min: {p.min_stock}
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        
-                        <div className={styles.card}>
-                        <div
-                          style={{
-                            fontWeight: 800,
-                            fontSize: 14,
-                            color: "#1a4a1a",
-                            marginBottom: 14,
-                          }}
-                        >
-                          ⚠ Stok Menipis
-                        </div>
-                        {lowStock.length === 0 ? (
-                          <div
-                            style={{
-                              color: "#bbb",
-                              fontSize: 13,
-                              textAlign: "center",
-                              padding: "20px 0",
-                            }}
-                          >
-                            ✅ Semua stok aman
-                          </div>
-                        ) : (
-                          lowStock.slice(0, 7).map((p) => (
-                            <div
-                              key={p.id}
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                padding: "9px 0",
-                                borderBottom: "1px solid #f0f5f0",
-                              }}
-                            >
-                              <div>
-                                <div style={{ fontWeight: 700, fontSize: 13 }}>
-                                  {p.name}
-                                </div>
-                                <div style={{ fontSize: 10, color: "#aaa" }}>
-                                  {p.category}
-                                </div>
-                              </div>
-                              <div style={{ textAlign: "right" }}>
-                                <div
-                                  style={{
-                                    fontWeight: 800,
-                                    color:
-                                      p.stock === 0 ? "#dc3545" : "#e65100",
-                                    fontSize: 15,
-                                  }}
-                                >
-                                  {p.stock} {(p.unit || "").split(",")[0]}
-                                </div>
-                                <div style={{ fontSize: 9, color: "#ccc" }}>
-                                  min:{p.min_stock}
-                                </div>
-                              </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </div>
-
-                    {/* ACTIVITY LOG */}
-                    <div
-                      style={{
-                        marginTop: 18,
-                        background: "#fff",
-                        borderRadius: 12,
-                        border: "1px solid #e4ede4",
-                      }}
-                    >
-                      <div
-                        style={{
-                          padding: "16px 20px",
-                          borderBottom: "1px solid #e4ede4",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontWeight: 800,
-                            fontSize: 14,
-                            color: "#1a4a1a",
-                          }}
-                        >
-                          📋 Aktivitas Terbaru
-                        </div>
-                        <div style={{ fontSize: 11, color: "#aaa" }}>
-                          30 aktivitas terakhir
-                        </div>
-                      </div>
-                      {activityLogs.length === 0 ? (
-                        <div
-                          style={{
-                            padding: "24px",
-                            textAlign: "center",
-                            color: "#bbb",
-                            fontSize: 13,
-                          }}
-                        >
-                          Belum ada aktivitas tercatat
-                        </div>
-                      ) : (
-                        <div style={{ maxHeight: 320, overflowY: "auto" }}>
-                          {activityLogs.map((log, i) => {
-                            const ICONS = {
-                              Kasir: "🤝",
-                              Produk: "📦",
-                              Stok: "📊",
-                              Supplier: "🤝",
-                              Akun: "👥",
-                              "Master Data": "🗂️",
-                              "Import/Export": "📗",
-                            };
-                            const COLORS = {
-                              "Transaksi Baru": { bg: "#e8f5e9", c: "#2e7d32" },
-                              "Tambah Produk": { bg: "#e3f2fd", c: "#1565c0" },
-                              "Edit Produk": { bg: "#fff8e1", c: "#e65100" },
-                              "Hapus Produk": { bg: "#fee2e2", c: "#dc2626" },
-                              "Restock Stok": { bg: "#f3e5f5", c: "#6a1b9a" },
-                              "Tambah Supplier": {
-                                bg: "#e3f2fd",
-                                c: "#1565c0",
-                              },
-                              "Edit Supplier": { bg: "#fff8e1", c: "#e65100" },
-                              "Hapus Supplier": { bg: "#fee2e2", c: "#dc2626" },
-                              "Tambah Akun": { bg: "#e3f2fd", c: "#1565c0" },
-                              "Edit Akun": { bg: "#fff8e1", c: "#e65100" },
-                              "Hapus Akun": { bg: "#fee2e2", c: "#dc2626" },
-                              "Export Excel": { bg: "#e3f2fd", c: "#1565c0" },
-                              "Import Excel": { bg: "#f3e5f5", c: "#6a1b9a" },
-                              "Tambah Kategori": {
-                                bg: "#e0f2f1",
-                                c: "#00695c",
-                              },
-                              "Edit Kategori": { bg: "#fff8e1", c: "#e65100" },
-                              "Hapus Kategori": { bg: "#fee2e2", c: "#dc2626" },
-                              "Tambah Satuan": { bg: "#e0f2f1", c: "#00695c" },
-                              "Edit Satuan": { bg: "#fff8e1", c: "#e65100" },
-                              "Hapus Satuan": { bg: "#fee2e2", c: "#dc2626" },
-                            };
-                            const clr = COLORS[log.aksi] || {
-                              bg: "#f5f5f5",
-                              c: "#666",
-                            };
-                            const tgl = new Date(log.created_at);
-                            const tglStr = tgl.toLocaleDateString("id-ID", {
-                              day: "2-digit",
-                              month: "short",
-                              year: "numeric",
-                            });
-                            const jamStr = tgl.toLocaleTimeString("id-ID", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            });
-                            const roleClr =
-                              log.user_role === "superadmin"
-                                ? "#7b1fa2"
-                                : log.user_role === "admin"
-                                  ? "#e65100"
-                                  : "#1565c0";
-                            const roleBg =
-                              log.user_role === "superadmin"
-                                ? "#f3e5f5"
-                                : log.user_role === "admin"
-                                  ? "#fff8e1"
-                                  : "#e3f2fd";
-                            return (
-                              <div
-                                key={log.id}
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 12,
-                                  padding: "11px 20px",
-                                  borderBottom: "1px solid #f8f8f8",
-                                  transition: "background 0.1s",
-                                }}
-                                onMouseEnter={(e) =>
-                                  (e.currentTarget.style.background = "#f9fdf9")
-                                }
-                                onMouseLeave={(e) =>
-                                  (e.currentTarget.style.background =
-                                    "transparent")
-                                }
-                              >
-                                <div
-                                  style={{
-                                    width: 36,
-                                    height: 36,
-                                    borderRadius: 10,
-                                    background: clr.bg,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    fontSize: 16,
-                                    flexShrink: 0,
-                                  }}
-                                >
-                                  {ICONS[log.kategori] || "📝"}
-                                </div>
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: 8,
-                                      marginBottom: 3,
-                                      flexWrap: "wrap",
-                                    }}
-                                  >
-                                    <span
-                                      style={{
-                                        background: clr.bg,
-                                        color: clr.c,
-                                        padding: "2px 9px",
-                                        borderRadius: 20,
-                                        fontSize: 11,
-                                        fontWeight: 800,
-                                      }}
-                                    >
-                                      {log.aksi}
-                                    </span>
-                                    <span
-                                      style={{
-                                        fontSize: 12,
-                                        fontWeight: 700,
-                                        color: "#333",
-                                      }}
-                                    >
-                                      {log.user_nama}
-                                    </span>
-                                    <span
-                                      style={{
-                                        background: roleBg,
-                                        color: roleClr,
-                                        padding: "1px 7px",
-                                        borderRadius: 20,
-                                        fontSize: 10,
-                                        fontWeight: 700,
-                                      }}
-                                    >
-                                      {log.user_role === "superadmin"
-                                        ? "👑 Super Admin"
-                                        : log.user_role === "admin"
-                                          ? "🛡️ Admin"
-                                          : "👤 Pegawai"}
-                                    </span>
-                                  </div>
-                                  {log.detail && (
-                                    <div
-                                      style={{
-                                        fontSize: 12,
-                                        color: "#888",
-                                        whiteSpace: "nowrap",
-                                        overflow: "hidden",
-                                        textOverflow: "ellipsis",
-                                      }}
-                                    >
-                                      {log.detail}
-                                    </div>
-                                  )}
-                                </div>
-                                <div
-                                  style={{ textAlign: "right", flexShrink: 0 }}
-                                >
-                                  <div
-                                    style={{
-                                      fontSize: 11,
-                                      color: "#555",
-                                      fontWeight: 600,
-                                    }}
-                                  >
-                                    {jamStr}
-                                  </div>
-                                  <div style={{ fontSize: 10, color: "#bbb" }}>
-                                    {tglStr}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* KASIR */}
-                {page === "kasir" && (
-                  <div className="kasir-grid">
-                    <div>
-                      <div
-                        style={{ display: "flex", gap: 8, marginBottom: 14 }}
-                      >
-                        <input
-                          className={styles.inp} style={{ flex: 1  }}
-                          placeholder="🔍 Cari produk..."
-                          value={searchProd}
-                          onChange={(e) => setSearchProd(e.target.value)}
-                        />
-                        <select
-                          className={styles.inp} style={{ width: 150  }}
-                          value={filterCat}
-                          onChange={(e) => setFilterCat(e.target.value)}
-                        >
-                          {CATS.map((c) => (
-                            <option key={c}>{c}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="prod-grid">
-                        {filtProd.map((p) => (
-                          <div
-                            key={p.id}
-                            onClick={() => addToCart(p)}
-                            style={{
-                              background: "#fff",
-                              borderRadius: 10,
-                              padding: "13px",
-                              border: "1px solid #e4ede4",
-                              cursor: p.stock > 0 ? "pointer" : "not-allowed",
-                              opacity: p.stock <= 0 ? 0.5 : 1,
-                              transition: "border 0.1s,transform 0.1s",
-                            }}
-                            onMouseEnter={(e) => {
-                              if (p.stock > 0) {
-                                e.currentTarget.style.borderColor = "#2d7a2d";
-                                e.currentTarget.style.transform =
-                                  "translateY(-2px)";
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.borderColor = "#e4ede4";
-                              e.currentTarget.style.transform = "";
-                            }}
-                          >
-                            <Badge cat={p.category} />
-                            <div style={{ 
-                               marginTop: 10,
-                               height: 100, 
-                               width: "100%",
-                               background: p.image_url ? `url(${p.image_url}) center/cover` : "#f5f5f5", 
-                               borderRadius: 8, 
-                               display: "flex",
-                               border: "1px solid #efefef"
-                            }}>
-                               {!p.image_url && <span style={{fontSize: 28, margin: "auto", opacity: 0.2}}>📦</span>}
-                            </div>
-                            <div
-                              style={{
-                                fontWeight: 700,
-                                fontSize: 13,
-                                marginTop: 8,
-                                marginBottom: 3,
-                                lineHeight: 1.3,
-                              }}
-                            >
-                              {p.name}
-                            </div>
-                            <div
-                              style={{
-                                fontSize: 15,
-                                fontWeight: 800,
-                                color: "#2d7a2d",
-                              }}
-                            >
-                              {fmt(p.price)}
-                            </div>
-                            <div style={{ fontSize: 9, color: "#ccc" }}>
-                              /{p.unit}
-                            </div>
-                            <div
-                              style={{
-                                fontSize: 10,
-                                marginTop: 5,
-                                color:
-                                  p.stock <= p.min_stock ? "#e65100" : "#aaa",
-                              }}
-                            >
-                              Stok: {p.stock} {p.unit}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div
-                      className="kasir-cart"
-                      style={{
-                        background: "#fff",
-                        borderRadius: 12,
-                        padding: "18px 20px",
-                        border: "1px solid #e4ede4",
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontWeight: 800,
-                          fontSize: 14,
-                          color: "#1a4a1a",
-                          marginBottom: 14,
-                        }}
-                      >
-                        🤝 Keranjang
-                      </div>
-                      <input
-                        className={styles.inp} style={{ marginBottom: 10  }}
-                        placeholder="Nama pelanggan..."
-                        value={customerName}
-                        onChange={(e) => setCustomerName(e.target.value)}
-                      />
-                      {cart.length === 0 ? (
-                        <div
-                          style={{
-                            color: "#ccc",
-                            textAlign: "center",
-                            padding: "28px 0",
-                            fontSize: 13,
-                          }}
-                        >
-                          Ketuk produk untuk menambahkan
-                        </div>
-                      ) : (
-                        <>
-                          <div style={{ maxHeight: 250, overflowY: "auto" }}>
-                            {cart.map((item) => (
-                              <div
-                                key={item.product_id}
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 6,
-                                  padding: "7px 0",
-                                  borderBottom: "1px solid #f0f5f0",
-                                }}
-                              >
-                                <div style={{ flex: 1 }}>
-                                  <div
-                                    style={{ fontSize: 12, fontWeight: 700 }}
-                                  >
-                                    {item.name}
-                                  </div>
-                                  <div style={{ fontSize: 10, color: "#aaa" }}>
-                                    {fmt(item.price)}/{item.unit}
-                                  </div>
-                                </div>
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 4,
-                                  }}
-                                >
-                                  <button
-                                    onClick={() =>
-                                      updCart(item.product_id, item.qty - 1)
-                                    }
-                                    style={{
-                                      width: 24,
-                                      height: 24,
-                                      borderRadius: 6,
-                                      border: "1px solid #ddd",
-                                      cursor: "pointer",
-                                      background: "#f5f5f5",
-                                      fontWeight: 800,
-                                      fontSize: 16,
-                                      lineHeight: 1,
-                                    }}
-                                  >
-                                    −
-                                  </button>
-                                  <span
-                                    style={{
-                                      fontSize: 13,
-                                      fontWeight: 800,
-                                      minWidth: 22,
-                                      textAlign: "center",
-                                    }}
-                                  >
-                                    {item.qty}
-                                  </span>
-                                  <button
-                                    onClick={() =>
-                                      updCart(item.product_id, item.qty + 1)
-                                    }
-                                    style={{
-                                      width: 24,
-                                      height: 24,
-                                      borderRadius: 6,
-                                      border: "1px solid #ddd",
-                                      cursor: "pointer",
-                                      background: "#f5f5f5",
-                                      fontWeight: 800,
-                                      fontSize: 16,
-                                      lineHeight: 1,
-                                    }}
-                                  >
-                                    +
-                                  </button>
-                                </div>
-                                <div
-                                  style={{
-                                    fontSize: 12,
-                                    fontWeight: 800,
-                                    color: "#2d7a2d",
-                                    minWidth: 62,
-                                    textAlign: "right",
-                                  }}
-                                >
-                                  {fmt(item.price * item.qty)}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                          <div
-                            style={{
-                              marginTop: 12,
-                              paddingTop: 12,
-                              borderTop: "2px solid #e4ede4",
-                            }}
-                          >
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                marginBottom: 10,
-                              }}
-                            >
-                              <span style={{ fontWeight: 800, fontSize: 15 }}>
-                                TOTAL
-                              </span>
-                              <span
-                                style={{
-                                  fontWeight: 900,
-                                  fontSize: 18,
-                                  color: "#2d7a2d",
-                                }}
-                              >
-                                {fmt(cartTotal)}
-                              </span>
-                            </div>
-                            <input
-                              className={styles.inp} style={{ marginBottom: 8,
-                                fontSize: 15,
-                                fontWeight: 700,
-                               }}
-                              type="number"
-                              placeholder="Nominal pembayaran..."
-                              value={paymentInput}
-                              onChange={(e) => setPaymentInput(e.target.value)}
-                            />
-                            {payNum > 0 && (
-                              <div
-                                style={{
-                                  display: "flex",
-                                  justifyContent: "space-between",
-                                  fontSize: 13,
-                                  marginBottom: 10,
-                                  color: change >= 0 ? "#2d7a2d" : "#dc3545",
-                                  fontWeight: 800,
-                                }}
-                              >
-                                <span>Kembalian</span>
-                                <span>
-                                  {change >= 0
-                                    ? fmt(change)
-                                    : "Kurang " + fmt(Math.abs(change))}
-                                </span>
-                              </div>
-                            )}
-                            <button
-                              className={`${styles.btn} ${styles.btnprimary}`} style={{ width: "100%",
-                                padding: "11px",
-                                fontSize: 14,
-                                borderRadius: 10,
-                               }}
-                              onClick={processPayment}
-                            >
-                              ✅ Proses Pembayaran
-                            </button>
-                            <button
-                              className={styles.btndefault} style={{ width: "100%",
-                                marginTop: 8,
-                                padding: "9px",
-                                fontSize: 12,
-                                borderRadius: 10,
-                               }}
-                              onClick={() => setCart([])}
-                            >
-                              🗑 Kosongkan
-                            </button>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* PRODUK */}
-                {page === "produk" && (
-                  <div>
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: 8,
-                        marginBottom: 16,
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      <input
-                        className={styles.inp} style={{ maxWidth: 250  }}
-                        placeholder="🔍 Cari produk..."
-                        value={searchProd}
-                        onChange={(e) => setSearchProd(e.target.value)}
-                      />
-                      <select
-                        className={styles.inp} style={{ width: 150  }}
-                        value={filterCat}
-                        onChange={(e) => setFilterCat(e.target.value)}
-                      >
-                        {CATS.map((c) => (
-                          <option key={c}>{c}</option>
-                        ))}
-                      </select>
-                      <button
-                        className={`${styles.btn} ${styles.btnprimary}`} style={{ marginLeft: "auto"  }}
-                        onClick={() => {
-                          setProdForm({
-                            name: "",
-                            category: "Pakan Jadi",
-                            unit: "kg",
-                            price: "",
-                            stock: "",
-                            min_stock: "",
-                            supplier_id: "",
-                          });
-                          setProdImage(null);
-                          setProdModal("add");
-                        }}
-                      >
-                        + Tambah Produk
-                      </button>
-                    </div>
-                    <div className={styles.card} style={{ padding: 0, overflow: "auto"  }}>
-                      <table
-                        style={{ width: "100%", borderCollapse: "collapse" }}
-                      >
-                        <thead>
-                          <tr>
-                            {[
-                              "Foto",
-                              "Nama",
-                              "Kategori",
-                              "Satuan",
-                              "Harga",
-                              "Stok",
-                              "Min",
-                              "Supplier",
-                              "Aksi",
-                            ].map((h) => (
-                              <th key={h} className={styles.th}>
-                                {h}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filtProd.map((p) => {
-                            const s = suppliers.find(
-                              (s) => s.id === p.supplier_id,
-                            );
-                            return (
-                              <tr
-                                key={p.id}
-                                style={{
-                                  background:
-                                    p.stock <= p.min_stock ? "#fffaf0" : "#fff",
-                                }}
-                              >
-                                <td className={styles.td}>
-                                  {p.image_url ? (
-                                    <img src={p.image_url} alt={p.name} style={{ width: 44, height: 44, objectFit: "cover", borderRadius: 8, border: "1px solid #ddd" }} />
-                                  ) : (
-                                    <div style={{ width: 44, height: 44, background: "#f0f0f0", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>📦</div>
-                                  )}
-                                </td>
-                                <td className={styles.td}>
-                                  <strong>{p.name}</strong>
-                                </td>
-                                <td className={styles.td}>
-                                  <Badge cat={p.category} />
-                                </td>
-                                <td className={styles.td}>{p.unit}</td>
-                                <td className={styles.td}>
-                                  <strong style={{ color: "#2d7a2d" }}>
-                                    {fmt(p.price)}
-                                  </strong>
-                                </td>
-                                <td className={styles.td}>
-                                  <strong
-                                    style={{
-                                      color:
-                                        p.stock <= p.min_stock
-                                          ? "#e65100"
-                                          : "#333",
-                                      fontSize: 15,
-                                    }}
-                                  >
-                                    {p.stock}
-                                  </strong>
-                                </td>
-                                <td className={styles.td}>{p.min_stock}</td>
-                                <td className={styles.td}>
-                                  <span style={{ fontSize: 11, color: "#666" }}>
-                                    {s?.name || "—"}
-                                  </span>
-                                </td>
-                                <td className={styles.td}>
-                                  <div style={{ display: "flex", gap: 5 }}>
-                                    <button
-                                      className={`${styles.btn} ${styles.btnoutline}`} style={{ padding: "4px 10px",
-                                        fontSize: 11,
-                                       }}
-                                      onClick={() => {
-                                        setProdForm({
-                                          name: p.name,
-                                          category: p.category,
-                                          unit: p.unit,
-                                          price: String(p.price),
-                                          stock: String(p.stock),
-                                          min_stock: String(p.min_stock),
-                                          supplier_id: String(
-                                            p.supplier_id || "",
-                                          ),
-                                        });
-                                        setProdImage(null);
-                                        setProdModal(p);
-                                      }}
-                                    >
-                                      Edit
-                                    </button>
-                                    <button
-                                      className={`${styles.btn} ${styles.btndanger}`} style={{ padding: "4px 10px",
-                                        fontSize: 11,
-                                       }}
-                                      onClick={() => delProd(p.id)}
-                                    >
-                                      Hapus
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-
-                {/* RIWAYAT */}
-                {page === "riwayat" && (
-                  <div>
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: 8,
-                        marginBottom: 16,
-                        flexWrap: "wrap",
-                        alignItems: "center",
-                      }}
-                    >
-                      <input
-                        className={styles.inp} style={{ maxWidth: 230  }}
-                        placeholder="🔍 ID / pelanggan..."
-                        value={histSearch}
-                        onChange={(e) => setHistSearch(e.target.value)}
-                      />
-                      <input
-                        className={styles.inp} style={{ width: 150  }}
-                        type="date"
-                        value={filterDate}
-                        onChange={(e) => setFilterDate(e.target.value)}
-                      />
-                      {filterDate && (
-                        <button className={styles.btndefault} onClick={() => setFilterDate("")}>
-                          ✕ Reset
-                        </button>
-                      )}
-                      <button
-                        className={`${styles.btn} ${styles.btnblue}`} style={{ marginLeft: "auto"  }}
-                        onClick={() => exportExcel("transaksi")}
-                      >
-                        📥 Export Excel
-                      </button>
-                    </div>
-                    <div
-                      className="table-wrap"
-                      style={{
-                        background: "#fff",
-                        borderRadius: 12,
-                        border: "1px solid #e4ede4",
-                        overflow: "auto",
-                      }}
-                    >
-                      <table
-                        style={{
-                          width: "100%",
-                          borderCollapse: "collapse",
-                          minWidth: 650,
-                        }}
-                      >
-                        <thead>
-                          <tr>
-                            {[
-                              "ID",
-                              "Tanggal",
-                              "Pelanggan",
-                              "Item",
-                              "Total",
-                              "Bayar",
-                              "Kembalian",
-                            ].map((h) => (
-                              <th key={h} className={styles.th}>
-                                {h}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filtHist.slice(0, 60).map((t) => (
-                            <tr key={t.id}>
-                              <td className={styles.td}>
-                                <strong style={{ color: "#2d7a2d" }}>
-                                  {t.trx_code}
-                                </strong>
-                              </td>
-                              <td className={styles.td}>{t.date}</td>
-                              <td className={styles.td}>{t.customer}</td>
-                              <td className={styles.td}>
-                                {(t.items || []).map((i, idx) => (
-                                  <div
-                                    key={idx}
-                                    style={{ fontSize: 10, color: "#666" }}
-                                  >
-                                    {i.product_name} ×{i.qty}
-                                  </div>
-                                ))}
-                              </td>
-                              <td className={styles.td}>
-                                <strong style={{ color: "#2d7a2d" }}>
-                                  {fmt(t.total)}
-                                </strong>
-                              </td>
-                              <td className={styles.td}>{fmt(t.payment)}</td>
-                              <td className={styles.td}>{fmt(t.change_amt)}</td>
-                            </tr>
-                          ))}
-                          {filtHist.length === 0 && (
-                            <tr>
-                              <td
-                                colSpan={7}
-                                className={styles.td} style={{ textAlign: "center",
-                                  color: "#bbb",
-                                  padding: 32,
-                                 }}
-                              >
-                                Tidak ada transaksi
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                      <div
-                        style={{
-                          padding: "11px 16px",
-                          borderTop: "1px solid #e4ede4",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          fontSize: 13,
-                        }}
-                      >
-                        <span style={{ color: "#888" }}>
-                          {filtHist.length} transaksi
+                          {s.status}
                         </span>
-                        <strong style={{ color: "#2d7a2d" }}>
-                          Total:{" "}
-                          {fmt(filtHist.reduce((s, t) => s + t.total, 0))}
-                        </strong>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* STOK */}
-                {page === "stok" && (
-                  <div>
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: 8,
-                        marginBottom: 16,
-                        alignItems: "center",
-                      }}
-                    >
-                      <input
-                        className={styles.inp} style={{ maxWidth: 250  }}
-                        placeholder="🔍 Cari produk..."
-                        value={searchProd}
-                        onChange={(e) => setSearchProd(e.target.value)}
-                      />
-                      <select
-                        className={styles.inp} style={{ width: 150  }}
-                        value={filterCat}
-                        onChange={(e) => setFilterCat(e.target.value)}
-                      >
-                        {CATS.map((c) => (
-                          <option key={c}>{c}</option>
-                        ))}
-                      </select>
-                      {isSuperAdmin && (
-                        <button
-                          className={`${styles.btn} ${styles.btnblue}`} style={{ marginLeft: "auto"  }}
-                          onClick={() => exportExcel("stok")}
-                        >
-                          📥 Export Stok
-                        </button>
-                      )}
-                    </div>
-                    <div
-                      className="table-wrap"
-                      style={{
-                        background: "#fff",
-                        borderRadius: 12,
-                        border: "1px solid #e4ede4",
-                        overflow: "auto",
-                      }}
-                    >
-                      <table
-                        style={{
-                          width: "100%",
-                          borderCollapse: "collapse",
-                          minWidth: 600,
-                        }}
-                      >
-                        <thead>
-                          <tr>
-                            {[
-                              "Foto",
-                              "Nama Produk",
-                              "Kategori",
-                              "Satuan",
-                              "Stok",
-                              "Min",
-                              "Status",
-                              "Aksi",
-                            ].map((h) => (
-                              <th key={h} className={styles.th}>
-                                {h}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {[...filtProd]
-                            .sort(
-                              (a, b) =>
-                                a.stock / a.min_stock - b.stock / b.min_stock,
-                            )
-                            .map((p) => {
-                              const st =
-                                p.stock === 0
-                                  ? "Habis"
-                                  : p.stock <= p.min_stock
-                                    ? "Menipis"
-                                    : "Aman";
-                              return (
-                                <tr
-                                  key={p.id}
-                                  style={{
-                                    background:
-                                      p.stock === 0
-                                        ? "#fff5f5"
-                                        : p.stock <= p.min_stock
-                                          ? "#fffaf0"
-                                          : "#fff",
-                                  }}
-                                >
-                                  <td className={styles.td}>
-                                    {p.image_url ? (
-                                      <img src={p.image_url} alt={p.name} style={{ width: 44, height: 44, objectFit: "cover", borderRadius: 8, border: "1px solid #ddd" }} />
-                                    ) : (
-                                      <div style={{ width: 44, height: 44, background: "#f0f0f0", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>📦</div>
-                                    )}
-                                  </td>
-                                  <td className={styles.td}>
-                                    <strong>{p.name}</strong>
-                                  </td>
-                                  <td className={styles.td}>
-                                    <Badge cat={p.category} />
-                                  </td>
-                                  <td className={styles.td}>{p.unit}</td>
-                                  <td className={styles.td}>
-                                    <div
-                                      style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 8,
-                                      }}
-                                    >
-                                      <strong style={{ fontSize: 16 }}>
-                                        {p.stock}
-                                      </strong>
-                                      <div
-                                        style={{
-                                          flex: 1,
-                                          height: 6,
-                                          background: "#eee",
-                                          borderRadius: 3,
-                                          maxWidth: 80,
-                                        }}
-                                      >
-                                        <div
-                                          style={{
-                                            height: "100%",
-                                            borderRadius: 3,
-                                            width: `${Math.min(100, (p.stock / (p.min_stock * 3)) * 100)}%`,
-                                            background:
-                                              p.stock === 0
-                                                ? "#dc2626"
-                                                : p.stock <= p.min_stock
-                                                  ? "#ea580c"
-                                                  : "#16a34a",
-                                          }}
-                                        />
-                                      </div>
-                                    </div>
-                                  </td>
-                                  <td className={styles.td}>{p.min_stock}</td>
-                                  <td className={styles.td}>
-                                    <span className={`${styles.stChip} ${styles['stChip' + st]}`}>{st}</span>
-                                  </td>
-                                  <td className={styles.td}>
-                                    <button
-                                      className={`${styles.btn} ${styles.btnwarning}`} style={{ padding: "5px 12px",
-                                        fontSize: 11,
-                                       }}
-                                      onClick={() => {
-                                        setRestockModal(p);
-                                        setRestockQty("");
-                                      }}
-                                    >
-                                      + Restock
-                                    </button>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-
-                {/* LAPORAN */}
-                {page === "laporan" && (
-                  <div id="laporan-container" style={{ padding: 10, background: "#f8fdf8" }}>
-                    <div
-                      id="laporan-actions"
-                      style={{
-                        display: "flex",
-                        gap: 10,
-                        marginBottom: 18,
-                        alignItems: "center",
-                        flexWrap: "wrap",
-                      }}
-                      data-html2canvas-ignore="true"
-                    >
-                      <select
-                        className={styles.inp} style={{ width: 140  }}
-                        value={rptMonth}
-                        onChange={(e) => setRptMonth(parseInt(e.target.value))}
-                      >
-                        {MONTHS.map((m, i) => (
-                          <option key={i} value={i}>
-                            {m}
-                          </option>
-                        ))}
-                      </select>
-                      <select
-                        className={styles.inp} style={{ width: 90  }}
-                        value={rptYear}
-                        onChange={(e) => setRptYear(parseInt(e.target.value))}
-                      >
-                        {[2024, 2025, 2026, 2027].map((y) => (
-                          <option key={y}>{y}</option>
-                        ))}
-                      </select>
-                      <button
-                        className={`${styles.btn} ${styles.btnblue}`}
-                        onClick={() => exportExcel("laporan")}
-                      >
-                        📥 Export Excel
-                      </button>
-                      <button
-                        className={styles.btn}
-                        style={{ background: "#dc2626", color: "#fff", minWidth: 140 }}
-                        onClick={exportPDF}
-                        disabled={showExportPDFLoading}
-                      >
-                        {showExportPDFLoading ? "⏳ Memproses..." : "🖨️ Cetak Jurnal PDF"}
-                      </button>
-                    </div>
-
-                    <div style={{ textAlign: "center", marginBottom: 20 }}>
-                      <h2 style={{ color: "#1a4a1a", margin: 0, textTransform: "uppercase" }}>Laporan Performa Keuangan Toko BBS</h2>
-                      <p style={{ color: "#666", margin: "5px 0 0 0", fontWeight: 600 }}>Periode Pembukuan: {MONTHS[rptMonth]} {rptYear}</p>
-                    </div>
-
-                    <div className="rpt-grid" style={{ marginBottom: 20 }}>
-                      {[
-                        {
-                          label: "Total Pendapatan",
-                          value: fmt(rptRev),
-                          color: "#2d7a2d",
-                          bg: "#e8f5e9",
-                        },
-                        {
-                          label: "Jumlah Transaksi",
-                          value: fmtN(rptTrx.length),
-                          color: "#1565c0",
-                          bg: "#e3f2fd",
-                        },
-                        {
-                          label: "Rata-rata Pendapatan / Transaksi",
-                          value: fmt(
-                            rptTrx.length > 0
-                              ? Math.round(rptRev / rptTrx.length)
-                              : 0,
-                          ),
-                          color: "#7b1fa2",
-                          bg: "#f3e5f5",
-                        },
-                      ].map((s, i) => (
-                        <div
-                          key={i}
-                          style={{
-                            background: s.bg,
-                            borderRadius: 12,
-                            padding: "16px 18px",
-                            border: `1px solid ${s.color}33`
-                          }}
-                        >
-                          <div
-                            style={{
-                              fontSize: 10,
-                              color: s.color,
-                              fontWeight: 800,
-                              marginBottom: 8,
-                              textTransform: "uppercase",
-                              letterSpacing: 0.5
-                            }}
-                          >
-                            {s.label}
-                          </div>
-                          <div
-                            style={{
-                              fontSize: 22,
-                              fontWeight: 900,
-                              color: s.color,
-                            }}
-                          >
-                            {s.value}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    <div className={styles.card} style={{ marginBottom: 20  }}>
-                      <div
-                        style={{
-                          fontWeight: 800,
-                          fontSize: 14,
-                          color: "#1a4a1a",
-                          marginBottom: 14,
-                          display: "flex",
-                          justifyContent: "space-between"
-                        }}
-                      >
-                        <span>📈 Tren Pendapatan Harian</span>
-                        <span style={{ color: "#aaa", fontSize: 12, fontWeight: 500 }}>{MONTHS[rptMonth]} {rptYear}</span>
-                      </div>
-                      <div style={{ height: 260, width: "100%" }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={dayData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4ede4" />
-                            <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#666' }} axisLine={false} tickLine={false} tickMargin={10} />
-                            <YAxis tickFormatter={(val) => `Rp${val/1000}k`} tick={{ fontSize: 11, fill: '#666' }} axisLine={false} tickLine={false} tickMargin={10} />
-                            <RTooltip formatter={(value) => [fmt(value), "Pendapatan"]} labelFormatter={(label) => `Tanggal ${label}`} cursor={{ stroke: '#2d7a2d', strokeWidth: 1, strokeDasharray: '3 3' }} contentStyle={{ borderRadius: 8, border: "1px solid #e4ede4", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }} />
-                            <Line type="monotone" dataKey="rev" stroke="#2d7a2d" strokeWidth={3} dot={{ r: 3, fill: '#2d7a2d', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }} animationDuration={1200} />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
-                    
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
-                      <div className={styles.card}>
-                        <div
-                          style={{
-                            fontWeight: 800,
-                            fontSize: 14,
-                            color: "#1a4a1a",
-                            marginBottom: 14,
-                          }}
-                        >
-                          🧩 Distribusi Kategori
-                        </div>
-                        <div style={{ height: 240, width: "100%" }}>
-                          {catData.length === 0 ? (
-                            <div style={{ color: "#ccc", textAlign: "center", paddingTop: 80 }}>Tidak ada data</div>
-                          ) : (
-                            <ResponsiveContainer width="100%" height="100%">
-                              <PieChart>
-                                <Pie
-                                  data={catData}
-                                  dataKey="rev"
-                                  nameKey="cat"
-                                  cx="50%"
-                                  cy="50%"
-                                  innerRadius={55}
-                                  outerRadius={85}
-                                  paddingAngle={3}
-                                  animationDuration={1200}
-                                >
-                                  {catData.map((entry, index) => {
-                                    const COLORS = ['#2d7a2d', '#1565c0', '#e65100', '#7b1fa2', '#c2185b', '#00796b'];
-                                    return <Cell key={`cell-${index}`} fill={BADGE[entry.cat]?.c || COLORS[index % COLORS.length]} />;
-                                  })}
-                                </Pie>
-                                <RTooltip formatter={(value) => [fmt(value), "Total"]} contentStyle={{ borderRadius: 8, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} />
-                                <Legend layout="horizontal" verticalAlign="bottom" align="center" wrapperStyle={{ fontSize: 11, paddingTop: 10 }} />
-                              </PieChart>
-                            </ResponsiveContainer>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className={styles.card}>
-                        <div
-                          style={{
-                            fontWeight: 800,
-                            fontSize: 14,
-                            color: "#1a4a1a",
-                            marginBottom: 14,
-                          }}
-                        >
-                          🏆 Top 5 Produk Terlaris
-                        </div>
-                        <div style={{ height: 240, width: "100%" }}>
-                          {topProds.length === 0 ? (
-                            <div style={{ color: "#ccc", textAlign: "center", paddingTop: 80 }}>Tidak ada data</div>
-                          ) : (
-                            <ResponsiveContainer width="100%" height="100%">
-                              <BarChart data={topProds.map(([name, qty]) => ({ name, qty }))} layout="vertical" margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f0f0f0" />
-                                <XAxis type="number" hide />
-                                <YAxis dataKey="name" type="category" width={110} tick={{ fontSize: 11, fill: '#444' }} axisLine={false} tickLine={false} />
-                                <RTooltip formatter={(value) => [`${fmtN(value)} Terjual`, "Kuantitas"]} cursor={{fill: '#f8fdf8'}} contentStyle={{ borderRadius: 8, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} />
-                                <Bar dataKey="qty" fill="#1565c0" radius={[0, 6, 6, 0]} barSize={20} animationDuration={1200}>
-                                  {topProds.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={index === 0 ? '#ea580c' : '#2563eb'} />
-                                  ))}
-                                </Bar>
-                              </BarChart>
-                            </ResponsiveContainer>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* SUPPLIER */}
-                {page === "supplier" && (
-                  <div>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        marginBottom: 16,
-                        flexWrap: "wrap",
-                        gap: 8,
-                      }}
-                    >
-                      <span style={{ fontSize: 13, color: "#666" }}>
-                        {suppliers.length} supplier
-                      </span>
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <button
-                          className={`${styles.btn} ${styles.btnblue}`}
-                          onClick={() => exportExcel("supplier")}
-                        >
-                          📥 Export
-                        </button>
-                        <button
-                          className={`${styles.btn} ${styles.btnprimary}`}
-                          onClick={() => {
-                            setSupForm({
-                              name: "",
-                              contact: "",
-                              phone: "",
-                              email: "",
-                              address: "",
-                              category: "",
-                              status: "Aktif",
-                              notes: "",
-                            });
-                            setSupModal("add");
-                          }}
-                        >
-                          + Tambah
-                        </button>
-                      </div>
-                    </div>
-                    <div className="sup-grid">
-                      {suppliers.map((s) => {
-                        const spProds = products.filter(
-                          (p) => p.supplier_id === s.id,
-                        );
-                        return (
-                          <div
-                            key={s.id}
-                            className={styles.card} style={{ padding: "16px 18px"  }}
-                          >
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "flex-start",
-                                marginBottom: 10,
-                              }}
-                            >
-                              <div style={{ flex: 1 }}>
-                                <div
-                                  style={{
-                                    fontWeight: 800,
-                                    fontSize: 14,
-                                    color: "#1a4a1a",
-                                  }}
-                                >
-                                  {s.name}
-                                </div>
-                                <div
-                                  style={{
-                                    fontSize: 11,
-                                    color: "#888",
-                                    marginTop: 2,
-                                  }}
-                                >
-                                  👤 {s.contact}
-                                </div>
-                              </div>
-                              <span
-                                style={{
-                                  padding: "3px 10px",
-                                  borderRadius: 20,
-                                  fontSize: 10,
-                                  fontWeight: 800,
-                                  background:
-                                    s.status === "Aktif"
-                                      ? "#e8f5e9"
-                                      : "#fee2e2",
-                                  color:
-                                    s.status === "Aktif"
-                                      ? "#2e7d32"
-                                      : "#dc2626",
-                                  flexShrink: 0,
-                                }}
-                              >
-                                {s.status}
-                              </span>
-                            </div>
-                            <div
-                              style={{
-                                fontSize: 12,
-                                color: "#555",
-                                marginBottom: 3,
-                              }}
-                            >
-                              📞 {s.phone}
-                            </div>
-                            {s.email && (
-                              <div
-                                style={{
-                                  fontSize: 12,
-                                  color: "#555",
-                                  marginBottom: 3,
-                                }}
-                              >
-                                ✉️ {s.email}
-                              </div>
-                            )}
-                            <div
-                              style={{
-                                fontSize: 12,
-                                color: "#555",
-                                marginBottom: 6,
-                              }}
-                            >
-                              📍 {s.address}
-                            </div>
-                            {spProds.length > 0 && (
-                              <div
-                                style={{
-                                  fontSize: 11,
-                                  color: "#888",
-                                  marginBottom: 6,
-                                }}
-                              >
-                                📦 {spProds.map((p) => p.name).join(", ")}
-                              </div>
-                            )}
-                            {s.notes && (
-                              <div
-                                style={{
-                                  fontSize: 11,
-                                  color: "#aaa",
-                                  fontStyle: "italic",
-                                  marginBottom: 10,
-                                }}
-                              >
-                                💬 {s.notes}
-                              </div>
-                            )}
-                            <div
-                              style={{
-                                display: "flex",
-                                gap: 6,
-                                borderTop: "1px solid #f0f5f0",
-                                paddingTop: 10,
-                              }}
-                            >
-                              <button
-                                className={`${styles.btn} ${styles.btnoutline}`} style={{ flex: 1,
-                                  padding: "5px 0",
-                                  fontSize: 11,
-                                 }}
-                                onClick={() => {
-                                  setSupForm({
-                                    name: s.name,
-                                    contact: s.contact,
-                                    phone: s.phone,
-                                    email: s.email,
-                                    address: s.address,
-                                    category: s.category,
-                                    status: s.status,
-                                    notes: s.notes,
-                                  });
-                                  setSupModal(s);
-                                }}
-                              >
-                                ✏️ Edit
-                              </button>
-                              <button
-                                className={`${styles.btn} ${styles.btndanger}`} style={{ flex: 1,
-                                  padding: "5px 0",
-                                  fontSize: 11,
-                                 }}
-                                onClick={() => delSup(s.id)}
-                              >
-                                🗑 Hapus
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* EXCEL */}
-                {page === "excel" && (
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
-                      gap: 18,
-                    }}
-                  >
-                    <div className={styles.card}>
-                      <div
-                        style={{
-                          fontWeight: 800,
-                          fontSize: 15,
-                          color: "#1a4a1a",
-                          marginBottom: 4,
-                        }}
-                      >
-                        📥 Export ke Excel
                       </div>
                       <div
                         style={{
                           fontSize: 12,
-                          color: "#888",
-                          marginBottom: 16,
+                          color: "#555",
+                          marginBottom: 3,
                         }}
                       >
-                        Unduh data ke file .xlsx
+                        📞 {s.phone}
                       </div>
-                      {[
-                        {
-                          label: "📦 Semua Data",
-                          sub: "4 sheet sekaligus",
-                          type: "all",
-                          color: "primary",
-                        },
-                        {
-                          label: "📈 Laporan Bulanan",
-                          sub: `${MONTHS[rptMonth]} ${rptYear}`,
-                          type: "laporan",
-                          color: "blue",
-                        },
-                        {
-                          label: "📋 Transaksi",
-                          sub: "Riwayat transaksi",
-                          type: "transaksi",
-                          color: "outline",
-                        },
-                        {
-                          label: "📦 Produk",
-                          sub: "Daftar produk",
-                          type: "produk",
-                          color: "outline",
-                        },
-                        {
-                          label: "📊 Stok",
-                          sub: "Status stok",
-                          type: "stok",
-                          color: "outline",
-                        },
-                        {
-                          label: "🤝 Supplier",
-                          sub: "Data supplier",
-                          type: "supplier",
-                          color: "outline",
-                        },
-                      ].map((e) => (
-                        <div
-                          key={e.type}
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            padding: "11px 0",
-                            borderBottom: "1px solid #f0f5f0",
-                          }}
-                        >
-                          <div>
-                            <div style={{ fontSize: 13, fontWeight: 700 }}>
-                              {e.label}
-                            </div>
-                            <div style={{ fontSize: 11, color: "#aaa" }}>
-                              {e.sub}
-                            </div>
-                          </div>
-                          <button
-                            className={`${styles.btn} ${styles['btn' + e.color]}`} style={{ flexShrink: 0, minWidth: 100 }}
-                            onClick={() => exportExcel(e.type)}
-                            disabled={exportingTitle === e.type}
-                          >
-                            {exportingTitle === e.type ? "⏳..." : "Download"}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                    <div>
-                      <div className={styles.card} style={{ marginBottom: 14  }}>
-                        <div
-                          style={{
-                            fontWeight: 800,
-                            fontSize: 15,
-                            color: "#1a4a1a",
-                            marginBottom: 4,
-                          }}
-                        >
-                          📤 Import dari Excel
-                        </div>
+                      {s.email && (
                         <div
                           style={{
                             fontSize: 12,
+                            color: "#555",
+                            marginBottom: 3,
+                          }}
+                        >
+                          ✉️ {s.email}
+                        </div>
+                      )}
+                      <div
+                        style={{
+                          fontSize: 12,
+                          color: "#555",
+                          marginBottom: 6,
+                        }}
+                      >
+                        📍 {s.address}
+                      </div>
+                      {spProds.length > 0 && (
+                        <div
+                          style={{
+                            fontSize: 11,
                             color: "#888",
-                            marginBottom: 16,
+                            marginBottom: 6,
                           }}
                         >
-                          Upload .xlsx untuk update data produk massal
+                          📦 {spProds.map((p) => p.name).join(", ")}
                         </div>
+                      )}
+                      {s.notes && (
                         <div
                           style={{
-                            background: "#f8fdf8",
-                            borderRadius: 12,
-                            padding: "20px",
-                            marginBottom: 14,
-                            border: "2px dashed #b8d4b8",
-                            textAlign: "center",
-                            opacity: importingState ? 0.6 : 1,
-                            pointerEvents: importingState ? "none" : "auto"
+                            fontSize: 11,
+                            color: "#aaa",
+                            fontStyle: "italic",
+                            marginBottom: 10,
                           }}
                         >
-                          <div style={{ fontSize: 32, marginBottom: 8 }}>
-                            {importingState ? "⏳" : "📂"}
-                          </div>
-                          <div
-                            style={{
-                               fontSize: 13,
-                               fontWeight: 800,
-                               color: importingState ? "#2d7a2d" : "#333",
-                               marginBottom: 14,
-                             }}
-                          >
-                            {importingState ? importingState : "Pilih File Excel"}
-                          </div>
-                          <input
-                            type="file"
-                            accept=".xlsx,.xls"
-                            ref={fileRef}
-                            onChange={handleImport}
-                            style={{ display: "none" }}
-                          />
-                          <button
-                            className={`${styles.btn} ${styles.btnprimary}`} style={{ padding: "10px 24px"  }}
-                            onClick={() => fileRef.current.click()}
-                            disabled={!!importingState}
-                          >
-                            {importingState ? <Spin size={16} color="#fff" /> : "📤 Upload File"}
-                          </button>
+                          💬 {s.notes}
                         </div>
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            padding: "12px 14px",
-                            background: "#fff8e1",
-                            borderRadius: 10,
-                            border: "1px solid #fde68a",
+                      )}
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 6,
+                          borderTop: "1px solid #f0f5f0",
+                          paddingTop: 10,
+                        }}
+                      >
+                        <button
+                          className={`${styles.btn} ${styles.btnoutline}`} style={{
+                            flex: 1,
+                            padding: "5px 0",
+                            fontSize: 11,
+                          }}
+                          onClick={() => {
+                            setSupForm({
+                              name: s.name,
+                              contact: s.contact,
+                              phone: s.phone,
+                              email: s.email,
+                              address: s.address,
+                              category: s.category,
+                              status: s.status,
+                              notes: s.notes,
+                            });
+                            setSupModal(s);
                           }}
                         >
-                          <div>
-                            <div style={{ fontSize: 13, fontWeight: 700 }}>
-                              📄 Download Template
-                            </div>
-                            <div style={{ fontSize: 11, color: "#888" }}>
-                              Format kolom yang benar
-                            </div>
-                          </div>
-                          <button
-                            className={`${styles.btn} ${styles.btnwarning}`} style={{ padding: "8px 14px"  }}
-                            onClick={() => exportExcel("template")}
-                          >
-                            ⬇ Unduh
-                          </button>
-                        </div>
-                        {importLog.length > 0 && (
-                          <div
-                            style={{
-                              marginTop: 12,
-                              background: "#f0fdf4",
-                              borderRadius: 10,
-                              padding: "12px 14px",
-                              border: "1px solid #bbf7d0",
-                            }}
-                          >
-                            {importLog.map((l, i) => (
-                              <div
-                                key={i}
-                                style={{
-                                  fontSize: 12,
-                                  color: "#333",
-                                  marginBottom: 3,
-                                }}
-                              >
-                                {l}
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                          ✏️ Edit
+                        </button>
+                        <button
+                          className={`${styles.btn} ${styles.btndanger}`} style={{
+                            flex: 1,
+                            padding: "5px 0",
+                            fontSize: 11,
+                          }}
+                          onClick={() => delSup(s.id)}
+                        >
+                          🗑 Hapus
+                        </button>
                       </div>
                     </div>
-                  </div>
-                )}
-
-                {/* KELOLA AKUN */}
-                {page === "users" && (
-                  <UsersPage
-                    sb={sb}
-                    showNotif={showNotif}
-                    currentUser={currentUser}
-                    logActivity={logActivity}
-                  />
-                )}
-
-                {/* MASTER DATA */}
-                {page === "masterdata" && (
-                  <MasterDataPage
-                    sb={sb}
-                    showNotif={showNotif}
-                    kategoris={kategoris}
-                    satuans={satuans}
-                    onReload={loadAll}
-                    logActivity={logActivity}
-                  />
-                )}
+                  );
+                })}
               </div>
             </div>
+          )}
 
-            {/* RECEIPT */}
-            {receipt && (
-              <div className={styles.overlay} onClick={() => setReceipt(null)}>
+          {/* EXCEL */}
+          {page === "excel" && (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 18,
+              }}
+            >
+              <div className={styles.card}>
                 <div
-                  className={styles.modal} style={{ width: 300  }}
-                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    fontWeight: 800,
+                    fontSize: 15,
+                    color: "#1a4a1a",
+                    marginBottom: 4,
+                  }}
                 >
-                  <div style={{ textAlign: "center", marginBottom: 14 }}>
-                    <div
-                      style={{
-                        fontSize: 18,
-                        fontWeight: 900,
-                        color: "#1a4a1a",
-                      }}
-                    >
-                      🌿 BerkahBirdShop
-                    </div>
-                    <div style={{ fontSize: 10, color: "#aaa" }}>
-                      Klaten, Jawa Tengah
-                    </div>
-                    <div
-                      style={{ margin: "10px 0", borderTop: "2px dashed #eee" }}
-                    />
-                    <div style={{ fontSize: 10, color: "#aaa" }}>
-                      {receipt.trx_code} · {receipt.date || TODAY}
-                    </div>
-                    <div
-                      style={{ fontSize: 11, fontWeight: 700, color: "#555" }}
-                    >
-                      Pelanggan: {receipt.customer || customerName || "Umum"}
-                    </div>
-                  </div>
-                  {(receipt.items || []).map((i, idx) => (
-                    <div
-                      key={idx}
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        fontSize: 11,
-                        padding: "4px 0",
-                      }}
-                    >
-                      <span>
-                        {i.product_name} ×{i.qty} {i.unit}
-                      </span>
-                      <strong>{fmt(i.price * i.qty)}</strong>
-                    </div>
-                  ))}
+                  📥 Export ke Excel
+                </div>
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: "#888",
+                    marginBottom: 16,
+                  }}
+                >
+                  Unduh data ke file .xlsx
+                </div>
+                {[
+                  {
+                    label: "📦 Semua Data",
+                    sub: "4 sheet sekaligus",
+                    type: "all",
+                    color: "primary",
+                  },
+                  {
+                    label: "📈 Laporan Bulanan",
+                    sub: `${MONTHS[rptMonth]} ${rptYear}`,
+                    type: "laporan",
+                    color: "blue",
+                  },
+                  {
+                    label: "📋 Transaksi",
+                    sub: "Riwayat transaksi",
+                    type: "transaksi",
+                    color: "outline",
+                  },
+                  {
+                    label: "📦 Produk",
+                    sub: "Daftar produk",
+                    type: "produk",
+                    color: "outline",
+                  },
+                  {
+                    label: "📊 Stok",
+                    sub: "Status stok",
+                    type: "stok",
+                    color: "outline",
+                  },
+                  {
+                    label: "🤝 Supplier",
+                    sub: "Data supplier",
+                    type: "supplier",
+                    color: "outline",
+                  },
+                ].map((e) => (
                   <div
-                    style={{ margin: "10px 0", borderTop: "2px dashed #eee" }}
-                  />
-                  <div
+                    key={e.type}
                     style={{
                       display: "flex",
                       justifyContent: "space-between",
-                      fontWeight: 900,
+                      alignItems: "center",
+                      padding: "11px 0",
+                      borderBottom: "1px solid #f0f5f0",
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700 }}>
+                        {e.label}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#aaa" }}>
+                        {e.sub}
+                      </div>
+                    </div>
+                    <button
+                      className={`${styles.btn} ${styles['btn' + e.color]}`} style={{ flexShrink: 0, minWidth: 100 }}
+                      onClick={() => exportExcel(e.type)}
+                      disabled={exportingTitle === e.type}
+                    >
+                      {exportingTitle === e.type ? "⏳..." : "Download"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <div className={styles.card} style={{ marginBottom: 14 }}>
+                  <div
+                    style={{
+                      fontWeight: 800,
                       fontSize: 15,
-                    }}
-                  >
-                    <span>TOTAL</span>
-                    <span style={{ color: "#2d7a2d" }}>
-                      {fmt(receipt.total)}
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      fontSize: 12,
-                      marginTop: 5,
-                      color: "#666",
-                    }}
-                  >
-                    <span>Bayar</span>
-                    <span>{fmt(receipt.payment)}</span>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      fontSize: 12,
-                      color: "#666",
-                    }}
-                  >
-                    <span>Kembalian</span>
-                    <strong>{fmt(receipt.change_amt)}</strong>
-                  </div>
-                  <div
-                    style={{
-                      textAlign: "center",
-                      marginTop: 14,
-                      fontSize: 10,
-                      color: "#bbb",
-                      lineHeight: 1.8,
-                    }}
-                  >
-                    Terima kasih sudah berbelanja! 🌿
-                  </div>
-                  <button
-                    className={`${styles.btn} ${styles.btnprimary}`} style={{ width: "100%",
-                      marginTop: 12,
-                      padding: "11px",
-                      borderRadius: 10,
-                      fontSize: 14,
-                     }}
-                    onClick={() => setReceipt(null)}
-                  >
-                    ✅ Tutup Struk
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* MODAL PRODUK */}
-            {prodModal && (
-              <div className={styles.overlay} onClick={() => setProdModal(null)}>
-                <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-                  <div
-                    style={{
-                      fontSize: 16,
-                      fontWeight: 800,
-                      marginBottom: 18,
                       color: "#1a4a1a",
-                    }}
-                  >
-                    {prodModal === "add"
-                      ? "➕ Tambah Produk"
-                      : "✏️ Edit Produk"}
-                  </div>
-                  <div style={{ marginBottom: 16 }}>
-                     <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>
-                        Foto Produk (Opsional)
-                     </label>
-                     <input type="file" accept="image/*" onChange={(e) => setProdImage(e.target.files[0])} className={styles.inp} style={{ padding: "8px", width: "100%" }} />
-                     {prodModal !== "add" && prodModal?.image_url && !prodImage && (
-                        <div style={{ marginTop: 8 }}>
-                           <img src={prodModal.image_url} alt="Current" style={{ width: 64, height: 64, objectFit: "cover", borderRadius: 8, border: "2px solid #e4ede4" }} />
-                           <div style={{ fontSize: 10, color: "#888", marginTop: 4 }}>Foto saat ini, biarkan kosong untuk tidak mengubah.</div>
-                        </div>
-                     )}
-                  </div>
-                  {[
-                    { l: "Nama *", k: "name", t: "text", p: "Nama produk..." },
-                    { l: "Harga *", k: "price", t: "number", p: "Harga..." },
-                    { l: "Stok *", k: "stock", t: "number", p: "Stok..." },
-                    {
-                      l: "Min Stok",
-                      k: "min_stock",
-                      t: "number",
-                      p: "Min stok...",
-                    },
-                  ].map((f) => (
-                    <div key={f.k} style={{ marginBottom: 12 }}>
-                      <label
-                        style={{
-                          display: "block",
-                          fontSize: 11,
-                          fontWeight: 800,
-                          color: "#555",
-                          marginBottom: 4,
-                        }}
-                      >
-                        {f.l}
-                      </label>
-                      <input
-                        className={styles.inp}
-                        type={f.t}
-                        placeholder={f.p}
-                        value={prodForm[f.k]}
-                        onChange={(e) =>
-                          setProdForm((p) => ({ ...p, [f.k]: e.target.value }))
-                        }
-                      />
-                    </div>
-                  ))}
-                  <div style={{ marginBottom: 12 }}>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: 11,
-                        fontWeight: 800,
-                        color: "#555",
-                        marginBottom: 4,
-                      }}
-                    >
-                      Kategori
-                    </label>
-                    <select
-                      className={styles.inp}
-                      value={prodForm.category}
-                      onChange={(e) =>
-                        setProdForm((p) => ({ ...p, category: e.target.value }))
-                      }
-                    >
-                      {kategoris.map((k) => (
-                        <option key={k.id} value={k.nama}>
-                          {k.nama}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div style={{ marginBottom: 12 }}>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: 11,
-                        fontWeight: 800,
-                        color: "#555",
-                        marginBottom: 4,
-                      }}
-                    >
-                      Satuan
-                    </label>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                      {satuans.map((s) => {
-                        const isSelected = prodForm.unit && prodForm.unit.split(", ").includes(s.nama);
-                        return (
-                          <div
-                            key={s.id}
-                            onClick={() => {
-                              let current = prodForm.unit ? prodForm.unit.split(", ").filter(Boolean) : [];
-                              if (isSelected) {
-                                current = current.filter((u) => u !== s.nama);
-                              } else {
-                                current.push(s.nama);
-                              }
-                              setProdForm((p) => ({ ...p, unit: current.join(", ") }));
-                            }}
-                            style={{
-                              padding: "6px 12px",
-                              border: "1px solid " + (isSelected ? "#2d7a2d" : "#ddd"),
-                              borderRadius: 6,
-                              background: isSelected ? "#e4ede4" : "#fff",
-                              color: isSelected ? "#1a4a1a" : "#666",
-                              fontSize: 13,
-                              cursor: "pointer",
-                              fontWeight: isSelected ? 700 : 500,
-                              userSelect: "none",
-                              transition: "all 0.15s ease",
-                            }}
-                          >
-                            {s.nama}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  <div style={{ marginBottom: 20 }}>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: 11,
-                        fontWeight: 800,
-                        color: "#555",
-                        marginBottom: 4,
-                      }}
-                    >
-                      Supplier
-                    </label>
-                    <select
-                      className={styles.inp}
-                      value={prodForm.supplier_id}
-                      onChange={(e) =>
-                        setProdForm((p) => ({
-                          ...p,
-                          supplier_id: e.target.value,
-                        }))
-                      }
-                    >
-                      <option value="">— Pilih Supplier —</option>
-                      {suppliers.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div style={{ display: "flex", gap: 10 }}>
-                    <button
-                      className={`${styles.btn} ${styles.btnprimary}`} style={{ flex: 1,
-                        padding: 12,
-                        fontSize: 14,
-                       }}
-                      onClick={saveProd}
-                    >
-                      💾 Simpan
-                    </button>
-                    <button
-                      className={styles.btndefault} style={{ flex: 1, padding: 12, fontSize: 14  }}
-                      onClick={() => setProdModal(null)}
-                    >
-                      Batal
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* MODAL SUPPLIER */}
-            {supModal && (
-              <div className={styles.overlay} onClick={() => setSupModal(null)}>
-                <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-                  <div
-                    style={{
-                      fontSize: 16,
-                      fontWeight: 800,
-                      marginBottom: 18,
-                      color: "#1a4a1a",
-                    }}
-                  >
-                    {supModal === "add"
-                      ? "➕ Tambah Supplier"
-                      : "✏️ Edit Supplier"}
-                  </div>
-                  {[
-                    {
-                      l: "Nama *",
-                      k: "name",
-                      t: "text",
-                      p: "Nama supplier...",
-                    },
-                    {
-                      l: "Kontak PIC",
-                      k: "contact",
-                      t: "text",
-                      p: "Nama PIC...",
-                    },
-                    { l: "Telepon *", k: "phone", t: "text", p: "08xx..." },
-                    { l: "Email", k: "email", t: "email", p: "email@..." },
-                    { l: "Alamat", k: "address", t: "text", p: "Jl. ..." },
-                    {
-                      l: "Kategori",
-                      k: "category",
-                      t: "text",
-                      p: "Jenis produk...",
-                    },
-                  ].map((f) => (
-                    <div key={f.k} style={{ marginBottom: 12 }}>
-                      <label
-                        style={{
-                          display: "block",
-                          fontSize: 11,
-                          fontWeight: 800,
-                          color: "#555",
-                          marginBottom: 4,
-                        }}
-                      >
-                        {f.l}
-                      </label>
-                      <input
-                        className={styles.inp}
-                        type={f.t}
-                        placeholder={f.p}
-                        value={supForm[f.k]}
-                        onChange={(e) =>
-                          setSupForm((s) => ({ ...s, [f.k]: e.target.value }))
-                        }
-                      />
-                    </div>
-                  ))}
-                  <div style={{ marginBottom: 12 }}>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: 11,
-                        fontWeight: 800,
-                        color: "#555",
-                        marginBottom: 4,
-                      }}
-                    >
-                      Status
-                    </label>
-                    <select
-                      className={styles.inp}
-                      value={supForm.status}
-                      onChange={(e) =>
-                        setSupForm((s) => ({ ...s, status: e.target.value }))
-                      }
-                    >
-                      <option>Aktif</option>
-                      <option>Tidak Aktif</option>
-                    </select>
-                  </div>
-                  <div style={{ marginBottom: 20 }}>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: 11,
-                        fontWeight: 800,
-                        color: "#555",
-                        marginBottom: 4,
-                      }}
-                    >
-                      Catatan
-                    </label>
-                    <textarea
-                      className={styles.inp} style={{ height: 76, resize: "vertical"  }}
-                      placeholder="Catatan..."
-                      value={supForm.notes}
-                      onChange={(e) =>
-                        setSupForm((s) => ({ ...s, notes: e.target.value }))
-                      }
-                    />
-                  </div>
-                  <div style={{ display: "flex", gap: 10 }}>
-                    <button
-                      className={`${styles.btn} ${styles.btnprimary}`} style={{ flex: 1,
-                        padding: 12,
-                        fontSize: 14,
-                       }}
-                      onClick={saveSup}
-                    >
-                      💾 Simpan
-                    </button>
-                    <button
-                      className={styles.btndefault} style={{ flex: 1, padding: 12, fontSize: 14  }}
-                      onClick={() => setSupModal(null)}
-                    >
-                      Batal
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* MODAL RESTOCK */}
-            {restockModal && (
-              <div className={styles.overlay} onClick={() => setRestockModal(null)}>
-                <div
-                  className={styles.modal} style={{ width: 330  }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div
-                    style={{
-                      fontSize: 16,
-                      fontWeight: 800,
                       marginBottom: 4,
-                      color: "#1a4a1a",
                     }}
                   >
-                    📦 Restock Produk
+                    📤 Import dari Excel
                   </div>
                   <div
                     style={{
-                      fontSize: 13,
-                      color: "#666",
-                      marginBottom: 14,
-                      fontWeight: 600,
+                      fontSize: 12,
+                      color: "#888",
+                      marginBottom: 16,
                     }}
                   >
-                    {restockModal.name}
+                    Upload .xlsx untuk update data produk massal
                   </div>
                   <div
                     style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      fontSize: 13,
+                      background: "#f8fdf8",
+                      borderRadius: 12,
+                      padding: "20px",
                       marginBottom: 14,
-                      padding: "12px",
-                      background: "#f4f7f2",
-                      borderRadius: 10,
+                      border: "2px dashed #b8d4b8",
+                      textAlign: "center",
+                      opacity: importingState ? 0.6 : 1,
+                      pointerEvents: importingState ? "none" : "auto"
                     }}
                   >
-                    <span>Stok saat ini</span>
-                    <strong>
-                      {restockModal.stock} {restockModal.unit}
-                    </strong>
-                  </div>
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: 11,
-                      fontWeight: 800,
-                      color: "#555",
-                      marginBottom: 5,
-                    }}
-                  >
-                    Tambah Stok ({restockModal.unit})
-                  </label>
-                  <input
-                    className={styles.inp} style={{ marginBottom: 12,
-                      fontSize: 16,
-                      fontWeight: 700,
-                     }}
-                    type="number"
-                    placeholder="Jumlah tambahan..."
-                    value={restockQty}
-                    onChange={(e) => setRestockQty(e.target.value)}
-                    autoFocus
-                  />
-                  {restockQty && parseInt(restockQty) > 0 && (
+                    <div style={{ fontSize: 32, marginBottom: 8 }}>
+                      {importingState ? "⏳" : "📂"}
+                    </div>
                     <div
                       style={{
-                        marginBottom: 12,
                         fontSize: 13,
-                        color: "#2d7a2d",
                         fontWeight: 800,
-                        padding: "10px 12px",
+                        color: importingState ? "#2d7a2d" : "#333",
+                        marginBottom: 14,
+                      }}
+                    >
+                      {importingState ? importingState : "Pilih File Excel"}
+                    </div>
+                    <input
+                      type="file"
+                      accept=".xlsx,.xls"
+                      ref={fileRef}
+                      onChange={handleImport}
+                      style={{ display: "none" }}
+                    />
+                    <button
+                      className={`${styles.btn} ${styles.btnprimary}`} style={{ padding: "10px 24px" }}
+                      onClick={() => fileRef.current.click()}
+                      disabled={!!importingState}
+                    >
+                      {importingState ? <Spin size={16} color="#fff" /> : "📤 Upload File"}
+                    </button>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      padding: "12px 14px",
+                      background: "#fff8e1",
+                      borderRadius: 10,
+                      border: "1px solid #fde68a",
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700 }}>
+                        📄 Download Template
+                      </div>
+                      <div style={{ fontSize: 11, color: "#888" }}>
+                        Format kolom yang benar
+                      </div>
+                    </div>
+                    <button
+                      className={`${styles.btn} ${styles.btnwarning}`} style={{ padding: "8px 14px" }}
+                      onClick={() => exportExcel("template")}
+                    >
+                      ⬇ Unduh
+                    </button>
+                  </div>
+                  {importLog.length > 0 && (
+                    <div
+                      style={{
+                        marginTop: 12,
                         background: "#f0fdf4",
                         borderRadius: 10,
+                        padding: "12px 14px",
+                        border: "1px solid #bbf7d0",
                       }}
                     >
-                      ✅ Setelah restock:{" "}
-                      <strong>
-                        {restockModal.stock + parseInt(restockQty)}{" "}
-                        {restockModal.unit}
-                      </strong>
+                      {importLog.map((l, i) => (
+                        <div
+                          key={i}
+                          style={{
+                            fontSize: 12,
+                            color: "#333",
+                            marginBottom: 3,
+                          }}
+                        >
+                          {l}
+                        </div>
+                      ))}
                     </div>
                   )}
-                  <div style={{ display: "flex", gap: 10 }}>
-                    <button
-                      className={`${styles.btn} ${styles.btnprimary}`} style={{ flex: 1,
-                        padding: 12,
-                        fontSize: 14,
-                       }}
-                      onClick={doRestock}
-                    >
-                      ✅ Konfirmasi
-                    </button>
-                    <button
-                      className={styles.btndefault} style={{ flex: 1, padding: 12, fontSize: 14  }}
-                      onClick={() => setRestockModal(null)}
-                    >
-                      Batal
-                    </button>
-                  </div>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* KONFIRMASI LOGOUT */}
-            {showLogout && (
-              <div className={styles.overlay} onClick={() => setShowLogout(false)}>
-                <div
-                  className={styles.modal} style={{ width: 340, textAlign: "center"  }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div style={{ fontSize: 40, marginBottom: 12 }}>🚪</div>
-                  <div
-                    style={{
-                      fontSize: 17,
-                      fontWeight: 800,
-                      color: "#1a4a1a",
-                      marginBottom: 8,
-                    }}
-                  >
-                    Keluar dari Sistem?
-                  </div>
-                  <div
-                    style={{ fontSize: 13, color: "#888", marginBottom: 24 }}
-                  >
-                    Anda akan kembali ke halaman login.
-                    <br />
-                    Pastikan semua transaksi sudah disimpan.
-                  </div>
-                  <div style={{ display: "flex", gap: 10 }}>
-                    <button
-                      className={`${styles.btn} ${styles.btndanger}`} style={{ flex: 1,
-                        padding: 12,
-                        fontSize: 14,
-                       }}
-                      onClick={onLogout}
-                    >
-                      🚪 Ya, Keluar
-                    </button>
-                    <button
-                      className={styles.btndefault} style={{ flex: 1, padding: 12, fontSize: 14  }}
-                      onClick={() => setShowLogout(false)}
-                    >
-                      Batal
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+          {/* KELOLA AKUN */}
+          {page === "users" && (
+            <UsersPage
+              sb={sb}
+              showNotif={showNotif}
+              currentUser={currentUser}
+              logActivity={logActivity}
+            />
+          )}
 
-            {notif && (
+          {/* MASTER DATA */}
+          {page === "masterdata" && (
+            <MasterDataPage
+              sb={sb}
+              showNotif={showNotif}
+              kategoris={kategoris}
+              satuans={satuans}
+              onReload={loadAll}
+              logActivity={logActivity}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* RECEIPT */}
+      {receipt && (
+        <div className={styles.overlay} onClick={() => setReceipt(null)}>
+          <div
+            className={styles.modal} style={{ width: 300 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ textAlign: "center", marginBottom: 14 }}>
               <div
                 style={{
-                  position: "fixed",
-                  top: 14,
-                  right: 14,
-                  zIndex: 9999,
-                  padding: "12px 18px",
-                  borderRadius: 12,
-                  background: notif.type === "error" ? "#dc3545" : "#2d7a2d",
-                  color: "#fff",
-                  fontSize: 13,
-                  fontWeight: 800,
-                  boxShadow: "0 6px 20px rgba(0,0,0,0.25)",
-                  animation: "fadeIn 0.2s ease",
+                  fontSize: 18,
+                  fontWeight: 900,
+                  color: "#1a4a1a",
                 }}
               >
-                {notif.msg}
+                🌿 BerkahBirdShop
+              </div>
+              <div style={{ fontSize: 10, color: "#aaa" }}>
+                Klaten, Jawa Tengah
+              </div>
+              <div
+                style={{ margin: "10px 0", borderTop: "2px dashed #eee" }}
+              />
+              <div style={{ fontSize: 10, color: "#aaa" }}>
+                {receipt.trx_code} · {receipt.date || TODAY}
+              </div>
+              <div
+                style={{ fontSize: 11, fontWeight: 700, color: "#555" }}
+              >
+                Pelanggan: {receipt.customer || customerName || "Umum"}
+              </div>
+            </div>
+            {(receipt.items || []).map((i, idx) => (
+              <div
+                key={idx}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  fontSize: 11,
+                  padding: "4px 0",
+                }}
+              >
+                <span>
+                  {i.product_name} ×{i.qty} {i.unit}
+                </span>
+                <strong>{fmt(i.price * i.qty)}</strong>
+              </div>
+            ))}
+            <div
+              style={{ margin: "10px 0", borderTop: "2px dashed #eee" }}
+            />
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontWeight: 900,
+                fontSize: 15,
+              }}
+            >
+              <span>TOTAL</span>
+              <span style={{ color: "#2d7a2d" }}>
+                {fmt(receipt.total)}
+              </span>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: 12,
+                marginTop: 5,
+                color: "#666",
+              }}
+            >
+              <span>Bayar</span>
+              <span>{fmt(receipt.payment)}</span>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: 12,
+                color: "#666",
+              }}
+            >
+              <span>Kembalian</span>
+              <strong>{fmt(receipt.change_amt)}</strong>
+            </div>
+            <div
+              style={{
+                textAlign: "center",
+                marginTop: 14,
+                fontSize: 10,
+                color: "#bbb",
+                lineHeight: 1.8,
+              }}
+            >
+              Terima kasih sudah berbelanja! 🌿
+            </div>
+            <button
+              className={`${styles.btn} ${styles.btnprimary}`} style={{
+                width: "100%",
+                marginTop: 12,
+                padding: "11px",
+                borderRadius: 10,
+                fontSize: 14,
+              }}
+              onClick={() => setReceipt(null)}
+            >
+              ✅ Tutup Struk
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL PRODUK */}
+      {prodModal && (
+        <div className={styles.overlay} onClick={() => setProdModal(null)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div
+              style={{
+                fontSize: 16,
+                fontWeight: 800,
+                marginBottom: 18,
+                color: "#1a4a1a",
+              }}
+            >
+              {prodModal === "add"
+                ? "➕ Tambah Produk"
+                : "✏️ Edit Produk"}
+            </div>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>
+                Foto Produk (Opsional)
+              </label>
+              <input type="file" accept="image/*" onChange={(e) => setProdImage(e.target.files[0])} className={styles.inp} style={{ padding: "8px", width: "100%" }} />
+              {prodModal !== "add" && prodModal?.image_url && !prodImage && (
+                <div style={{ marginTop: 8 }}>
+                  <img src={prodModal.image_url} alt="Current" style={{ width: 64, height: 64, objectFit: "cover", borderRadius: 8, border: "2px solid #e4ede4" }} />
+                  <div style={{ fontSize: 10, color: "#888", marginTop: 4 }}>Foto saat ini, biarkan kosong untuk tidak mengubah.</div>
+                </div>
+              )}
+            </div>
+            {[
+              { l: "Nama *", k: "name", t: "text", p: "Nama produk..." },
+              { l: "Harga *", k: "price", t: "number", p: "Harga..." },
+              { l: "Stok *", k: "stock", t: "number", p: "Stok..." },
+              {
+                l: "Min Stok",
+                k: "min_stock",
+                t: "number",
+                p: "Min stok...",
+              },
+            ].map((f) => (
+              <div key={f.k} style={{ marginBottom: 12 }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: 11,
+                    fontWeight: 800,
+                    color: "#555",
+                    marginBottom: 4,
+                  }}
+                >
+                  {f.l}
+                </label>
+                <input
+                  className={styles.inp}
+                  type={f.t}
+                  placeholder={f.p}
+                  value={prodForm[f.k]}
+                  onChange={(e) =>
+                    setProdForm((p) => ({ ...p, [f.k]: e.target.value }))
+                  }
+                />
+              </div>
+            ))}
+            <div style={{ marginBottom: 12 }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 11,
+                  fontWeight: 800,
+                  color: "#555",
+                  marginBottom: 4,
+                }}
+              >
+                Kategori
+              </label>
+              <select
+                className={styles.inp}
+                value={prodForm.category}
+                onChange={(e) =>
+                  setProdForm((p) => ({ ...p, category: e.target.value }))
+                }
+              >
+                {kategoris.map((k) => (
+                  <option key={k.id} value={k.nama}>
+                    {k.nama}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 11,
+                  fontWeight: 800,
+                  color: "#555",
+                  marginBottom: 4,
+                }}
+              >
+                Satuan
+              </label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {satuans.map((s) => {
+                  const isSelected = prodForm.unit && prodForm.unit.split(", ").includes(s.nama);
+                  return (
+                    <div
+                      key={s.id}
+                      onClick={() => {
+                        let current = prodForm.unit ? prodForm.unit.split(", ").filter(Boolean) : [];
+                        if (isSelected) {
+                          current = current.filter((u) => u !== s.nama);
+                        } else {
+                          current.push(s.nama);
+                        }
+                        setProdForm((p) => ({ ...p, unit: current.join(", ") }));
+                      }}
+                      style={{
+                        padding: "6px 12px",
+                        border: "1px solid " + (isSelected ? "#2d7a2d" : "#ddd"),
+                        borderRadius: 6,
+                        background: isSelected ? "#e4ede4" : "#fff",
+                        color: isSelected ? "#1a4a1a" : "#666",
+                        fontSize: 13,
+                        cursor: "pointer",
+                        fontWeight: isSelected ? 700 : 500,
+                        userSelect: "none",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      {s.nama}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <div style={{ marginBottom: 20 }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 11,
+                  fontWeight: 800,
+                  color: "#555",
+                  marginBottom: 4,
+                }}
+              >
+                Supplier
+              </label>
+              <select
+                className={styles.inp}
+                value={prodForm.supplier_id}
+                onChange={(e) =>
+                  setProdForm((p) => ({
+                    ...p,
+                    supplier_id: e.target.value,
+                  }))
+                }
+              >
+                <option value="">— Pilih Supplier —</option>
+                {suppliers.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                className={`${styles.btn} ${styles.btnprimary}`} style={{
+                  flex: 1,
+                  padding: 12,
+                  fontSize: 14,
+                }}
+                onClick={saveProd}
+              >
+                💾 Simpan
+              </button>
+              <button
+                className={styles.btndefault} style={{ flex: 1, padding: 12, fontSize: 14 }}
+                onClick={() => setProdModal(null)}
+              >
+                Batal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL SUPPLIER */}
+      {supModal && (
+        <div className={styles.overlay} onClick={() => setSupModal(null)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div
+              style={{
+                fontSize: 16,
+                fontWeight: 800,
+                marginBottom: 18,
+                color: "#1a4a1a",
+              }}
+            >
+              {supModal === "add"
+                ? "➕ Tambah Supplier"
+                : "✏️ Edit Supplier"}
+            </div>
+            {[
+              {
+                l: "Nama *",
+                k: "name",
+                t: "text",
+                p: "Nama supplier...",
+              },
+              {
+                l: "Kontak PIC",
+                k: "contact",
+                t: "text",
+                p: "Nama PIC...",
+              },
+              { l: "Telepon *", k: "phone", t: "text", p: "08xx..." },
+              { l: "Email", k: "email", t: "email", p: "email@..." },
+              { l: "Alamat", k: "address", t: "text", p: "Jl. ..." },
+              {
+                l: "Kategori",
+                k: "category",
+                t: "text",
+                p: "Jenis produk...",
+              },
+            ].map((f) => (
+              <div key={f.k} style={{ marginBottom: 12 }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: 11,
+                    fontWeight: 800,
+                    color: "#555",
+                    marginBottom: 4,
+                  }}
+                >
+                  {f.l}
+                </label>
+                <input
+                  className={styles.inp}
+                  type={f.t}
+                  placeholder={f.p}
+                  value={supForm[f.k]}
+                  onChange={(e) =>
+                    setSupForm((s) => ({ ...s, [f.k]: e.target.value }))
+                  }
+                />
+              </div>
+            ))}
+            <div style={{ marginBottom: 12 }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 11,
+                  fontWeight: 800,
+                  color: "#555",
+                  marginBottom: 4,
+                }}
+              >
+                Status
+              </label>
+              <select
+                className={styles.inp}
+                value={supForm.status}
+                onChange={(e) =>
+                  setSupForm((s) => ({ ...s, status: e.target.value }))
+                }
+              >
+                <option>Aktif</option>
+                <option>Tidak Aktif</option>
+              </select>
+            </div>
+            <div style={{ marginBottom: 20 }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 11,
+                  fontWeight: 800,
+                  color: "#555",
+                  marginBottom: 4,
+                }}
+              >
+                Catatan
+              </label>
+              <textarea
+                className={styles.inp} style={{ height: 76, resize: "vertical" }}
+                placeholder="Catatan..."
+                value={supForm.notes}
+                onChange={(e) =>
+                  setSupForm((s) => ({ ...s, notes: e.target.value }))
+                }
+              />
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                className={`${styles.btn} ${styles.btnprimary}`} style={{
+                  flex: 1,
+                  padding: 12,
+                  fontSize: 14,
+                }}
+                onClick={saveSup}
+              >
+                💾 Simpan
+              </button>
+              <button
+                className={styles.btndefault} style={{ flex: 1, padding: 12, fontSize: 14 }}
+                onClick={() => setSupModal(null)}
+              >
+                Batal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL RESTOCK */}
+      {restockModal && (
+        <div className={styles.overlay} onClick={() => setRestockModal(null)}>
+          <div
+            className={styles.modal} style={{ width: 330 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                fontSize: 16,
+                fontWeight: 800,
+                marginBottom: 4,
+                color: "#1a4a1a",
+              }}
+            >
+              📦 Restock Produk
+            </div>
+            <div
+              style={{
+                fontSize: 13,
+                color: "#666",
+                marginBottom: 14,
+                fontWeight: 600,
+              }}
+            >
+              {restockModal.name}
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: 13,
+                marginBottom: 14,
+                padding: "12px",
+                background: "#f4f7f2",
+                borderRadius: 10,
+              }}
+            >
+              <span>Stok saat ini</span>
+              <strong>
+                {restockModal.stock} {restockModal.unit}
+              </strong>
+            </div>
+            <label
+              style={{
+                display: "block",
+                fontSize: 11,
+                fontWeight: 800,
+                color: "#555",
+                marginBottom: 5,
+              }}
+            >
+              Tambah Stok ({restockModal.unit})
+            </label>
+            <input
+              className={styles.inp} style={{
+                marginBottom: 12,
+                fontSize: 16,
+                fontWeight: 700,
+              }}
+              type="number"
+              placeholder="Jumlah tambahan..."
+              value={restockQty}
+              onChange={(e) => setRestockQty(e.target.value)}
+              autoFocus
+            />
+            {restockQty && parseInt(restockQty) > 0 && (
+              <div
+                style={{
+                  marginBottom: 12,
+                  fontSize: 13,
+                  color: "#2d7a2d",
+                  fontWeight: 800,
+                  padding: "10px 12px",
+                  background: "#f0fdf4",
+                  borderRadius: 10,
+                }}
+              >
+                ✅ Setelah restock:{" "}
+                <strong>
+                  {restockModal.stock + parseInt(restockQty)}{" "}
+                  {restockModal.unit}
+                </strong>
               </div>
             )}
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                className={`${styles.btn} ${styles.btnprimary}`} style={{
+                  flex: 1,
+                  padding: 12,
+                  fontSize: 14,
+                }}
+                onClick={doRestock}
+              >
+                ✅ Konfirmasi
+              </button>
+              <button
+                className={styles.btndefault} style={{ flex: 1, padding: 12, fontSize: 14 }}
+                onClick={() => setRestockModal(null)}
+              >
+                Batal
+              </button>
+            </div>
           </div>
-        );
-      }
+        </div>
+      )}
+
+      {/* KONFIRMASI LOGOUT */}
+      {showLogout && (
+        <div className={styles.overlay} onClick={() => setShowLogout(false)}>
+          <div
+            className={styles.modal} style={{ width: 340, textAlign: "center" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ fontSize: 40, marginBottom: 12 }}>🚪</div>
+            <div
+              style={{
+                fontSize: 17,
+                fontWeight: 800,
+                color: "#1a4a1a",
+                marginBottom: 8,
+              }}
+            >
+              Keluar dari Sistem?
+            </div>
+            <div
+              style={{ fontSize: 13, color: "#888", marginBottom: 24 }}
+            >
+              Anda akan kembali ke halaman login.
+              <br />
+              Pastikan semua transaksi sudah disimpan.
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                className={`${styles.btn} ${styles.btndanger}`} style={{
+                  flex: 1,
+                  padding: 12,
+                  fontSize: 14,
+                }}
+                onClick={onLogout}
+              >
+                🚪 Ya, Keluar
+              </button>
+              <button
+                className={styles.btndefault} style={{ flex: 1, padding: 12, fontSize: 14 }}
+                onClick={() => setShowLogout(false)}
+              >
+                Batal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {notif && (
+        <div
+          style={{
+            position: "fixed",
+            top: 14,
+            right: 14,
+            zIndex: 9999,
+            padding: "12px 18px",
+            borderRadius: 12,
+            background: notif.type === "error" ? "#dc3545" : "#2d7a2d",
+            color: "#fff",
+            fontSize: 13,
+            fontWeight: 800,
+            boxShadow: "0 6px 20px rgba(0,0,0,0.25)",
+            animation: "fadeIn 0.2s ease",
+          }}
+        >
+          {notif.msg}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default App;
