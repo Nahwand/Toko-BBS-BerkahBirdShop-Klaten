@@ -19,6 +19,28 @@ export default function LoginPage({ onLogin }) {
     }
     setLoading(true);
     setError("");
+
+    // === OFFLINE FALLBACK ===
+    if (!navigator.onLine) {
+      try {
+        const cached = sessionStorage.getItem("bbs_user");
+        if (cached) {
+          const cachedUser = JSON.parse(cached);
+          if (cachedUser.username === username.trim()) {
+            onLogin(cachedUser);
+            setLoading(false);
+            return;
+          }
+        }
+        setError("Mode Offline: Hanya user yang terakhir login di perangkat ini yang bisa masuk tanpa internet.");
+      } catch (offErr) {
+        setError("Mode Offline: Tidak ada data login tersimpan. Sambungkan internet untuk login pertama kali.");
+      }
+      setLoading(false);
+      return;
+    }
+
+    // === ONLINE LOGIN ===
     try {
       const { data: rows, error: err } = await sb
         .from("users")
@@ -45,6 +67,18 @@ export default function LoginPage({ onLogin }) {
       sessionStorage.setItem("bbs_user", JSON.stringify(data));
       onLogin(data);
     } catch (e) {
+      // Network error saat online — coba fallback ke cache
+      try {
+        const cached = sessionStorage.getItem("bbs_user");
+        if (cached) {
+          const cachedUser = JSON.parse(cached);
+          if (cachedUser.username === username.trim()) {
+            onLogin(cachedUser);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (_) { /* ignore */ }
       setError("Gagal login: " + e.message);
     }
     setLoading(false);

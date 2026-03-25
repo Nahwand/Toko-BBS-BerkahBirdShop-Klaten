@@ -171,28 +171,36 @@ function Main({ currentUser, onLogout, isOffline }) {
     } catch (e) {
       console.error("Log error:", e);
     }
-  }; const loadAll = useCallback(async () => {
+  };
+
+  // Helper: Load all cached data from localStorage
+  const loadFromCache = () => {
+    const cachedProds = JSON.parse(localStorage.getItem('bbs_offline_products') || "[]");
+    const cachedCats = JSON.parse(localStorage.getItem('bbs_offline_cats') || "[]");
+    const cachedUnits = JSON.parse(localStorage.getItem('bbs_offline_units') || "[]");
+    const cachedSup = JSON.parse(localStorage.getItem('bbs_offline_suppliers') || "[]");
+
+    setProducts(cachedProds);
+    setKategoris(cachedCats);
+    setSatuans(cachedUnits);
+    if (cachedSup.length > 0) setSuppliers(cachedSup);
+
+    return cachedProds.length > 0;
+  };
+
+  const loadAll = useCallback(async () => {
     setLoading(true);
 
     // 1. Prioritas Mode Offline: Jika offline, langsung ambil dari cache
-    if (isOffline) {
+    if (isOffline || !navigator.onLine) {
       try {
-        const cachedProds = JSON.parse(localStorage.getItem('bbs_offline_products') || "[]");
-        const cachedCats = JSON.parse(localStorage.getItem('bbs_offline_cats') || "[]");
-        const cachedUnits = JSON.parse(localStorage.getItem('bbs_offline_units') || "[]");
-        const cachedSup = JSON.parse(localStorage.getItem('bbs_offline_suppliers') || "[]");
-
-        setProducts(cachedProds);
-        setKategoris(cachedCats);
-        setSatuans(cachedUnits);
-        if (cachedSup.length > 0) setSuppliers(cachedSup);
-
-        showNotif("Mode Offline Aktif", "info");
-        setLoading(false);
-        return; // Selesai, jangan coba-coba fetch ke server
+        const hasData = loadFromCache();
+        showNotif(hasData ? "Mode Offline Aktif" : "Mode Offline: Belum ada data tersimpan.", hasData ? "info" : "error");
       } catch (err) {
         console.error("Gagal load cache:", err);
       }
+      setLoading(false);
+      return;
     }
 
     try {
@@ -235,16 +243,8 @@ function Main({ currentUser, onLogout, isOffline }) {
         .then(() => { })
         .catch(e => console.error("Gagal menghapus log lama:", e));
 
-      // 4. Fetch data dari server
-      const [
-        { data: prods },
-        { data: sups },
-        { data: trxs },
-        { data: items },
-        { data: kats },
-        { data: sats },
-        { data: acts },
-      ] = await Promise.all([
+      // 4. Fetch data dari server DENGAN timeout 8 detik
+      const fetchWithTimeout = Promise.all([
         sb.from("products").select("*").order("name"),
         sb.from("suppliers").select("*").order("name"),
         sb
@@ -261,6 +261,20 @@ function Main({ currentUser, onLogout, isOffline }) {
           .order("created_at", { ascending: false })
           .limit(30),
       ]);
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Request timeout")), 8000)
+      );
+
+      const [
+        { data: prods },
+        { data: sups },
+        { data: trxs },
+        { data: items },
+        { data: kats },
+        { data: sats },
+        { data: acts },
+      ] = await Promise.race([fetchWithTimeout, timeoutPromise]);
 
       // 5. Update state & Caching (HANYA jika data berhasil di-fetch)
       if (prods) {
@@ -290,13 +304,15 @@ function Main({ currentUser, onLogout, isOffline }) {
       }
     } catch (e) {
       console.error("LoadAll Error:", e);
-      // Fallback terakhir jika catch error (misal network error tiba-tiba)
-      if (isOffline || !navigator.onLine) {
-        const cp = JSON.parse(localStorage.getItem('bbs_offline_products') || "[]");
-        if (cp.length > 0) setProducts(cp);
-        setKategoris(JSON.parse(localStorage.getItem('bbs_offline_cats') || "[]"));
-        setSatuans(JSON.parse(localStorage.getItem('bbs_offline_units') || "[]"));
-      } else {
+      // Fallback terakhir: SELALU coba load dari cache jika fetch gagal
+      try {
+        const hasData = loadFromCache();
+        if (hasData) {
+          showNotif("Koneksi bermasalah. Menggunakan data offline.", "info");
+        } else {
+          showNotif("Gagal terhubung ke server. Periksa koneksi Anda.", "error");
+        }
+      } catch (cacheErr) {
         showNotif("Gagal terhubung ke server. Periksa koneksi Anda.", "error");
       }
     }
