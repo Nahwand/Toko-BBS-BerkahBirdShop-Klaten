@@ -180,6 +180,13 @@ function Main({ currentUser, onLogout, isOffline }) {
     const cachedUnits = JSON.parse(localStorage.getItem('bbs_offline_units') || "[]");
     const cachedSup = JSON.parse(localStorage.getItem('bbs_offline_suppliers') || "[]");
 
+    console.log('[BBS Offline] loadFromCache:', {
+      products: cachedProds.length,
+      cats: cachedCats.length,
+      units: cachedUnits.length,
+      suppliers: cachedSup.length,
+    });
+
     setProducts(cachedProds);
     setKategoris(cachedCats);
     setSatuans(cachedUnits);
@@ -190,11 +197,13 @@ function Main({ currentUser, onLogout, isOffline }) {
 
   const loadAll = useCallback(async () => {
     setLoading(true);
+    console.log('[BBS Offline] loadAll called, isOffline:', isOffline, 'navigator.onLine:', navigator.onLine);
 
     // 1. Prioritas Mode Offline: Jika offline, langsung ambil dari cache
     if (isOffline || !navigator.onLine) {
       try {
         const hasData = loadFromCache();
+        console.log('[BBS Offline] Offline mode, hasData:', hasData);
         showNotif(hasData ? "Mode Offline Aktif" : "Mode Offline: Belum ada data tersimpan.", hasData ? "info" : "error");
       } catch (err) {
         console.error("Gagal load cache:", err);
@@ -280,6 +289,7 @@ function Main({ currentUser, onLogout, isOffline }) {
       if (prods) {
         setProducts(prods);
         localStorage.setItem('bbs_offline_products', JSON.stringify(prods));
+        console.log('[BBS Offline] Cached products:', prods.length);
       }
       if (sups) {
         setSuppliers(sups);
