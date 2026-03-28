@@ -55,7 +55,7 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
       });
       const data = await res.json();
       if (data.status) {
-        // Reset cache notif agar bisa kirim lagi
+        // Reset cache notif agar semua produk bisa kirim lagi
         const today = new Date().toISOString().slice(0, 10);
         localStorage.removeItem(`bbs_notif_sent_${today}`);
         showNotif('✅ Pesan WA terkirim!');

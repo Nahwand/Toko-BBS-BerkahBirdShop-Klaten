@@ -232,12 +232,12 @@ function Main({ currentUser, onLogout, isOffline }) {
       // Cek produk mana yang BELUM pernah dinotif hari ini
       const today = new Date().toISOString().slice(0, 10);
       const cacheKey = `bbs_notif_sent_${today}`;
-      const alreadySent = JSON.parse(localStorage.getItem(cacheKey) || '[]');
-      const belumDinotif = habis.filter(p => !alreadySent.includes(p.id));
+      const alreadySent = JSON.parse(localStorage.getItem(cacheKey) || '[]').map(String);
+      const belumDinotif = habis.filter(p => !alreadySent.includes(String(p.id)));
       if (!belumDinotif.length) return;
 
       // Simpan yang sudah dinotif
-      const newSent = [...alreadySent, ...belumDinotif.map(p => p.id)];
+      const newSent = [...alreadySent, ...belumDinotif.map(p => String(p.id))];
       localStorage.setItem(cacheKey, JSON.stringify(newSent));
 
       // Auto-format nomor: 08xxx → 628xxx
