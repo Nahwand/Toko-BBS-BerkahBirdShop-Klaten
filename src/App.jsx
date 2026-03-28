@@ -195,19 +195,34 @@ function Main({ currentUser, onLogout, isOffline }) {
     return cachedProds.length > 0;
   };
 
-  const loadAll = useCallback(async () => {
+  const loadAll = useCallback(async (forceOffline = false) => {
     setLoading(true);
-    console.log('[BBS Offline] loadAll called, isOffline:', isOffline, 'navigator.onLine:', navigator.onLine);
 
-    // 1. Prioritas Mode Offline: Jika offline, langsung ambil dari cache
-    if (isOffline || !navigator.onLine) {
-      try {
-        const hasData = loadFromCache();
-        console.log('[BBS Offline] Offline mode, hasData:', hasData);
-        showNotif(hasData ? "Mode Offline Aktif" : "Mode Offline: Belum ada data tersimpan.", hasData ? "info" : "error");
-      } catch (err) {
-        console.error("Gagal load cache:", err);
-      }
+    // Jika offline, pakai data yang sudah ada di state dulu
+    // Hanya load dari cache jika state kosong (pertama kali)
+    if (forceOffline || (!navigator.onLine)) {
+      setProducts(prev => {
+        if (prev.length > 0) return prev; // sudah ada data di memory, jangan timpa
+        const cached = JSON.parse(localStorage.getItem('bbs_offline_products') || "[]");
+        return cached;
+      });
+      setKategoris(prev => {
+        if (prev.length > 0) return prev;
+        return JSON.parse(localStorage.getItem('bbs_offline_cats') || "[]");
+      });
+      setSatuans(prev => {
+        if (prev.length > 0) return prev;
+        return JSON.parse(localStorage.getItem('bbs_offline_units') || "[]");
+      });
+      setSuppliers(prev => {
+        if (prev.length > 0) return prev;
+        return JSON.parse(localStorage.getItem('bbs_offline_suppliers') || "[]");
+      });
+      const cachedCount = JSON.parse(localStorage.getItem('bbs_offline_products') || "[]").length;
+      showNotif(
+        cachedCount > 0 ? "Mode Offline: Menggunakan data tersimpan." : "Mode Offline: Belum ada data. Sambungkan internet lalu refresh.",
+        cachedCount > 0 ? "info" : "error"
+      );
       setLoading(false);
       return;
     }
@@ -327,12 +342,37 @@ function Main({ currentUser, onLogout, isOffline }) {
       }
     }
     setLoading(false);
-  }, [isOffline]);
-
+  }, []);
 
   useEffect(() => {
     loadAll();
   }, [loadAll]);
+
+  // Saat status offline berubah, jangan reload data — cukup notif
+  useEffect(() => {
+    if (isOffline) {
+      // Pastikan data di memory tidak hilang — jika kosong, load dari cache
+      setProducts(prev => {
+        if (prev.length > 0) return prev;
+        return JSON.parse(localStorage.getItem('bbs_offline_products') || "[]");
+      });
+      setKategoris(prev => {
+        if (prev.length > 0) return prev;
+        return JSON.parse(localStorage.getItem('bbs_offline_cats') || "[]");
+      });
+      setSatuans(prev => {
+        if (prev.length > 0) return prev;
+        return JSON.parse(localStorage.getItem('bbs_offline_units') || "[]");
+      });
+      setSuppliers(prev => {
+        if (prev.length > 0) return prev;
+        return JSON.parse(localStorage.getItem('bbs_offline_suppliers') || "[]");
+      });
+    } else {
+      // Kembali online — refresh data dari server
+      loadAll();
+    }
+  }, [isOffline]);
 
   const todayTrx = transactions.filter((t) => t.date === TODAY);
   const todayRev = todayTrx.reduce((s, t) => s + t.total, 0);
