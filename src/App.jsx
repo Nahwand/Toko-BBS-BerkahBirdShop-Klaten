@@ -229,10 +229,16 @@ function Main({ currentUser, onLogout, isOffline }) {
       const habis = prods.filter(p => Number(p.stock) === 0);
       if (!habis.length) return;
 
-      const lastNotif = localStorage.getItem('bbs_last_notif_date');
+      // Cek produk mana yang BELUM pernah dinotif hari ini
       const today = new Date().toISOString().slice(0, 10);
-      if (lastNotif === today) return; // Hanya 1x per hari
-      localStorage.setItem('bbs_last_notif_date', today);
+      const cacheKey = `bbs_notif_sent_${today}`;
+      const alreadySent = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+      const belumDinotif = habis.filter(p => !alreadySent.includes(p.id));
+      if (!belumDinotif.length) return;
+
+      // Simpan yang sudah dinotif
+      const newSent = [...alreadySent, ...belumDinotif.map(p => p.id)];
+      localStorage.setItem(cacheKey, JSON.stringify(newSent));
 
       // Auto-format nomor: 08xxx → 628xxx
       let nomorWA = (cfg.notif_wa_number || '').trim().replace(/\s+/g, '');
@@ -240,7 +246,7 @@ function Main({ currentUser, onLogout, isOffline }) {
       if (nomorWA.startsWith('+')) nomorWA = nomorWA.slice(1);
 
       const now = new Date().toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' });
-      const msg = `🌿 *BerkahBirdShop - Peringatan Stok!*\n━━━━━━━━━━━━━━━━\n🚨 *${habis.length} Produk Stok HABIS*\n\n${habis.map((p, i) => `${i + 1}. ❌ ${p.name}`).join('\n')}\n\n━━━━━━━━━━━━━━━━\n📅 ${now}\n\n⚡ Segera lakukan restock agar penjualan tidak terganggu.\n\n_Notifikasi otomatis dari sistem Toko BBS_`;
+      const msg = `🌿 *BerkahBirdShop - Peringatan Stok!*\n━━━━━━━━━━━━━━━━\n🚨 *${belumDinotif.length} Produk Stok HABIS*\n\n${belumDinotif.map((p, i) => `${i + 1}. ❌ ${p.name}`).join('\n')}\n\n━━━━━━━━━━━━━━━━\n📅 ${now}\n\n⚡ Segera lakukan restock agar penjualan tidak terganggu.\n\n_Notifikasi otomatis dari sistem Toko BBS_`;
 
       if (cfg.notif_wa_token && nomorWA) {
         const res = await fetch('https://api.fonnte.com/send', {
@@ -672,6 +678,9 @@ function Main({ currentUser, onLogout, isOffline }) {
         `${trxCode} - ${customerName || "Umum"} - ${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(cartTotal)}`,
       );
       showNotif("Transaksi berhasil!");
+      // Cek stok habis setelah transaksi — kirim notif jika ada yang baru habis
+      const { data: freshProds } = await sb.from("products").select("*");
+      if (freshProds) sendStockNotif(freshProds);
     } catch (e) {
       showNotif("Gagal: " + e.message, "error");
     }
