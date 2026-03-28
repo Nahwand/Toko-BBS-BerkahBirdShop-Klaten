@@ -2,38 +2,41 @@ import React from 'react';
 import styles from '../../styles/App.module.css';
 import { fmt, TODAY } from '../../utils/constants';
 
+const row = { display: "flex", justifyContent: "space-between", fontSize: 11, padding: "3px 0" };
+const divider = { margin: "8px 0", borderTop: "1px dashed #ccc" };
+
 export default function ReceiptModal({ receipt, customerName, onClose }) {
   if (!receipt) return null;
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} style={{ width: 300 }} onClick={(e) => e.stopPropagation()}>
         <div id="struk-print">
-          <div style={{ textAlign: "center", marginBottom: 14 }}>
-            <div style={{ fontSize: 18, fontWeight: 900, color: "#1a4a1a" }}>🌿 BerkahBirdShop</div>
-            <div style={{ fontSize: 10, color: "#aaa" }}>Klaten, Jawa Tengah</div>
-            <div style={{ margin: "10px 0", borderTop: "2px dashed #eee" }} />
-            <div style={{ fontSize: 10, color: "#aaa" }}>{receipt.trx_code} · {receipt.date || TODAY}</div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#555" }}>Pelanggan: {receipt.customer || customerName || "Umum"}</div>
+          <div style={{ textAlign: "center", marginBottom: 10 }}>
+            <div style={{ fontSize: 15, fontWeight: 900, color: "#1a4a1a" }}>BerkahBirdShop</div>
+            <div style={{ fontSize: 9, color: "#aaa" }}>Klaten, Jawa Tengah</div>
+            <div style={divider} />
+            <div style={{ fontSize: 9, color: "#666" }}>{receipt.trx_code} · {receipt.date || TODAY}</div>
+            <div style={{ fontSize: 10, fontWeight: 700 }}>Pelanggan: {receipt.customer || customerName || "Umum"}</div>
           </div>
+          <div style={divider} />
           {(receipt.items || []).map((i, idx) => (
-            <div key={idx} style={{ display: "flex", justifyContent: "space-between", fontSize: 11, padding: "4px 0" }}>
-              <span>{i.product_name} ×{i.qty} {i.unit}</span>
-              <strong>{fmt(i.price * i.qty)}</strong>
+            <div key={idx} style={{ padding: "3px 0", fontSize: 10 }}>
+              <div>{i.product_name}</div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "#888" }}>{i.qty} {i.unit} × {fmt(i.price)}</span>
+                <strong>{fmt(i.price * i.qty)}</strong>
+              </div>
             </div>
           ))}
-          <div style={{ margin: "10px 0", borderTop: "2px dashed #eee" }} />
-          <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 900, fontSize: 15 }}>
+          <div style={divider} />
+          <div style={{ ...row, fontWeight: 900, fontSize: 13 }}>
             <span>TOTAL</span>
             <span style={{ color: "#2d7a2d" }}>{fmt(receipt.total)}</span>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginTop: 5, color: "#666" }}>
-            <span>Bayar</span><span>{fmt(receipt.payment)}</span>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#666" }}>
-            <span>Kembalian</span><strong>{fmt(receipt.change_amt)}</strong>
-          </div>
-          <div style={{ textAlign: "center", marginTop: 14, fontSize: 10, color: "#bbb", lineHeight: 1.8 }}>
-            Terima kasih sudah berbelanja! 🌿
+          <div style={row}><span>Bayar</span><span>{fmt(receipt.payment)}</span></div>
+          <div style={row}><span>Kembalian</span><strong>{fmt(receipt.change_amt)}</strong></div>
+          <div style={{ textAlign: "center", marginTop: 10, fontSize: 9, color: "#aaa" }}>
+            Terima kasih sudah berbelanja!
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
