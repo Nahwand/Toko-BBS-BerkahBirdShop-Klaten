@@ -64,7 +64,7 @@ export default function ProdukModal({ prodModal, prodForm, setProdForm, prodImag
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <button className={`${styles.btn} ${styles.btnprimary}`} style={{ flex: 1, padding: 12, fontSize: 14 }} onClick={saveProd}>💾 Simpan</button>
-          <button className={styles.btndefault} style={{ flex: 1, padding: 12, fontSize: 14 }} onClick={onClose}>Batal</button>
+          <button style={{ flex: 1, padding: 12, fontSize: 14, borderRadius: 10, border: "none", background: "#f0f5f0", color: "#2d7a2d", fontWeight: 700, cursor: "pointer" }} onClick={onClose}>Batal</button>
         </div>
       </div>
     </div>

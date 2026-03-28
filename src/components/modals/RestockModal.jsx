@@ -25,7 +25,7 @@ export default function RestockModal({ restockModal, restockQty, setRestockQty, 
         )}
         <div style={{ display: "flex", gap: 10 }}>
           <button className={`${styles.btn} ${styles.btnprimary}`} style={{ flex: 1, padding: 12, fontSize: 14 }} onClick={doRestock}>✅ Konfirmasi</button>
-          <button className={styles.btndefault} style={{ flex: 1, padding: 12, fontSize: 14 }} onClick={onClose}>Batal</button>
+          <button style={{ flex: 1, padding: 12, fontSize: 14, borderRadius: 10, border: "none", background: "#f0f5f0", color: "#2d7a2d", fontWeight: 700, cursor: "pointer" }} onClick={onClose}>Batal</button>
         </div>
       </div>
     </div>

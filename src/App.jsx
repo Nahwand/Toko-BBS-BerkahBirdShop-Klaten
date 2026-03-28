@@ -1331,7 +1331,7 @@ function Main({ currentUser, onLogout, isOffline }) {
             <div style={{ fontSize: 13, color: "#888", marginBottom: 24 }}>Anda akan kembali ke halaman login.<br />Pastikan semua transaksi sudah disimpan.</div>
             <div style={{ display: "flex", gap: 10 }}>
               <button className={`${styles.btn} ${styles.btndanger}`} style={{ flex: 1, padding: 12, fontSize: 14 }} onClick={onLogout}>🚪 Ya, Keluar</button>
-              <button className={styles.btndefault} style={{ flex: 1, padding: 12, fontSize: 14 }} onClick={() => setShowLogout(false)}>Batal</button>
+              <button style={{ flex: 1, padding: 12, fontSize: 14, borderRadius: 10, border: "none", background: "#f0f5f0", color: "#2d7a2d", fontWeight: 700, cursor: "pointer" }} onClick={() => setShowLogout(false)}>Batal</button>
             </div>
           </div>
         </div>

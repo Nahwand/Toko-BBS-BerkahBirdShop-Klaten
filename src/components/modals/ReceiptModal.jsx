@@ -80,7 +80,7 @@ export default function ReceiptModal({ receipt, customerName, onClose }) {
         </div>
 
         <div style={{ display: "flex", gap: 8 }}>
-          <button className={`${styles.btn} ${styles.btndefault}`} style={{ flex: 1, padding: "11px", borderRadius: 10, fontSize: 14 }} onClick={handlePrint}>🖨️ Cetak</button>
+          <button style={{ flex: 1, padding: "11px", borderRadius: 10, fontSize: 14, border: "none", background: "#f0f5f0", color: "#2d7a2d", fontWeight: 700, cursor: "pointer" }} onClick={handlePrint}>🖨️ Cetak</button>
           <button className={`${styles.btn} ${styles.btnprimary}`} style={{ flex: 1, padding: "11px", borderRadius: 10, fontSize: 14 }} onClick={onClose}>✅ Tutup</button>
         </div>
       </div>
