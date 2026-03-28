@@ -18,7 +18,7 @@ export default function ConfirmModal({ confirm, onConfirm, onCancel }) {
           <button className={`${styles.btn} ${styles.btndanger}`} style={{ flex: 1, padding: 12, fontSize: 14 }} onClick={onConfirm}>
             {confirm.confirmLabel || "Ya, Hapus"}
           </button>
-          <button className={styles.btndefault} style={{ flex: 1, padding: 12, fontSize: 14 }} onClick={onCancel}>
+          <button style={{ flex: 1, padding: 12, fontSize: 14, borderRadius: 10, border: "none", background: "#f0f5f0", color: "#2d7a2d", fontWeight: 700, cursor: "pointer" }} onClick={onCancel}>
             Batal
           </button>
         </div>
