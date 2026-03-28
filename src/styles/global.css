@@ -280,22 +280,11 @@ textarea {
     font-size: 10px;
     line-height: 1.4;
   }
-  #struk-print strong,
-  #struk-print span {
-    white-space: nowrap;
+  #struk-print table {
+    width: 100%;
+    border-collapse: collapse;
   }
-  /* Khusus baris item: nama produk boleh wrap, harga tidak */
-  #struk-print .item-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  #struk-print .item-name {
-    white-space: normal;
-    flex: 1;
-  }
-  #struk-print .item-price {
-    white-space: nowrap;
-    margin-left: 8px;
+  #struk-print td {
+    padding: 1mm 0;
   }
 }
