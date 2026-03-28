@@ -234,7 +234,8 @@ function Main({ currentUser, onLogout, isOffline }) {
       if (lastNotif === today) return; // Hanya 1x per hari
       localStorage.setItem('bbs_last_notif_date', today);
 
-      const msg = `⚠️ *Toko BBS - Stok Habis!*\n\nProduk berikut stoknya habis:\n${habis.map(p => `• ${p.name}`).join('\n')}\n\nSegera lakukan restock. 🙏`;
+      const now = new Date().toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' });
+      const msg = `🌿 *BerkahBirdShop - Peringatan Stok!*\n━━━━━━━━━━━━━━━━\n🚨 *${habis.length} Produk Stok HABIS*\n\n${habis.map((p, i) => `${i + 1}. ❌ ${p.name}`).join('\n')}\n\n━━━━━━━━━━━━━━━━\n📅 ${now}\n\n⚡ Segera lakukan restock agar penjualan tidak terganggu.\n\n_Notifikasi otomatis dari sistem Toko BBS_`;
 
       if (cfg.notif_wa_token && cfg.notif_wa_number) {
         await fetch('https://api.fonnte.com/send', {

@@ -41,10 +41,12 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
     }
     setTestingWa(true);
     try {
+      const now = new Date().toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' });
+      const msg = `🌿 *BerkahBirdShop*\n━━━━━━━━━━━━━━━━\n✅ *Notifikasi Aktif!*\n\nSistem notifikasi Toko BBS berhasil terhubung dan siap digunakan.\n\n📅 ${now}\n\n_Pesan ini dikirim otomatis oleh sistem Toko BBS._`;
       const res = await fetch('https://api.fonnte.com/send', {
         method: 'POST',
         headers: { 'Authorization': settings.notif_wa_token },
-        body: new URLSearchParams({ target: settings.notif_wa_number, message: '✅ Test notifikasi dari Toko BBS berhasil!' }),
+        body: new URLSearchParams({ target: settings.notif_wa_number, message: msg }),
       });
       const data = await res.json();
       if (data.status) showNotif('✅ Pesan WA terkirim!');
