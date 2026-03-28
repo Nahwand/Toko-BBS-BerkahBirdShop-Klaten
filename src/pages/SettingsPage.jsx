@@ -41,16 +41,26 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
     }
     setTestingWa(true);
     try {
+      // Auto-format nomor
+      let nomorWA = settings.notif_wa_number.trim().replace(/\s+/g, '');
+      if (nomorWA.startsWith('0')) nomorWA = '62' + nomorWA.slice(1);
+      if (nomorWA.startsWith('+')) nomorWA = nomorWA.slice(1);
+
       const now = new Date().toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' });
       const msg = `🌿 *BerkahBirdShop*\n━━━━━━━━━━━━━━━━\n✅ *Notifikasi Aktif!*\n\nSistem notifikasi Toko BBS berhasil terhubung dan siap digunakan.\n\n📅 ${now}\n\n_Pesan ini dikirim otomatis oleh sistem Toko BBS._`;
       const res = await fetch('https://api.fonnte.com/send', {
         method: 'POST',
         headers: { 'Authorization': settings.notif_wa_token },
-        body: new URLSearchParams({ target: settings.notif_wa_number, message: msg }),
+        body: new URLSearchParams({ target: nomorWA, message: msg }),
       });
       const data = await res.json();
-      if (data.status) showNotif('✅ Pesan WA terkirim!');
-      else showNotif('Gagal kirim WA: ' + (data.reason || 'Unknown'), 'error');
+      if (data.status) {
+        // Reset cache agar notifikasi stok bisa kirim lagi hari ini
+        localStorage.removeItem('bbs_last_notif_date');
+        showNotif('✅ Pesan WA terkirim!');
+      } else {
+        showNotif('Gagal kirim WA: ' + (data.reason || 'Unknown'), 'error');
+      }
     } catch (e) {
       showNotif('Error: ' + e.message, 'error');
     }

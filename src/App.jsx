@@ -234,15 +234,22 @@ function Main({ currentUser, onLogout, isOffline }) {
       if (lastNotif === today) return; // Hanya 1x per hari
       localStorage.setItem('bbs_last_notif_date', today);
 
+      // Auto-format nomor: 08xxx → 628xxx
+      let nomorWA = (cfg.notif_wa_number || '').trim().replace(/\s+/g, '');
+      if (nomorWA.startsWith('0')) nomorWA = '62' + nomorWA.slice(1);
+      if (nomorWA.startsWith('+')) nomorWA = nomorWA.slice(1);
+
       const now = new Date().toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' });
       const msg = `🌿 *BerkahBirdShop - Peringatan Stok!*\n━━━━━━━━━━━━━━━━\n🚨 *${habis.length} Produk Stok HABIS*\n\n${habis.map((p, i) => `${i + 1}. ❌ ${p.name}`).join('\n')}\n\n━━━━━━━━━━━━━━━━\n📅 ${now}\n\n⚡ Segera lakukan restock agar penjualan tidak terganggu.\n\n_Notifikasi otomatis dari sistem Toko BBS_`;
 
-      if (cfg.notif_wa_token && cfg.notif_wa_number) {
-        await fetch('https://api.fonnte.com/send', {
+      if (cfg.notif_wa_token && nomorWA) {
+        const res = await fetch('https://api.fonnte.com/send', {
           method: 'POST',
           headers: { 'Authorization': cfg.notif_wa_token },
-          body: new URLSearchParams({ target: cfg.notif_wa_number, message: msg }),
+          body: new URLSearchParams({ target: nomorWA, message: msg }),
         });
+        const result = await res.json();
+        console.log('[BBS Notif] WA result:', result);
       }
     } catch (e) {
       console.error('Notif error:', e);
