@@ -5,6 +5,7 @@ import { fmt } from '../utils/constants';
 export default function RiwayatPage({
   filtHist, histSearch, setHistSearch, filterDate, setFilterDate,
   exportExcel, setHistReceipt,
+  totalCount, page, setPage, totalPages, perPage,
 }) {
   return (
     <div>
@@ -20,6 +21,7 @@ export default function RiwayatPage({
           📥 Export Excel
         </button>
       </div>
+
       <div className="table-wrap" style={{ background: "#fff", borderRadius: 12, border: "1px solid #e4ede4", overflow: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 650 }}>
           <thead>
@@ -30,7 +32,7 @@ export default function RiwayatPage({
             </tr>
           </thead>
           <tbody>
-            {filtHist.slice(0, 60).map((t) => (
+            {filtHist.map((t) => (
               <tr key={t.id} onClick={() => setHistReceipt(t)} style={{ cursor: "pointer" }}
                 onMouseEnter={(e) => (e.currentTarget.style.background = "#f0f7f0")}
                 onMouseLeave={(e) => (e.currentTarget.style.background = "")}>
@@ -54,9 +56,40 @@ export default function RiwayatPage({
             )}
           </tbody>
         </table>
-        <div style={{ padding: "11px 16px", borderTop: "1px solid #e4ede4", display: "flex", justifyContent: "space-between", fontSize: 13 }}>
-          <span style={{ color: "#888" }}>{filtHist.length} transaksi</span>
-          <strong style={{ color: "#2d7a2d" }}>Total: {fmt(filtHist.reduce((s, t) => s + t.total, 0))}</strong>
+
+        {/* Footer: total + pagination */}
+        <div style={{ padding: "11px 16px", borderTop: "1px solid #e4ede4", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+          <span style={{ color: "#888", fontSize: 13 }}>
+            {totalCount} transaksi · halaman {page} dari {totalPages || 1}
+          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <button className={styles.btndefault} style={{ padding: "4px 12px", fontSize: 12 }}
+              onClick={() => setPage(1)} disabled={page === 1}>«</button>
+            <button className={styles.btndefault} style={{ padding: "4px 12px", fontSize: 12 }}
+              onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>‹ Prev</button>
+            {/* Nomor halaman */}
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(n => n === 1 || n === totalPages || Math.abs(n - page) <= 1)
+              .reduce((acc, n, i, arr) => {
+                if (i > 0 && n - arr[i - 1] > 1) acc.push('...');
+                acc.push(n);
+                return acc;
+              }, [])
+              .map((n, i) => n === '...'
+                ? <span key={`e${i}`} style={{ fontSize: 12, color: "#aaa", padding: "0 4px" }}>…</span>
+                : <button key={n} onClick={() => setPage(n)}
+                    style={{ padding: "4px 10px", fontSize: 12, borderRadius: 6, border: `1px solid ${page === n ? '#2d7a2d' : '#ddd'}`, background: page === n ? '#2d7a2d' : '#fff', color: page === n ? '#fff' : '#333', cursor: "pointer", fontWeight: page === n ? 700 : 400 }}>
+                    {n}
+                  </button>
+              )}
+            <button className={styles.btndefault} style={{ padding: "4px 12px", fontSize: 12 }}
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages || totalPages === 0}>Next ›</button>
+            <button className={styles.btndefault} style={{ padding: "4px 12px", fontSize: 12 }}
+              onClick={() => setPage(totalPages)} disabled={page === totalPages || totalPages === 0}>»</button>
+          </div>
+          <strong style={{ color: "#2d7a2d", fontSize: 13 }}>
+            Total: {fmt(filtHist.reduce((s, t) => s + t.total, 0))}
+          </strong>
         </div>
       </div>
     </div>

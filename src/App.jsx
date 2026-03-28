@@ -24,6 +24,7 @@ import HistReceiptModal from './components/modals/HistReceiptModal';
 import ProdukModal from './components/modals/ProdukModal';
 import SupplierModal from './components/modals/SupplierModal';
 import RestockModal from './components/modals/RestockModal';
+import ConfirmModal from './components/modals/ConfirmModal';
 
 function App() {
   const [currentUser, setCurrentUser] = useState(() => {
@@ -79,6 +80,31 @@ function App() {
     sessionStorage.removeItem("bbs_user");
     setCurrentUser(null);
   };
+
+  // Session timeout: auto logout setelah 30 menit tidak ada aktivitas
+  useEffect(() => {
+    if (!currentUser) return;
+    const TIMEOUT = 30 * 60 * 1000; // 30 menit
+    let timer = setTimeout(() => {
+      sessionStorage.removeItem("bbs_user");
+      setCurrentUser(null);
+      alert("Sesi Anda telah berakhir karena tidak ada aktivitas selama 30 menit. Silakan login kembali.");
+    }, TIMEOUT);
+    const reset = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        sessionStorage.removeItem("bbs_user");
+        setCurrentUser(null);
+        alert("Sesi Anda telah berakhir karena tidak ada aktivitas selama 30 menit. Silakan login kembali.");
+      }, TIMEOUT);
+    };
+    const events = ['mousedown', 'keydown', 'touchstart', 'scroll'];
+    events.forEach(e => window.addEventListener(e, reset));
+    return () => {
+      clearTimeout(timer);
+      events.forEach(e => window.removeEventListener(e, reset));
+    };
+  }, [currentUser]);
 
   return (
     <>
@@ -163,6 +189,23 @@ function Main({ currentUser, onLogout, isOffline }) {
   const [showLogout, setShowLogout] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const fileRef = useRef();
+
+  // Pagination riwayat
+  const [histPage, setHistPage] = useState(1);
+  const HIST_PER_PAGE = 20;
+
+  // Global search
+  const [globalSearch, setGlobalSearch] = useState("");
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
+  const globalSearchRef = useRef();
+
+  // Confirm modal (ganti window.confirm)
+  const [confirm, setConfirm] = useState(null);
+  const confirmResolve = useRef(null);
+  const showConfirm = (opts) => new Promise((resolve) => {
+    confirmResolve.current = resolve;
+    setConfirm(opts);
+  });
 
   const showNotif = (msg, type = "success") => {
     setNotif({ msg, type });
@@ -677,8 +720,16 @@ function Main({ currentUser, onLogout, isOffline }) {
     setLoading(false);
   };
   const delProd = async (id) => {
-    if (!window.confirm("Hapus produk ini?")) return;
     const p = products.find((x) => x.id === id);
+    const hasTransactions = transactions.some(t => (t.items || []).some(i => i.product_id === id));
+    const ok = await showConfirm({
+      icon: "🗑️",
+      title: "Hapus Produk?",
+      message: `Produk "${p?.name}" akan dihapus permanen.`,
+      warning: hasTransactions ? "⚠️ Produk ini memiliki riwayat transaksi. Data transaksi lama tidak akan terhapus, tapi nama produk tidak bisa dilacak." : null,
+      confirmLabel: "Ya, Hapus",
+    });
+    if (!ok) return;
     await sb.from("products").delete().eq("id", id);
     await logActivity("Hapus Produk", "Produk", p?.name || "");
     await loadAll();
@@ -744,8 +795,16 @@ function Main({ currentUser, onLogout, isOffline }) {
     setLoading(false);
   };
   const delSup = async (id) => {
-    if (!window.confirm("Hapus supplier?")) return;
     const sup = suppliers.find((x) => x.id === id);
+    const hasProducts = products.some(p => p.supplier_id === id);
+    const ok = await showConfirm({
+      icon: "🗑️",
+      title: "Hapus Supplier?",
+      message: `Supplier "${sup?.name}" akan dihapus permanen.`,
+      warning: hasProducts ? `⚠️ Ada ${products.filter(p => p.supplier_id === id).length} produk yang terhubung ke supplier ini. Produk tidak akan terhapus tapi supplier-nya jadi kosong.` : null,
+      confirmLabel: "Ya, Hapus",
+    });
+    if (!ok) return;
     await sb.from("suppliers").delete().eq("id", id);
     await logActivity("Hapus Supplier", "Supplier", sup?.name || "");
     await loadAll();
@@ -1052,6 +1111,26 @@ function Main({ currentUser, onLogout, isOffline }) {
     return md && ms;
   });
 
+  // Reset ke halaman 1 saat filter berubah
+  useEffect(() => { setHistPage(1); }, [histSearch, filterDate]);
+
+  const histTotalPages = Math.ceil(filtHist.length / HIST_PER_PAGE);
+  const histPaged = filtHist.slice((histPage - 1) * HIST_PER_PAGE, histPage * HIST_PER_PAGE);
+
+  // Global search results
+  const globalResults = useMemo(() => {
+    const q = globalSearch.toLowerCase().trim();
+    if (!q || q.length < 2) return [];
+    const results = [];
+    products.filter(p => p.name?.toLowerCase().includes(q) || p.category?.toLowerCase().includes(q))
+      .slice(0, 5).forEach(p => results.push({ type: "Produk", icon: "📦", label: p.name, sub: `${p.category} · Stok: ${p.stock}`, action: () => { setPage("produk"); setGlobalSearch(""); setShowGlobalSearch(false); } }));
+    transactions.filter(t => t.trx_code?.toLowerCase().includes(q) || t.customer?.toLowerCase().includes(q))
+      .slice(0, 5).forEach(t => results.push({ type: "Transaksi", icon: "📋", label: t.trx_code, sub: `${t.customer} · ${t.date} · ${fmt(t.total)}`, action: () => { setPage("riwayat"); setHistSearch(t.trx_code); setGlobalSearch(""); setShowGlobalSearch(false); } }));
+    suppliers.filter(s => s.name?.toLowerCase().includes(q) || s.contact?.toLowerCase().includes(q))
+      .slice(0, 3).forEach(s => results.push({ type: "Supplier", icon: "🤝", label: s.name, sub: s.phone, action: () => { setPage("supplier"); setGlobalSearch(""); setShowGlobalSearch(false); } }));
+    return results;
+  }, [globalSearch, products, transactions, suppliers]);
+
   const allNavs = [
     { id: "dashboard", icon: "⊞", label: "Dashboard" },
     { id: "kasir", icon: "🤝", label: "Kasir" },
@@ -1139,6 +1218,40 @@ function Main({ currentUser, onLogout, isOffline }) {
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {/* GLOBAL SEARCH */}
+            <div style={{ position: "relative" }} ref={globalSearchRef}>
+              <input
+                className={styles.inp}
+                style={{ width: showGlobalSearch ? 220 : 36, padding: showGlobalSearch ? "5px 10px" : "5px", transition: "width 0.2s", cursor: "pointer", fontSize: 12 }}
+                placeholder={showGlobalSearch ? "🔍 Cari produk, transaksi, supplier..." : "🔍"}
+                value={globalSearch}
+                onFocus={() => setShowGlobalSearch(true)}
+                onChange={(e) => { setGlobalSearch(e.target.value); setShowGlobalSearch(true); }}
+                onBlur={() => setTimeout(() => { setShowGlobalSearch(false); setGlobalSearch(""); }, 200)}
+              />
+              {showGlobalSearch && globalResults.length > 0 && (
+                <div style={{ position: "absolute", top: "100%", right: 0, width: 300, background: "#fff", borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", border: "1px solid #e4ede4", zIndex: 999, marginTop: 4, overflow: "hidden" }}>
+                  {globalResults.map((r, i) => (
+                    <div key={i} onMouseDown={r.action}
+                      style={{ padding: "10px 14px", cursor: "pointer", borderBottom: "1px solid #f5f5f5", display: "flex", gap: 10, alignItems: "center" }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = "#f0f7f0"}
+                      onMouseLeave={(e) => e.currentTarget.style.background = ""}>
+                      <span style={{ fontSize: 18 }}>{r.icon}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#1a4a1a" }}>{r.label}</div>
+                        <div style={{ fontSize: 11, color: "#888", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.sub}</div>
+                      </div>
+                      <span style={{ fontSize: 10, color: "#aaa", background: "#f5f5f5", padding: "2px 7px", borderRadius: 10 }}>{r.type}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {showGlobalSearch && globalSearch.length >= 2 && globalResults.length === 0 && (
+                <div style={{ position: "absolute", top: "100%", right: 0, width: 240, background: "#fff", borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", border: "1px solid #e4ede4", zIndex: 999, marginTop: 4, padding: "14px", textAlign: "center", color: "#aaa", fontSize: 12 }}>
+                  Tidak ada hasil untuk "{globalSearch}"
+                </div>
+              )}
+            </div>
             <button className={styles.btndefault} style={{ padding: "5px 10px", fontSize: 11 }} onClick={loadAll}>🔄 Refresh</button>
             <div className="hide-mobile" style={{ fontSize: 11, color: "#888" }}>
               {new Date().toLocaleDateString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
@@ -1165,8 +1278,9 @@ function Main({ currentUser, onLogout, isOffline }) {
               setProdForm={setProdForm} setProdImage={setProdImage} setProdModal={setProdModal} delProd={delProd} />
           )}
           {page === "riwayat" && (
-            <RiwayatPage filtHist={filtHist} histSearch={histSearch} setHistSearch={setHistSearch}
-              filterDate={filterDate} setFilterDate={setFilterDate} exportExcel={exportExcel} setHistReceipt={setHistReceipt} />
+            <RiwayatPage filtHist={histPaged} histSearch={histSearch} setHistSearch={setHistSearch}
+              filterDate={filterDate} setFilterDate={setFilterDate} exportExcel={exportExcel} setHistReceipt={setHistReceipt}
+              totalCount={filtHist.length} page={histPage} setPage={setHistPage} totalPages={histTotalPages} perPage={HIST_PER_PAGE} />
           )}
           {page === "stok" && (
             <StokPage filtProd={filtProd} searchProd={searchProd} setSearchProd={setSearchProd}
@@ -1197,6 +1311,9 @@ function Main({ currentUser, onLogout, isOffline }) {
       </div>
 
       {/* MODALS */}
+      <ConfirmModal confirm={confirm}
+        onConfirm={() => { confirmResolve.current?.(true); setConfirm(null); }}
+        onCancel={() => { confirmResolve.current?.(false); setConfirm(null); }} />
       <HistReceiptModal histReceipt={histReceipt} onClose={() => setHistReceipt(null)} />
       <ReceiptModal receipt={receipt} customerName={customerName} onClose={() => setReceipt(null)} />
       <ProdukModal prodModal={prodModal} prodForm={prodForm} setProdForm={setProdForm} prodImage={prodImage}
