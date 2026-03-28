@@ -19,6 +19,8 @@ import StokPage from './pages/StokPage';
 import LaporanPage from './pages/LaporanPage';
 import SupplierPage from './pages/SupplierPage';
 import ImportExportPage from './pages/ImportExportPage';
+import RestockLogPage from './pages/RestockLogPage';
+import SettingsPage from './pages/SettingsPage';
 import ReceiptModal from './components/modals/ReceiptModal';
 import HistReceiptModal from './components/modals/HistReceiptModal';
 import ProdukModal from './components/modals/ProdukModal';
@@ -131,6 +133,8 @@ function Main({ currentUser, onLogout, isOffline }) {
   const [satuans, setSatuans] = useState([]);
   const [activityLogs, setActivityLogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [restockLogs, setRestockLogs] = useState([]);
+  const [realtimeUsers, setRealtimeUsers] = useState([]);
   const [cart, setCart] = useState([]);
   const [searchProd, setSearchProd] = useState("");
   const [filterCat, setFilterCat] = useState("Semua");
@@ -152,6 +156,7 @@ function Main({ currentUser, onLogout, isOffline }) {
   const [filterDate, setFilterDate] = useState("");
   const [restockModal, setRestockModal] = useState(null);
   const [restockQty, setRestockQty] = useState("");
+  const [restockCatatan, setRestockCatatan] = useState("");
   const [histReceipt, setHistReceipt] = useState(null);
   const [notif, setNotif] = useState(null);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -210,6 +215,37 @@ function Main({ currentUser, onLogout, isOffline }) {
   const showNotif = (msg, type = "success") => {
     setNotif({ msg, type });
     setTimeout(() => setNotif(null), 3200);
+  };
+
+  // Kirim notifikasi WA/email saat stok habis
+  const sendStockNotif = async (prods) => {
+    try {
+      const { data: settingsData } = await sb.from('settings').select('*');
+      if (!settingsData) return;
+      const cfg = {};
+      settingsData.forEach(s => { cfg[s.key] = s.value; });
+      if (cfg.notif_enabled !== 'true') return;
+
+      const habis = prods.filter(p => Number(p.stock) === 0);
+      if (!habis.length) return;
+
+      const lastNotif = localStorage.getItem('bbs_last_notif_date');
+      const today = new Date().toISOString().slice(0, 10);
+      if (lastNotif === today) return; // Hanya 1x per hari
+      localStorage.setItem('bbs_last_notif_date', today);
+
+      const msg = `⚠️ *Toko BBS - Stok Habis!*\n\nProduk berikut stoknya habis:\n${habis.map(p => `• ${p.name}`).join('\n')}\n\nSegera lakukan restock. 🙏`;
+
+      if (cfg.notif_wa_token && cfg.notif_wa_number) {
+        await fetch('https://api.fonnte.com/send', {
+          method: 'POST',
+          headers: { 'Authorization': cfg.notif_wa_token },
+          body: new URLSearchParams({ target: cfg.notif_wa_number, message: msg }),
+        });
+      }
+    } catch (e) {
+      console.error('Notif error:', e);
+    }
   };
 
   const logActivity = async (aksi, kategori, detail = "") => {
@@ -324,19 +360,12 @@ function Main({ currentUser, onLogout, isOffline }) {
       const fetchWithTimeout = Promise.all([
         sb.from("products").select("*").order("name"),
         sb.from("suppliers").select("*").order("name"),
-        sb
-          .from("transactions")
-          .select("*")
-          .order("date", { ascending: false })
-          .order("id", { ascending: false }),
+        sb.from("transactions").select("*").order("date", { ascending: false }).order("id", { ascending: false }),
         sb.from("transaction_items").select("*"),
         sb.from("kategoris").select("*").order("nama"),
         sb.from("satuans").select("*").order("nama"),
-        sb
-          .from("activity_logs")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(30),
+        sb.from("activity_logs").select("*").order("created_at", { ascending: false }).limit(30),
+        sb.from("restock_logs").select("*").order("created_at", { ascending: false }).limit(100),
       ]);
 
       const timeoutPromise = new Promise((_, reject) =>
@@ -351,34 +380,23 @@ function Main({ currentUser, onLogout, isOffline }) {
         { data: kats },
         { data: sats },
         { data: acts },
+        { data: rlogs },
       ] = await Promise.race([fetchWithTimeout, timeoutPromise]);
 
-      // 5. Update state & Caching (HANYA jika data berhasil di-fetch)
+      // 5. Update state & Caching
       if (prods) {
         setProducts(prods);
         localStorage.setItem('bbs_offline_products', JSON.stringify(prods));
-        console.log('[BBS Offline] Cached products:', prods.length);
+        // Cek notifikasi stok habis
+        sendStockNotif(prods);
       }
-      if (sups) {
-        setSuppliers(sups);
-        localStorage.setItem('bbs_offline_suppliers', JSON.stringify(sups));
-      }
-      if (kats) {
-        setKategoris(kats);
-        localStorage.setItem('bbs_offline_cats', JSON.stringify(kats));
-      }
-      if (sats) {
-        setSatuans(sats);
-        localStorage.setItem('bbs_offline_units', JSON.stringify(sats));
-      }
+      if (sups) { setSuppliers(sups); localStorage.setItem('bbs_offline_suppliers', JSON.stringify(sups)); }
+      if (kats) { setKategoris(kats); localStorage.setItem('bbs_offline_cats', JSON.stringify(kats)); }
+      if (sats) { setSatuans(sats); localStorage.setItem('bbs_offline_units', JSON.stringify(sats)); }
       if (acts) setActivityLogs(acts);
+      if (rlogs) setRestockLogs(rlogs);
       if (trxs) {
-        setTransactions(
-          trxs.map((t) => ({
-            ...t,
-            items: (items || []).filter((i) => i.transaction_id === t.id),
-          })),
-        );
+        setTransactions(trxs.map((t) => ({ ...t, items: (items || []).filter((i) => i.transaction_id === t.id) })));
       }
     } catch (e) {
       console.error("LoadAll Error:", e);
@@ -425,6 +443,27 @@ function Main({ currentUser, onLogout, isOffline }) {
       // Kembali online — refresh data dari server
       loadAll();
     }
+  }, [isOffline]);
+
+  // Realtime: subscribe ke perubahan produk & transaksi (multi-kasir)
+  useEffect(() => {
+    if (isOffline) return;
+    const channel = sb.channel('bbs-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => { loadAll(); })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'transactions' }, (payload) => {
+        showNotif(`🔔 Transaksi baru dari kasir lain: ${payload.new?.trx_code || ''}`, 'info');
+        loadAll();
+      })
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        setRealtimeUsers(Object.values(state).flat());
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await channel.track({ user: currentUser.nama, role: currentUser.role, online_at: new Date().toISOString() });
+        }
+      });
+    return () => { sb.removeChannel(channel); };
   }, [isOffline]);
 
   const todayTrx = transactions.filter((t) => t.date === TODAY);
@@ -741,19 +780,28 @@ function Main({ currentUser, onLogout, isOffline }) {
       return;
     }
     const p = products.find((x) => x.id === restockModal.id);
-    await sb
-      .from("products")
-      .update({ stock: p.stock + parseInt(restockQty) })
-      .eq("id", restockModal.id);
-    await logActivity(
-      "Restock Stok",
-      "Stok",
-      `${restockModal.name} +${restockQty} ${restockModal.unit} (${p.stock} → ${p.stock + parseInt(restockQty)})`,
-    );
+    const qtyBefore = p.stock;
+    const qtyAdded = parseInt(restockQty);
+    const qtyAfter = qtyBefore + qtyAdded;
+    await sb.from("products").update({ stock: qtyAfter }).eq("id", restockModal.id);
+    // Simpan ke restock_logs
+    await sb.from("restock_logs").insert({
+      product_id: restockModal.id,
+      product_name: restockModal.name,
+      qty_before: qtyBefore,
+      qty_added: qtyAdded,
+      qty_after: qtyAfter,
+      unit: restockModal.unit,
+      user_nama: currentUser.nama,
+      user_role: currentUser.role,
+      catatan: restockCatatan || "",
+    });
+    await logActivity("Restock Stok", "Stok", `${restockModal.name} +${restockQty} ${restockModal.unit} (${qtyBefore} → ${qtyAfter})`);
     await loadAll();
     showNotif(`Restock ${restockModal.name} berhasil!`);
     setRestockModal(null);
     setRestockQty("");
+    setRestockCatatan("");
   };
   const saveSup = async () => {
     if (!supForm.name || !supForm.phone) {
@@ -1137,11 +1185,13 @@ function Main({ currentUser, onLogout, isOffline }) {
     { id: "produk", icon: "📦", label: "Produk" },
     { id: "riwayat", icon: "📋", label: "Riwayat" },
     { id: "stok", icon: "📊", label: "Stok" },
+    { id: "restocklog", icon: "📦", label: "Riwayat Restock" },
     { id: "laporan", icon: "📈", label: "Laporan" },
     { id: "supplier", icon: "🤝", label: "Supplier" },
     { id: "excel", icon: "📗", label: "Import/Export" },
     { id: "users", icon: "👥", label: "Kelola Akun" },
     { id: "masterdata", icon: "🗂️", label: "Master Data" },
+    { id: "settings", icon: "⚙️", label: "Pengaturan" },
   ];
   const navs = allNavs.filter((n) => allowedPages.includes(n.id));
 
@@ -1162,7 +1212,9 @@ function Main({ currentUser, onLogout, isOffline }) {
         <div style={{ padding: "16px 14px 14px", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
           <div style={{ fontSize: 20, fontWeight: 900, color: "#a8e063" }}>🌿 BBS</div>
           <div style={{ fontSize: 11, color: "#a8e063", fontWeight: 700 }}>BerkahBirdShop</div>
-          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)" }}>Klaten · 🟢 Online</div>
+          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)" }}>
+            Klaten · {isOffline ? "🔴 Offline" : `🟢 Online${realtimeUsers.length > 1 ? ` · ${realtimeUsers.length} kasir aktif` : ""}`}
+          </div>
         </div>
         <div style={{ padding: "12px 14px", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.05)" }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>{currentUser.nama}</div>
@@ -1307,6 +1359,13 @@ function Main({ currentUser, onLogout, isOffline }) {
           {page === "masterdata" && (
             <MasterDataPage sb={sb} showNotif={showNotif} kategoris={kategoris} satuans={satuans} onReload={loadAll} logActivity={logActivity} />
           )}
+          {page === "restocklog" && (
+            <RestockLogPage restockLogs={restockLogs} products={products} />
+          )}
+          {page === "settings" && (
+            <SettingsPage sb={sb} showNotif={showNotif} products={products} transactions={transactions}
+              suppliers={suppliers} kategoris={kategoris} satuans={satuans} onRestore={loadAll} />
+          )}
         </div>
       </div>
 
@@ -1320,7 +1379,9 @@ function Main({ currentUser, onLogout, isOffline }) {
         setProdImage={setProdImage} kategoris={kategoris} satuans={satuans} suppliers={suppliers}
         saveProd={saveProd} onClose={() => setProdModal(null)} />
       <SupplierModal supModal={supModal} supForm={supForm} setSupForm={setSupForm} saveSup={saveSup} onClose={() => setSupModal(null)} />
-      <RestockModal restockModal={restockModal} restockQty={restockQty} setRestockQty={setRestockQty} doRestock={doRestock} onClose={() => setRestockModal(null)} />
+      <RestockModal restockModal={restockModal} restockQty={restockQty} setRestockQty={setRestockQty}
+        restockCatatan={restockCatatan} setRestockCatatan={setRestockCatatan}
+        doRestock={doRestock} onClose={() => { setRestockModal(null); setRestockCatatan(""); }} />
 
       {/* KONFIRMASI LOGOUT */}
       {showLogout && (

@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from '../../styles/App.module.css';
 
-export default function RestockModal({ restockModal, restockQty, setRestockQty, doRestock, onClose }) {
+export default function RestockModal({ restockModal, restockQty, setRestockQty, restockCatatan, setRestockCatatan, doRestock, onClose }) {
   if (!restockModal) return null;
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -23,6 +23,9 @@ export default function RestockModal({ restockModal, restockQty, setRestockQty, 
             ✅ Setelah restock: <strong>{restockModal.stock + parseInt(restockQty)} {restockModal.unit}</strong>
           </div>
         )}
+        <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 5 }}>Catatan (opsional)</label>
+        <input className={styles.inp} style={{ marginBottom: 16 }} placeholder="Misal: dari supplier X, tanggal kirim..."
+          value={restockCatatan} onChange={(e) => setRestockCatatan(e.target.value)} />
         <div style={{ display: "flex", gap: 10 }}>
           <button className={`${styles.btn} ${styles.btnprimary}`} style={{ flex: 1, padding: 12, fontSize: 14 }} onClick={doRestock}>✅ Konfirmasi</button>
           <button style={{ flex: 1, padding: 12, fontSize: 14, borderRadius: 10, border: "none", background: "#f0f5f0", color: "#2d7a2d", fontWeight: 700, cursor: "pointer" }} onClick={onClose}>Batal</button>

@@ -181,3 +181,39 @@ INSERT INTO users (username, password, nama, role, status) VALUES
 ('Kasir002',   'KasirBBS#002', 'Pegawai Kasir 2',  'pegawai',    'Aktif'),
 ('AdminToko',  'AdminBBS2025', 'Admin Toko BBS',   'admin',      'Aktif')
 ON CONFLICT (username) DO UPDATE SET password=EXCLUDED.password, nama=EXCLUDED.nama, role=EXCLUDED.role, status=EXCLUDED.status;
+
+-- ============================================================
+-- PATCH: Fitur Baru
+-- ============================================================
+
+-- 9. TABEL RIWAYAT RESTOCK
+CREATE TABLE IF NOT EXISTS restock_logs (
+  id          BIGSERIAL PRIMARY KEY,
+  product_id  BIGINT REFERENCES products(id) ON DELETE SET NULL,
+  product_name TEXT NOT NULL,
+  qty_before  INTEGER NOT NULL DEFAULT 0,
+  qty_added   INTEGER NOT NULL DEFAULT 0,
+  qty_after   INTEGER NOT NULL DEFAULT 0,
+  unit        TEXT DEFAULT 'pcs',
+  user_nama   TEXT NOT NULL,
+  user_role   TEXT NOT NULL,
+  catatan     TEXT DEFAULT '',
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE restock_logs DISABLE ROW LEVEL SECURITY;
+
+-- 10. TABEL SETTINGS (notifikasi, dll)
+CREATE TABLE IF NOT EXISTS settings (
+  id    BIGSERIAL PRIMARY KEY,
+  key   TEXT NOT NULL UNIQUE,
+  value TEXT DEFAULT ''
+);
+ALTER TABLE settings DISABLE ROW LEVEL SECURITY;
+
+-- Default settings
+INSERT INTO settings (key, value) VALUES
+  ('notif_wa_token', ''),
+  ('notif_wa_number', ''),
+  ('notif_email', ''),
+  ('notif_enabled', 'false')
+ON CONFLICT (key) DO NOTHING;
