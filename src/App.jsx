@@ -117,6 +117,7 @@ function Main({ currentUser, onLogout, isOffline }) {
   const [filterDate, setFilterDate] = useState("");
   const [restockModal, setRestockModal] = useState(null);
   const [restockQty, setRestockQty] = useState("");
+  const [histReceipt, setHistReceipt] = useState(null);
   const [notif, setNotif] = useState(null);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
 
@@ -2359,7 +2360,12 @@ function Main({ currentUser, onLogout, isOffline }) {
                   </thead>
                   <tbody>
                     {filtHist.slice(0, 60).map((t) => (
-                      <tr key={t.id}>
+                      <tr key={t.id}
+                        onClick={() => setHistReceipt(t)}
+                        style={{ cursor: "pointer" }}
+                        onMouseEnter={e => e.currentTarget.style.background = "#f0f7f0"}
+                        onMouseLeave={e => e.currentTarget.style.background = ""}
+                      >
                         <td className={styles.td}>
                           <strong style={{ color: "#2d7a2d" }}>
                             {t.trx_code}
@@ -3247,6 +3253,62 @@ function Main({ currentUser, onLogout, isOffline }) {
           )}
         </div>
       </div>
+
+      {/* STRUK RIWAYAT */}
+      {histReceipt && (
+        <div className={styles.overlay} onClick={() => setHistReceipt(null)}>
+          <div
+            className={styles.modal} style={{ width: 300 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ textAlign: "center", marginBottom: 14 }}>
+              <div style={{ fontSize: 18, fontWeight: 900, color: "#1a4a1a" }}>
+                🌿 BerkahBirdShop
+              </div>
+              <div style={{ fontSize: 10, color: "#aaa" }}>Klaten, Jawa Tengah</div>
+              <div style={{ margin: "10px 0", borderTop: "2px dashed #eee" }} />
+              <div style={{ fontSize: 10, color: "#aaa" }}>
+                {histReceipt.trx_code} · {histReceipt.date}
+              </div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#555" }}>
+                Pelanggan: {histReceipt.customer || "Umum"}
+              </div>
+            </div>
+            {(histReceipt.items || []).map((i, idx) => (
+              <div
+                key={idx}
+                style={{ display: "flex", justifyContent: "space-between", fontSize: 11, padding: "4px 0" }}
+              >
+                <span>{i.product_name} ×{i.qty} {i.unit}</span>
+                <strong>{fmt(i.price * i.qty)}</strong>
+              </div>
+            ))}
+            <div style={{ margin: "10px 0", borderTop: "2px dashed #eee" }} />
+            <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 900, fontSize: 15 }}>
+              <span>TOTAL</span>
+              <span style={{ color: "#2d7a2d" }}>{fmt(histReceipt.total)}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginTop: 5, color: "#666" }}>
+              <span>Bayar</span>
+              <span>{fmt(histReceipt.payment)}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#666" }}>
+              <span>Kembalian</span>
+              <strong>{fmt(histReceipt.change_amt)}</strong>
+            </div>
+            <div style={{ textAlign: "center", marginTop: 14, fontSize: 10, color: "#bbb", lineHeight: 1.8 }}>
+              Terima kasih sudah berbelanja! 🌿
+            </div>
+            <button
+              className={`${styles.btn} ${styles.btnprimary}`}
+              style={{ width: "100%", marginTop: 12, padding: "11px", borderRadius: 10, fontSize: 14 }}
+              onClick={() => setHistReceipt(null)}
+            >
+              ✅ Tutup Struk
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* RECEIPT */}
       {receipt && (
