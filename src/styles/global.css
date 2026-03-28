@@ -280,6 +280,13 @@ textarea {
     font-size: 10px;
     line-height: 1.4;
   }
+  #struk-print img {
+    display: block;
+    margin: 0 auto 4px;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+  }
   #struk-print table {
     width: 100%;
     border-collapse: collapse;
