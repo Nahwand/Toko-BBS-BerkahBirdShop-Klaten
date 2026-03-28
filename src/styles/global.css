@@ -265,31 +265,37 @@ textarea {
 /* ── PRINT ── */
 @media print {
   @page {
-    size: 58mm auto;
-    margin: 3mm;
+    size: 80mm auto;
+    margin: 2mm;
   }
   body * { visibility: hidden; }
   #struk-print, #struk-print * { visibility: visible; }
   #struk-print {
     position: fixed;
     top: 0; left: 0;
-    width: 52mm;
+    width: 76mm;
     padding: 0;
     background: #fff;
     font-family: 'Courier New', monospace;
-    font-size: 9px;
+    font-size: 10px;
     line-height: 1.4;
-    word-break: break-word;
-    overflow-wrap: break-word;
   }
-  #struk-print div {
-    max-width: 52mm;
-    word-break: break-word;
-    overflow-wrap: break-word;
+  #struk-print strong,
+  #struk-print span {
+    white-space: nowrap;
   }
-  #struk-print span,
-  #struk-print strong {
-    word-break: break-word;
-    overflow-wrap: break-word;
+  /* Khusus baris item: nama produk boleh wrap, harga tidak */
+  #struk-print .item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #struk-print .item-name {
+    white-space: normal;
+    flex: 1;
+  }
+  #struk-print .item-price {
+    white-space: nowrap;
+    margin-left: 8px;
   }
 }
