@@ -22,7 +22,7 @@ export default function HistReceiptModal({ histReceipt, onClose }) {
 
           {/* HEADER — center semua */}
           <div style={{ textAlign: "center", marginBottom: 8 }}>
-            <img src="/pwa-icon.svg" alt="Logo" style={{ width: 44, height: 44, borderRadius: 10, marginBottom: 4 }} />
+            <div style={{ fontSize: 22, fontWeight: 900, color: "#2d7a2d", letterSpacing: 1 }}>🌿 BBS</div>
             <div style={{ fontSize: 15, fontWeight: 900, color: "#1a4a1a" }}>BerkahBirdShop</div>
             <div style={{ fontSize: 9, color: "#aaa" }}>Klaten, Jawa Tengah</div>
             <div style={{ margin: "6px 0", borderTop: "1px dashed #ccc" }} />
