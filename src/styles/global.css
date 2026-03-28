@@ -261,3 +261,18 @@ textarea {
     padding: 12px;
   }
 }
+
+/* ── PRINT ── */
+@media print {
+  body * { visibility: hidden; }
+  #struk-print, #struk-print * { visibility: visible; }
+  #struk-print {
+    position: fixed;
+    top: 0; left: 0;
+    width: 80mm;
+    padding: 8mm;
+    background: #fff;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+  }
+}
