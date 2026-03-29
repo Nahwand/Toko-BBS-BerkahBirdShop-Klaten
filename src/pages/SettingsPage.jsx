@@ -159,15 +159,17 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
               <a href="https://fonnte.com" target="_blank" rel="noreferrer" style={{ marginLeft: 6, fontSize: 10, color: "#1565c0" }}>fonnte.com →</a>
             </label>
             <div style={{ position: "relative" }}>
-              <input className={styles.inp} style={{ paddingRight: 40 }}
-                type={showWaToken ? "text" : "password"}
+              <input className={styles.inp} style={{ paddingRight: 40, filter: showWaToken ? "none" : "blur(4px)", transition: "filter 0.2s", userSelect: showWaToken ? "auto" : "none" }}
+                type="text"
                 placeholder="Token dari dashboard Fonnte..."
                 value={settings.notif_wa_token}
+                onFocus={() => setShowWaToken(true)}
+                onBlur={() => setShowWaToken(false)}
                 onChange={(e) => setSettings(s => ({ ...s, notif_wa_token: e.target.value }))} />
-              <button onClick={() => setShowWaToken(v => !v)}
-                style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", fontSize: 15, color: "#888" }}>
-                {showWaToken ? "🙈" : "👁️"}
-              </button>
+              {!showWaToken && settings.notif_wa_token && (
+                <div onClick={() => setShowWaToken(true)}
+                  style={{ position: "absolute", inset: 0, cursor: "pointer", borderRadius: 8 }} />
+              )}
             </div>
           </div>
           <div style={{ marginBottom: 12 }}>
@@ -201,15 +203,17 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
               <a href="https://t.me/BotFather" target="_blank" rel="noreferrer" style={{ marginLeft: 6, fontSize: 10, color: "#0088cc" }}>Buat bot di @BotFather →</a>
             </label>
             <div style={{ position: "relative" }}>
-              <input className={styles.inp} style={{ paddingRight: 40 }}
-                type={showTgToken ? "text" : "password"}
+              <input className={styles.inp} style={{ paddingRight: 40, filter: showTgToken ? "none" : "blur(4px)", transition: "filter 0.2s", userSelect: showTgToken ? "auto" : "none" }}
+                type="text"
                 placeholder="123456789:ABCdef..."
                 value={settings.notif_tg_bot_token}
+                onFocus={() => setShowTgToken(true)}
+                onBlur={() => setShowTgToken(false)}
                 onChange={(e) => setSettings(s => ({ ...s, notif_tg_bot_token: e.target.value }))} />
-              <button onClick={() => setShowTgToken(v => !v)}
-                style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", fontSize: 15, color: "#888" }}>
-                {showTgToken ? "🙈" : "👁️"}
-              </button>
+              {!showTgToken && settings.notif_tg_bot_token && (
+                <div onClick={() => setShowTgToken(true)}
+                  style={{ position: "absolute", inset: 0, cursor: "pointer", borderRadius: 8 }} />
+              )}
             </div>
           </div>
           <div style={{ marginBottom: 12 }}>
