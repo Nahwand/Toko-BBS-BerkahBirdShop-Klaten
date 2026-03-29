@@ -117,12 +117,12 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
         </div>
 
         <div style={{ marginBottom: 12 }}>
-          <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>
+          <label htmlFor="settings-tg-token" style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>
             Bot Token
             <a href="https://t.me/BotFather" target="_blank" rel="noreferrer" style={{ marginLeft: 6, fontSize: 10, color: "#0088cc" }}>@BotFather →</a>
           </label>
           <div style={{ position: "relative" }}>
-            <input className={styles.inp}
+            <input id="settings-tg-token" name="settings-tg-token" className={styles.inp}
               style={{ filter: showTgToken ? "none" : "blur(4px)", transition: "filter 0.2s", userSelect: showTgToken ? "auto" : "none" }}
               type="text"
               placeholder="123456789:ABCdef..."
@@ -137,11 +137,11 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>
+          <label htmlFor="settings-tg-chat-id" style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>
             Chat ID
             <a href="https://t.me/userinfobot" target="_blank" rel="noreferrer" style={{ marginLeft: 6, fontSize: 10, color: "#0088cc" }}>@userinfobot →</a>
           </label>
-          <input className={styles.inp} placeholder="123456789"
+          <input id="settings-tg-chat-id" name="settings-tg-chat-id" className={styles.inp} placeholder="123456789"
             value={settings.notif_tg_chat_id} onChange={(e) => setSettings(s => ({ ...s, notif_tg_chat_id: e.target.value }))} />
         </div>
 
@@ -192,7 +192,7 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
           <div style={{ padding: "12px", background: "#fff8e1", borderRadius: 8, border: "1px solid #fde68a", marginBottom: 12, fontSize: 11, color: "#92400e" }}>
             ⚠️ Restore akan menimpa data produk, supplier, kategori, dan satuan. Transaksi tidak terpengaruh.
           </div>
-          <input type="file" accept=".json" onChange={handleRestore} style={{ display: "none" }} id="restore-input" />
+          <input type="file" accept=".json" onChange={handleRestore} style={{ display: "none" }} id="restore-input" name="restore-input" />
           <button className={`${styles.btn} ${styles.btnwarning}`} style={{ width: "100%", padding: 11 }}
             onClick={() => document.getElementById('restore-input').click()} disabled={restoring}>
             {restoring ? '⏳ Memulihkan data...' : '📤 Upload File Backup'}

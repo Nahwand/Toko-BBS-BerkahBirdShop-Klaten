@@ -10,8 +10,8 @@ export default function ProdukModal({ prodModal, prodForm, setProdForm, prodImag
           {prodModal === "add" ? "➕ Tambah Produk" : "✏️ Edit Produk"}
         </div>
         <div style={{ marginBottom: 16 }}>
-          <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Foto Produk (Opsional)</label>
-          <input type="file" accept="image/*" onChange={(e) => setProdImage(e.target.files[0])} className={styles.inp} style={{ padding: "8px", width: "100%" }} />
+          <label htmlFor="produk-foto" style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Foto Produk (Opsional)</label>
+          <input id="produk-foto" name="produk-foto" type="file" accept="image/*" onChange={(e) => setProdImage(e.target.files[0])} className={styles.inp} style={{ padding: "8px", width: "100%" }} />
           {prodModal !== "add" && prodModal?.image_url && !prodImage && (
             <div style={{ marginTop: 8 }}>
               <img src={prodModal.image_url} alt="Current" style={{ width: 64, height: 64, objectFit: "cover", borderRadius: 8, border: "2px solid #e4ede4" }} />
@@ -26,25 +26,25 @@ export default function ProdukModal({ prodModal, prodForm, setProdForm, prodImag
           { l: "Min Stok", k: "min_stock", t: "number", p: "Min stok..." },
         ].map((f) => (
           <div key={f.k} style={{ marginBottom: 12 }}>
-            <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>{f.l}</label>
-            <input className={styles.inp} type={f.t} placeholder={f.p} value={prodForm[f.k]}
+            <label htmlFor={`produk-${f.k}`} style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>{f.l}</label>
+            <input id={`produk-${f.k}`} name={`produk-${f.k}`} className={styles.inp} type={f.t} placeholder={f.p} value={prodForm[f.k]}
               onChange={(e) => setProdForm((p) => ({ ...p, [f.k]: e.target.value }))} />
           </div>
         ))}
         <div style={{ marginBottom: 12 }}>
-          <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Kategori</label>
-          <select className={styles.inp} value={prodForm.category} onChange={(e) => setProdForm((p) => ({ ...p, category: e.target.value }))}>
+          <label htmlFor="produk-category" style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Kategori</label>
+          <select id="produk-category" name="produk-category" className={styles.inp} value={prodForm.category} onChange={(e) => setProdForm((p) => ({ ...p, category: e.target.value }))}>
             {kategoris.map((k) => <option key={k.id} value={k.nama}>{k.nama}</option>)}
           </select>
         </div>
         <div style={{ marginBottom: 12 }}>
-          <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Jenis</label>
-          <input className={styles.inp} type="text" placeholder="Kitten / Adult / Semua Umur..." value={prodForm.jenis || ""}
+          <label htmlFor="produk-jenis" style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Jenis</label>
+          <input id="produk-jenis" name="produk-jenis" className={styles.inp} type="text" placeholder="Kitten / Adult / Semua Umur..." value={prodForm.jenis || ""}
             onChange={(e) => setProdForm((p) => ({ ...p, jenis: e.target.value }))} />
         </div>
         <div style={{ marginBottom: 12 }}>
-          <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Varian/Rasa</label>
-          <input className={styles.inp} type="text" placeholder="Tuna, Salmon, Sarden..." value={prodForm.varian || ""}
+          <label htmlFor="produk-varian" style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Varian/Rasa</label>
+          <input id="produk-varian" name="produk-varian" className={styles.inp} type="text" placeholder="Tuna, Salmon, Sarden..." value={prodForm.varian || ""}
             onChange={(e) => setProdForm((p) => ({ ...p, varian: e.target.value }))} />
         </div>
         <div style={{ marginBottom: 12 }}>
@@ -75,8 +75,8 @@ export default function ProdukModal({ prodModal, prodForm, setProdForm, prodImag
           </div>
         </div>
         <div style={{ marginBottom: 20 }}>
-          <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Supplier</label>
-          <select className={styles.inp} value={prodForm.supplier_id} onChange={(e) => setProdForm((p) => ({ ...p, supplier_id: e.target.value }))}>
+          <label htmlFor="produk-supplier" style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Supplier</label>
+          <select id="produk-supplier" name="produk-supplier" className={styles.inp} value={prodForm.supplier_id} onChange={(e) => setProdForm((p) => ({ ...p, supplier_id: e.target.value }))}>
             <option value="">— Pilih Supplier —</option>
             {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>

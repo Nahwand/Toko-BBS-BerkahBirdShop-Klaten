@@ -20,7 +20,7 @@ export default function ImportExportPage({
             <div style={{ fontSize: 13, fontWeight: 800, color: importingState ? "#2d7a2d" : "#333", marginBottom: 14 }}>
               {importingState ? importingState : "Pilih File Excel"}
             </div>
-            <input type="file" accept=".xlsx,.xls" ref={fileRef} onChange={handleImport} style={{ display: "none" }} />
+            <input id="import-file" name="import-file" type="file" accept=".xlsx,.xls" ref={fileRef} onChange={handleImport} style={{ display: "none" }} />
             <button className={`${styles.btn} ${styles.btnprimary}`} style={{ padding: "10px 24px" }}
               onClick={() => fileRef.current.click()} disabled={!!importingState}>
               {importingState ? <Spin size={16} color="#fff" /> : "📤 Upload File"}

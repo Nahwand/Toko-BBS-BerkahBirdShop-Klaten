@@ -14,10 +14,10 @@ export default function LaporanPage({
   return (
     <div id="laporan-container" style={{ padding: 10, background: "#f8fdf8" }}>
       <div id="laporan-actions" style={{ display: "flex", gap: 10, marginBottom: 18, alignItems: "center", flexWrap: "wrap" }} data-html2canvas-ignore="true">
-        <select className={styles.inp} style={{ width: 140 }} value={rptMonth} onChange={(e) => setRptMonth(parseInt(e.target.value))}>
+        <select id="laporan-month" name="laporan-month" className={styles.inp} style={{ width: 140 }} value={rptMonth} onChange={(e) => setRptMonth(parseInt(e.target.value))}>
           {MONTHS.map((m, i) => <option key={i} value={i}>{m}</option>)}
         </select>
-        <select className={styles.inp} style={{ width: 90 }} value={rptYear} onChange={(e) => setRptYear(parseInt(e.target.value))}>
+        <select id="laporan-year" name="laporan-year" className={styles.inp} style={{ width: 90 }} value={rptYear} onChange={(e) => setRptYear(parseInt(e.target.value))}>
           {[2024, 2025, 2026, 2027].map((y) => <option key={y}>{y}</option>)}
         </select>
         <button className={`${styles.btn} ${styles.btnblue}`} onClick={() => exportExcel("laporan")}>📥 Export Excel</button>

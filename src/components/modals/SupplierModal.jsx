@@ -18,21 +18,21 @@ export default function SupplierModal({ supModal, supForm, setSupForm, saveSup, 
           { l: "Kategori", k: "category", t: "text", p: "Jenis produk..." },
         ].map((f) => (
           <div key={f.k} style={{ marginBottom: 12 }}>
-            <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>{f.l}</label>
-            <input className={styles.inp} type={f.t} placeholder={f.p} value={supForm[f.k]}
+            <label htmlFor={`sup-${f.k}`} style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>{f.l}</label>
+            <input id={`sup-${f.k}`} name={`sup-${f.k}`} className={styles.inp} type={f.t} placeholder={f.p} value={supForm[f.k]}
               onChange={(e) => setSupForm((s) => ({ ...s, [f.k]: e.target.value }))} />
           </div>
         ))}
         <div style={{ marginBottom: 12 }}>
-          <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Status</label>
-          <select className={styles.inp} value={supForm.status} onChange={(e) => setSupForm((s) => ({ ...s, status: e.target.value }))}>
+          <label htmlFor="sup-status" style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Status</label>
+          <select id="sup-status" name="sup-status" className={styles.inp} value={supForm.status} onChange={(e) => setSupForm((s) => ({ ...s, status: e.target.value }))}>
             <option>Aktif</option>
             <option>Tidak Aktif</option>
           </select>
         </div>
         <div style={{ marginBottom: 20 }}>
-          <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Catatan</label>
-          <textarea className={styles.inp} style={{ height: 76, resize: "vertical" }} placeholder="Catatan..."
+          <label htmlFor="sup-notes" style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Catatan</label>
+          <textarea id="sup-notes" name="sup-notes" className={styles.inp} style={{ height: 76, resize: "vertical" }} placeholder="Catatan..."
             value={supForm.notes} onChange={(e) => setSupForm((s) => ({ ...s, notes: e.target.value }))} />
         </div>
         <div style={{ display: "flex", gap: 10 }}>

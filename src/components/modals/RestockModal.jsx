@@ -12,10 +12,10 @@ export default function RestockModal({ restockModal, restockQty, setRestockQty, 
           <span>Stok saat ini</span>
           <strong>{restockModal.stock} {restockModal.unit}</strong>
         </div>
-        <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 5 }}>
+        <label htmlFor="restock-qty" style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 5 }}>
           Tambah Stok ({restockModal.unit})
         </label>
-        <input className={styles.inp} style={{ marginBottom: 12, fontSize: 16, fontWeight: 700 }}
+        <input id="restock-qty" name="restock-qty" className={styles.inp} style={{ marginBottom: 12, fontSize: 16, fontWeight: 700 }}
           type="number" placeholder="Jumlah tambahan..." value={restockQty}
           onChange={(e) => setRestockQty(e.target.value)} autoFocus />
         {restockQty && parseInt(restockQty) > 0 && (
@@ -23,8 +23,8 @@ export default function RestockModal({ restockModal, restockQty, setRestockQty, 
             ✅ Setelah restock: <strong>{restockModal.stock + parseInt(restockQty)} {restockModal.unit}</strong>
           </div>
         )}
-        <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 5 }}>Catatan (opsional)</label>
-        <input className={styles.inp} style={{ marginBottom: 16 }} placeholder="Misal: dari supplier X, tanggal kirim..."
+        <label htmlFor="restock-catatan" style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 5 }}>Catatan (opsional)</label>
+        <input id="restock-catatan" name="restock-catatan" className={styles.inp} style={{ marginBottom: 16 }} placeholder="Misal: dari supplier X, tanggal kirim..."
           value={restockCatatan} onChange={(e) => setRestockCatatan(e.target.value)} />
         <div style={{ display: "flex", gap: 10 }}>
           <button className={`${styles.btn} ${styles.btnprimary}`} style={{ flex: 1, padding: 12, fontSize: 14 }} onClick={doRestock}>✅ Konfirmasi</button>

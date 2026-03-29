@@ -10,9 +10,9 @@ export default function RiwayatPage({
   return (
     <div>
       <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
-        <input className={styles.inp} style={{ maxWidth: 230 }} placeholder="🔍 ID / pelanggan..."
+        <input id="riwayat-search" name="riwayat-search" className={styles.inp} style={{ maxWidth: 230 }} placeholder="🔍 ID / pelanggan..."
           value={histSearch} onChange={(e) => setHistSearch(e.target.value)} />
-        <input className={styles.inp} style={{ width: 150 }} type="date"
+        <input id="riwayat-filter-date" name="riwayat-filter-date" className={styles.inp} style={{ width: 150 }} type="date"
           value={filterDate} onChange={(e) => setFilterDate(e.target.value)} />
         {filterDate && (
           <button className={styles.btndefault} onClick={() => setFilterDate("")}>✕ Reset</button>

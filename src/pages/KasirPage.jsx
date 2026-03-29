@@ -13,9 +13,9 @@ export default function KasirPage({
     <div className="kasir-grid">
       <div>
         <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-          <input className={styles.inp} style={{ flex: 1 }} placeholder="🔍 Cari produk..."
+          <input id="kasir-search" name="kasir-search" className={styles.inp} style={{ flex: 1 }} placeholder="🔍 Cari produk..."
             value={searchProd} onChange={(e) => setSearchProd(e.target.value)} />
-          <select className={styles.inp} style={{ width: 150 }} value={filterCat} onChange={(e) => setFilterCat(e.target.value)}>
+          <select id="kasir-filter-cat" name="kasir-filter-cat" className={styles.inp} style={{ width: 150 }} value={filterCat} onChange={(e) => setFilterCat(e.target.value)}>
             {CATS.map((c) => <option key={c}>{c}</option>)}
           </select>
         </div>
@@ -49,7 +49,7 @@ export default function KasirPage({
 
       <div className="kasir-cart" style={{ background: "#fff", borderRadius: 12, padding: "18px 20px", border: "1px solid #e4ede4" }}>
         <div style={{ fontWeight: 800, fontSize: 14, color: "#1a4a1a", marginBottom: 14 }}>🤝 Keranjang</div>
-        <input className={styles.inp} style={{ marginBottom: 10 }} placeholder="Nama pelanggan..."
+        <input id="kasir-customer-name" name="kasir-customer-name" className={styles.inp} style={{ marginBottom: 10 }} placeholder="Nama pelanggan..."
           value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
         {cart.length === 0 ? (
           <div style={{ color: "#ccc", textAlign: "center", padding: "28px 0", fontSize: 13 }}>Ketuk produk untuk menambahkan</div>
@@ -76,7 +76,7 @@ export default function KasirPage({
                 <span style={{ fontWeight: 800, fontSize: 15 }}>TOTAL</span>
                 <span style={{ fontWeight: 900, fontSize: 18, color: "#2d7a2d" }}>{fmt(cartTotal)}</span>
               </div>
-              <input className={styles.inp} style={{ marginBottom: 8, fontSize: 15, fontWeight: 700 }}
+              <input id="kasir-payment" name="kasir-payment" className={styles.inp} style={{ marginBottom: 8, fontSize: 15, fontWeight: 700 }}
                 type="number" placeholder="Nominal pembayaran..." value={paymentInput} onChange={(e) => setPaymentInput(e.target.value)} />
               {payNum > 0 && (
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 10, color: change >= 0 ? "#2d7a2d" : "#dc3545", fontWeight: 800 }}>

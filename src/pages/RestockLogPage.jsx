@@ -13,7 +13,7 @@ export default function RestockLogPage({ restockLogs, products }) {
   return (
     <div>
       <div style={{ display: "flex", gap: 8, marginBottom: 16, alignItems: "center" }}>
-        <input className={styles.inp} style={{ maxWidth: 280 }} placeholder="🔍 Cari produk / user..."
+        <input id="restock-log-search" name="restock-log-search" className={styles.inp} style={{ maxWidth: 280 }} placeholder="🔍 Cari produk / user..."
           value={search} onChange={(e) => setSearch(e.target.value)} />
         <span style={{ fontSize: 12, color: "#888", marginLeft: "auto" }}>{filtered.length} entri restock</span>
       </div>

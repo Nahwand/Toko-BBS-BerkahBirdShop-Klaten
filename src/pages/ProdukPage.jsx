@@ -10,9 +10,9 @@ export default function ProdukPage({
   return (
     <div>
       <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-        <input className={styles.inp} style={{ maxWidth: 250 }} placeholder="🔍 Cari produk..."
+        <input id="produk-search" name="produk-search" className={styles.inp} style={{ maxWidth: 250 }} placeholder="🔍 Cari produk..."
           value={searchProd} onChange={(e) => setSearchProd(e.target.value)} />
-        <select className={styles.inp} style={{ width: 150 }} value={filterCat} onChange={(e) => setFilterCat(e.target.value)}>
+        <select id="produk-filter-cat" name="produk-filter-cat" className={styles.inp} style={{ width: 150 }} value={filterCat} onChange={(e) => setFilterCat(e.target.value)}>
           {CATS.map((c) => <option key={c}>{c}</option>)}
         </select>
         <button className={`${styles.btn} ${styles.btnprimary}`} style={{ marginLeft: "auto" }}

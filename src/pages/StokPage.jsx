@@ -10,9 +10,9 @@ export default function StokPage({
   return (
     <div>
       <div style={{ display: "flex", gap: 8, marginBottom: 16, alignItems: "center" }}>
-        <input className={styles.inp} style={{ maxWidth: 250 }} placeholder="🔍 Cari produk..."
+        <input id="stok-search" name="stok-search" className={styles.inp} style={{ maxWidth: 250 }} placeholder="🔍 Cari produk..."
           value={searchProd} onChange={(e) => setSearchProd(e.target.value)} />
-        <select className={styles.inp} style={{ width: 150 }} value={filterCat} onChange={(e) => setFilterCat(e.target.value)}>
+        <select id="stok-filter-cat" name="stok-filter-cat" className={styles.inp} style={{ width: 150 }} value={filterCat} onChange={(e) => setFilterCat(e.target.value)}>
           {CATS.map((c) => <option key={c}>{c}</option>)}
         </select>
         {isSuperAdmin && (
