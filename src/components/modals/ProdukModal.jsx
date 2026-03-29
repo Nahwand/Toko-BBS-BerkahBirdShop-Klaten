@@ -41,12 +41,21 @@ export default function ProdukModal({ prodModal, prodForm, setProdForm, prodImag
           <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Satuan</label>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {satuans.map((s) => {
-              const isSelected = prodForm.unit && prodForm.unit.split(", ").includes(s.nama);
+              // Normalisasi lowercase agar "kg" == "Kg" == "KG"
+              const currentUnits = prodForm.unit
+                ? prodForm.unit.split(", ").filter(Boolean).map(u => u.toLowerCase())
+                : [];
+              const isSelected = currentUnits.includes(s.nama.toLowerCase());
               return (
                 <div key={s.id} onClick={() => {
+                  // Ambil unit yang ada, normalisasi, toggle
                   let current = prodForm.unit ? prodForm.unit.split(", ").filter(Boolean) : [];
-                  if (isSelected) current = current.filter((u) => u !== s.nama);
-                  else current.push(s.nama);
+                  if (isSelected) {
+                    // Hapus semua varian case dari satuan ini
+                    current = current.filter((u) => u.toLowerCase() !== s.nama.toLowerCase());
+                  } else {
+                    current.push(s.nama);
+                  }
                   setProdForm((p) => ({ ...p, unit: current.join(", ") }));
                 }} style={{ padding: "6px 12px", border: "1px solid " + (isSelected ? "#2d7a2d" : "#ddd"), borderRadius: 6, background: isSelected ? "#e4ede4" : "#fff", color: isSelected ? "#1a4a1a" : "#666", fontSize: 13, cursor: "pointer", fontWeight: isSelected ? 700 : 500, userSelect: "none", transition: "all 0.15s ease" }}>
                   {s.nama}
