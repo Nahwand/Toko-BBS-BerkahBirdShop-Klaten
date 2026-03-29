@@ -38,6 +38,16 @@ export default function ProdukModal({ prodModal, prodForm, setProdForm, prodImag
           </select>
         </div>
         <div style={{ marginBottom: 12 }}>
+          <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Jenis</label>
+          <input className={styles.inp} type="text" placeholder="Kitten / Adult / Semua Umur..." value={prodForm.jenis || ""}
+            onChange={(e) => setProdForm((p) => ({ ...p, jenis: e.target.value }))} />
+        </div>
+        <div style={{ marginBottom: 12 }}>
+          <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Varian/Rasa</label>
+          <input className={styles.inp} type="text" placeholder="Tuna, Salmon, Sarden..." value={prodForm.varian || ""}
+            onChange={(e) => setProdForm((p) => ({ ...p, varian: e.target.value }))} />
+        </div>
+        <div style={{ marginBottom: 12 }}>
           <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Satuan</label>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {satuans.map((s) => {

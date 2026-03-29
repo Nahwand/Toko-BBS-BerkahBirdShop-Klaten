@@ -217,3 +217,7 @@ INSERT INTO settings (key, value) VALUES
   ('notif_email', ''),
   ('notif_enabled', 'false')
 ON CONFLICT (key) DO NOTHING;
+
+-- Add jenis and varian columns to products table
+ALTER TABLE products ADD COLUMN IF NOT EXISTS jenis TEXT DEFAULT '';
+ALTER TABLE products ADD COLUMN IF NOT EXISTS varian TEXT DEFAULT '';

@@ -150,6 +150,8 @@ function Main({ currentUser, onLogout, isOffline }) {
     stock: "",
     min_stock: "",
     supplier_id: "",
+    jenis: "",
+    varian: "",
   });
   const [prodImage, setProdImage] = useState(null);
   const [histSearch, setHistSearch] = useState("");
@@ -713,6 +715,8 @@ function Main({ currentUser, onLogout, isOffline }) {
         ? parseInt(prodForm.supplier_id)
         : null,
       image_url: imageUrl,
+      jenis: prodForm.jenis || "",
+      varian: prodForm.varian || "",
     };
     try {
       if (prodModal === "add") {
