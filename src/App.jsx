@@ -257,6 +257,16 @@ function Main({ currentUser, onLogout, isOffline }) {
         const result = await res.json();
         console.log('[BBS Notif] WA result:', result);
       }
+
+      // Kirim ke Telegram jika aktif
+      if (cfg.notif_tg_enabled === 'true' && cfg.notif_tg_bot_token && cfg.notif_tg_chat_id) {
+        const tgMsg = `🌿 <b>BerkahBirdShop - Peringatan Stok!</b>\n━━━━━━━━━━━━━━━━\n🚨 <b>${belumDinotif.length} Produk Stok HABIS</b>\n\n${belumDinotif.map((p, i) => `${i + 1}. ❌ ${p.name}`).join('\n')}\n\n━━━━━━━━━━━━━━━━\n📅 ${now}\n\n⚡ Segera lakukan restock!\n\n<i>Notifikasi otomatis dari sistem Toko BBS</i>`;
+        await fetch(`https://api.telegram.org/bot${cfg.notif_tg_bot_token}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: cfg.notif_tg_chat_id, text: tgMsg, parse_mode: 'HTML' }),
+        });
+      }
     } catch (e) {
       console.error('Notif error:', e);
     }

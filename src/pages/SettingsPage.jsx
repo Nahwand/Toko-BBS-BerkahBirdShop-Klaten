@@ -2,9 +2,13 @@ import React, { useState, useEffect } from 'react';
 import styles from '../styles/App.module.css';
 
 export default function SettingsPage({ sb, showNotif, products, transactions, suppliers, kategoris, satuans, onRestore }) {
-  const [settings, setSettings] = useState({ notif_wa_token: '', notif_wa_number: '', notif_email: '', notif_enabled: 'false' });
+  const [settings, setSettings] = useState({
+    notif_wa_token: '', notif_wa_number: '', notif_enabled: 'false',
+    notif_tg_bot_token: '', notif_tg_chat_id: '', notif_tg_enabled: 'false',
+  });
   const [saving, setSaving] = useState(false);
   const [testingWa, setTestingWa] = useState(false);
+  const [testingTg, setTestingTg] = useState(false);
   const [restoring, setRestoring] = useState(false);
 
   useEffect(() => {
@@ -17,15 +21,11 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
     });
   }, []);
 
-  const saveSetting = async (key, value) => {
-    await sb.from('settings').upsert({ key, value }, { onConflict: 'key' });
-  };
-
   const saveAll = async () => {
     setSaving(true);
     try {
       for (const [key, value] of Object.entries(settings)) {
-        await saveSetting(key, value);
+        await sb.from('settings').upsert({ key, value }, { onConflict: 'key' });
       }
       showNotif('Pengaturan disimpan!');
     } catch (e) {
@@ -41,11 +41,9 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
     }
     setTestingWa(true);
     try {
-      // Auto-format nomor
       let nomorWA = settings.notif_wa_number.trim().replace(/\s+/g, '');
       if (nomorWA.startsWith('0')) nomorWA = '62' + nomorWA.slice(1);
       if (nomorWA.startsWith('+')) nomorWA = nomorWA.slice(1);
-
       const now = new Date().toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' });
       const msg = `🌿 *BerkahBirdShop*\n━━━━━━━━━━━━━━━━\n✅ *Notifikasi Aktif!*\n\nSistem notifikasi Toko BBS berhasil terhubung dan siap digunakan.\n\n📅 ${now}\n\n_Pesan ini dikirim otomatis oleh sistem Toko BBS._`;
       const res = await fetch('https://api.fonnte.com/send', {
@@ -55,7 +53,6 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
       });
       const data = await res.json();
       if (data.status) {
-        // Reset cache notif agar semua produk bisa kirim lagi
         const today = new Date().toISOString().slice(0, 10);
         localStorage.removeItem(`bbs_notif_sent_${today}`);
         showNotif('✅ Pesan WA terkirim!');
@@ -68,13 +65,37 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
     setTestingWa(false);
   };
 
+  const testTelegram = async () => {
+    if (!settings.notif_tg_bot_token || !settings.notif_tg_chat_id) {
+      showNotif('Isi Bot Token dan Chat ID Telegram terlebih dahulu!', 'error');
+      return;
+    }
+    setTestingTg(true);
+    try {
+      const now = new Date().toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' });
+      const msg = `🌿 <b>BerkahBirdShop</b>\n━━━━━━━━━━━━━━━━\n✅ <b>Notifikasi Telegram Aktif!</b>\n\nSistem notifikasi Toko BBS berhasil terhubung.\n\n📅 ${now}\n\n<i>Pesan ini dikirim otomatis oleh sistem Toko BBS.</i>`;
+      const res = await fetch(`https://api.telegram.org/bot${settings.notif_tg_bot_token}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: settings.notif_tg_chat_id, text: msg, parse_mode: 'HTML' }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        const today = new Date().toISOString().slice(0, 10);
+        localStorage.removeItem(`bbs_notif_sent_${today}`);
+        showNotif('✅ Pesan Telegram terkirim!');
+      } else {
+        showNotif('Gagal kirim Telegram: ' + (data.description || 'Unknown'), 'error');
+      }
+    } catch (e) {
+      showNotif('Error: ' + e.message, 'error');
+    }
+    setTestingTg(false);
+  };
+
   // BACKUP
   const handleBackup = () => {
-    const backup = {
-      version: '1.0',
-      exported_at: new Date().toISOString(),
-      products, transactions, suppliers, kategoris, satuans,
-    };
+    const backup = { version: '1.0', exported_at: new Date().toISOString(), products, transactions, suppliers, kategoris, satuans };
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -89,51 +110,20 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
   const handleRestore = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (!window.confirm('⚠️ Restore akan MENIMPA data produk, supplier, kategori, dan satuan yang ada. Lanjutkan?')) {
-      e.target.value = '';
-      return;
-    }
+    if (!window.confirm('⚠️ Restore akan MENIMPA data produk, supplier, kategori, dan satuan yang ada. Lanjutkan?')) { e.target.value = ''; return; }
     setRestoring(true);
     const reader = new FileReader();
     reader.onload = async (ev) => {
       try {
         const data = JSON.parse(ev.target.result);
         if (!data.version || !data.products) throw new Error('File backup tidak valid!');
-
-        // Restore kategoris
-        if (data.kategoris?.length) {
-          for (const k of data.kategoris) {
-            const { id, created_at, ...payload } = k;
-            await sb.from('kategoris').upsert(payload, { onConflict: 'nama' });
-          }
-        }
-        // Restore satuans
-        if (data.satuans?.length) {
-          for (const s of data.satuans) {
-            const { id, created_at, ...payload } = s;
-            await sb.from('satuans').upsert(payload, { onConflict: 'nama' });
-          }
-        }
-        // Restore suppliers
-        if (data.suppliers?.length) {
-          for (const s of data.suppliers) {
-            const { id, created_at, ...payload } = s;
-            await sb.from('suppliers').upsert(payload, { onConflict: 'name' });
-          }
-        }
-        // Restore products (tanpa image_url agar tidak overwrite)
-        if (data.products?.length) {
-          for (const p of data.products) {
-            const { id, created_at, updated_at, ...payload } = p;
-            await sb.from('products').upsert(payload, { onConflict: 'name' });
-          }
-        }
-
+        if (data.kategoris?.length) for (const k of data.kategoris) { const { id, created_at, ...p } = k; await sb.from('kategoris').upsert(p, { onConflict: 'nama' }); }
+        if (data.satuans?.length) for (const s of data.satuans) { const { id, created_at, ...p } = s; await sb.from('satuans').upsert(p, { onConflict: 'nama' }); }
+        if (data.suppliers?.length) for (const s of data.suppliers) { const { id, created_at, ...p } = s; await sb.from('suppliers').upsert(p, { onConflict: 'name' }); }
+        if (data.products?.length) for (const p of data.products) { const { id, created_at, updated_at, ...payload } = p; await sb.from('products').upsert(payload, { onConflict: 'name' }); }
         showNotif(`Restore selesai! ${data.products?.length || 0} produk dipulihkan.`);
         onRestore();
-      } catch (err) {
-        showNotif('Gagal restore: ' + err.message, 'error');
-      }
+      } catch (err) { showNotif('Gagal restore: ' + err.message, 'error'); }
       setRestoring(false);
       e.target.value = '';
     };
@@ -144,63 +134,88 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
 
       {/* NOTIFIKASI */}
-      <div className={styles.card}>
-        <div style={{ fontWeight: 800, fontSize: 15, color: "#1a4a1a", marginBottom: 4 }}>🔔 Notifikasi Stok Habis</div>
-        <div style={{ fontSize: 12, color: "#888", marginBottom: 16 }}>Kirim peringatan otomatis via WhatsApp saat ada produk stok habis</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
-        <div style={{ marginBottom: 12 }}>
-          <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Aktifkan Notifikasi</label>
-          <div style={{ display: "flex", gap: 8 }}>
-            {['true', 'false'].map(v => (
-              <button key={v} onClick={() => setSettings(s => ({ ...s, notif_enabled: v }))}
-                style={{ padding: "6px 18px", borderRadius: 8, border: `2px solid ${settings.notif_enabled === v ? '#2d7a2d' : '#ddd'}`, background: settings.notif_enabled === v ? '#e8f5e9' : '#fff', color: settings.notif_enabled === v ? '#1a4a1a' : '#666', fontWeight: settings.notif_enabled === v ? 800 : 500, fontSize: 12, cursor: "pointer" }}>
-                {v === 'true' ? '✅ Aktif' : '❌ Nonaktif'}
-              </button>
-            ))}
+        {/* WhatsApp */}
+        <div className={styles.card}>
+          <div style={{ fontWeight: 800, fontSize: 15, color: "#1a4a1a", marginBottom: 4 }}>📱 Notifikasi WhatsApp</div>
+          <div style={{ fontSize: 12, color: "#888", marginBottom: 12 }}>Kirim peringatan stok habis via WhatsApp (Fonnte)</div>
+          <div style={{ marginBottom: 10 }}>
+            <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Status</label>
+            <div style={{ display: "flex", gap: 8 }}>
+              {['true', 'false'].map(v => (
+                <button key={v} onClick={() => setSettings(s => ({ ...s, notif_enabled: v }))}
+                  style={{ padding: "5px 14px", borderRadius: 8, border: `2px solid ${settings.notif_enabled === v ? '#2d7a2d' : '#ddd'}`, background: settings.notif_enabled === v ? '#e8f5e9' : '#fff', color: settings.notif_enabled === v ? '#1a4a1a' : '#666', fontWeight: settings.notif_enabled === v ? 800 : 500, fontSize: 12, cursor: "pointer" }}>
+                  {v === 'true' ? '✅ Aktif' : '❌ Nonaktif'}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div style={{ marginBottom: 10 }}>
+            <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>
+              Token Fonnte
+              <a href="https://fonnte.com" target="_blank" rel="noreferrer" style={{ marginLeft: 6, fontSize: 10, color: "#1565c0" }}>fonnte.com →</a>
+            </label>
+            <input className={styles.inp} placeholder="Token dari dashboard Fonnte..."
+              value={settings.notif_wa_token} onChange={(e) => setSettings(s => ({ ...s, notif_wa_token: e.target.value }))} />
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Nomor WA (08xxx atau 628xxx)</label>
+            <input className={styles.inp} placeholder="085701025909"
+              value={settings.notif_wa_number} onChange={(e) => setSettings(s => ({ ...s, notif_wa_number: e.target.value }))} />
+          </div>
+          <button className={`${styles.btn} ${styles.btnprimary}`} style={{ width: "100%", padding: 9 }} onClick={testWA} disabled={testingWa}>
+            {testingWa ? '⏳...' : '📱 Test WhatsApp'}
+          </button>
+        </div>
+
+        {/* Telegram */}
+        <div className={styles.card}>
+          <div style={{ fontWeight: 800, fontSize: 15, color: "#1a4a1a", marginBottom: 4 }}>✈️ Notifikasi Telegram</div>
+          <div style={{ fontSize: 12, color: "#888", marginBottom: 12 }}>Kirim peringatan stok habis via Telegram Bot</div>
+          <div style={{ marginBottom: 10 }}>
+            <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Status</label>
+            <div style={{ display: "flex", gap: 8 }}>
+              {['true', 'false'].map(v => (
+                <button key={v} onClick={() => setSettings(s => ({ ...s, notif_tg_enabled: v }))}
+                  style={{ padding: "5px 14px", borderRadius: 8, border: `2px solid ${settings.notif_tg_enabled === v ? '#0088cc' : '#ddd'}`, background: settings.notif_tg_enabled === v ? '#e3f2fd' : '#fff', color: settings.notif_tg_enabled === v ? '#0088cc' : '#666', fontWeight: settings.notif_tg_enabled === v ? 800 : 500, fontSize: 12, cursor: "pointer" }}>
+                  {v === 'true' ? '✅ Aktif' : '❌ Nonaktif'}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div style={{ marginBottom: 10 }}>
+            <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>
+              Bot Token
+              <a href="https://t.me/BotFather" target="_blank" rel="noreferrer" style={{ marginLeft: 6, fontSize: 10, color: "#0088cc" }}>Buat bot di @BotFather →</a>
+            </label>
+            <input className={styles.inp} placeholder="123456789:ABCdef..."
+              value={settings.notif_tg_bot_token} onChange={(e) => setSettings(s => ({ ...s, notif_tg_bot_token: e.target.value }))} />
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>
+              Chat ID
+              <a href="https://t.me/userinfobot" target="_blank" rel="noreferrer" style={{ marginLeft: 6, fontSize: 10, color: "#0088cc" }}>Cek ID di @userinfobot →</a>
+            </label>
+            <input className={styles.inp} placeholder="123456789"
+              value={settings.notif_tg_chat_id} onChange={(e) => setSettings(s => ({ ...s, notif_tg_chat_id: e.target.value }))} />
+          </div>
+          <button style={{ width: "100%", padding: 9, borderRadius: 8, border: "none", background: "#0088cc", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }} onClick={testTelegram} disabled={testingTg}>
+            {testingTg ? '⏳...' : '✈️ Test Telegram'}
+          </button>
+
+          {/* Panduan singkat */}
+          <div style={{ marginTop: 12, padding: "10px 12px", background: "#e3f2fd", borderRadius: 8, fontSize: 11, color: "#1565c0" }}>
+            <strong>Cara setup:</strong><br />
+            1. Chat <a href="https://t.me/BotFather" target="_blank" rel="noreferrer" style={{ color: "#0088cc" }}>@BotFather</a> → /newbot → copy token<br />
+            2. Chat <a href="https://t.me/userinfobot" target="_blank" rel="noreferrer" style={{ color: "#0088cc" }}>@userinfobot</a> → copy Chat ID Anda<br />
+            3. Isi keduanya di atas → Test → Simpan
           </div>
         </div>
 
-        <div style={{ marginBottom: 12 }}>
-          <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>
-            Token Fonnte API
-            <a href="https://fonnte.com" target="_blank" rel="noreferrer" style={{ marginLeft: 6, fontSize: 10, color: "#1565c0" }}>Daftar di fonnte.com →</a>
-          </label>
-          <input className={styles.inp} placeholder="Token dari dashboard Fonnte..."
-            value={settings.notif_wa_token} onChange={(e) => setSettings(s => ({ ...s, notif_wa_token: e.target.value }))} />
-        </div>
-
-        <div style={{ marginBottom: 12 }}>
-          <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Nomor WA Pemilik (format: 628xxx)</label>
-          <input className={styles.inp} placeholder="628123456789"
-            value={settings.notif_wa_number} onChange={(e) => setSettings(s => ({ ...s, notif_wa_number: e.target.value }))} />
-        </div>
-
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Email Pemilik (opsional)</label>
-          <input className={styles.inp} type="email" placeholder="email@toko.com"
-            value={settings.notif_email} onChange={(e) => setSettings(s => ({ ...s, notif_email: e.target.value }))} />
-          <div style={{ fontSize: 10, color: "#aaa", marginTop: 4 }}>Klik link mailto — buka email client otomatis</div>
-        </div>
-
-        <div style={{ display: "flex", gap: 8 }}>
-          <button className={`${styles.btn} ${styles.btnprimary}`} style={{ flex: 1, padding: 10 }} onClick={saveAll} disabled={saving}>
-            {saving ? '⏳ Menyimpan...' : '💾 Simpan'}
-          </button>
-          <button className={`${styles.btn} ${styles.btnblue}`} style={{ flex: 1, padding: 10 }} onClick={testWA} disabled={testingWa}>
-            {testingWa ? '⏳...' : '📱 Test WA'}
-          </button>
-        </div>
-
-        {settings.notif_email && (
-          <a href={`mailto:${settings.notif_email}?subject=Test Notifikasi BBS&body=Test email dari Toko BBS`}
-            style={{ display: "block", marginTop: 8, textAlign: "center", fontSize: 12, color: "#1565c0" }}>
-            📧 Test Email →
-          </a>
-        )}
-
-        <div style={{ marginTop: 14, padding: "10px 12px", background: "#f8fdf8", borderRadius: 8, border: "1px solid #e4ede4", fontSize: 11, color: "#666" }}>
-          <strong>Cara kerja:</strong> Setiap kali app dibuka atau refresh, sistem otomatis cek produk stok habis. Jika ada dan notifikasi aktif, pesan WA dikirim ke nomor pemilik.
-        </div>
+        <button className={`${styles.btn} ${styles.btnprimary}`} style={{ padding: 11 }} onClick={saveAll} disabled={saving}>
+          {saving ? '⏳ Menyimpan...' : '💾 Simpan Semua Pengaturan'}
+        </button>
       </div>
 
       {/* BACKUP & RESTORE */}
@@ -208,7 +223,7 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
         <div className={styles.card} style={{ marginBottom: 14 }}>
           <div style={{ fontWeight: 800, fontSize: 15, color: "#1a4a1a", marginBottom: 4 }}>💾 Backup Data</div>
           <div style={{ fontSize: 12, color: "#888", marginBottom: 16 }}>Unduh semua data ke file JSON sebagai cadangan</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14, fontSize: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
             {[
               { label: "Produk", count: products.length, color: "#1565c0", bg: "#e3f2fd" },
               { label: "Transaksi", count: transactions.length, color: "#2e7d32", bg: "#e8f5e9" },
@@ -229,8 +244,8 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
         <div className={styles.card}>
           <div style={{ fontWeight: 800, fontSize: 15, color: "#1a4a1a", marginBottom: 4 }}>📤 Restore Data</div>
           <div style={{ fontSize: 12, color: "#888", marginBottom: 12 }}>Upload file backup .json untuk memulihkan data</div>
-          <div style={{ padding: "14px", background: "#fff8e1", borderRadius: 8, border: "1px solid #fde68a", marginBottom: 12, fontSize: 11, color: "#92400e" }}>
-            ⚠️ Restore akan menimpa data produk, supplier, kategori, dan satuan yang ada. Transaksi tidak akan terpengaruh.
+          <div style={{ padding: "12px", background: "#fff8e1", borderRadius: 8, border: "1px solid #fde68a", marginBottom: 12, fontSize: 11, color: "#92400e" }}>
+            ⚠️ Restore akan menimpa data produk, supplier, kategori, dan satuan. Transaksi tidak terpengaruh.
           </div>
           <input type="file" accept=".json" onChange={handleRestore} style={{ display: "none" }} id="restore-input" />
           <button className={`${styles.btn} ${styles.btnwarning}`} style={{ width: "100%", padding: 11 }}
