@@ -49,8 +49,8 @@ export default function LaporanPage({
           <span>📈 Tren Pendapatan Harian</span>
           <span style={{ color: "#aaa", fontSize: 12, fontWeight: 500 }}>{MONTHS[rptMonth]} {rptYear}</span>
         </div>
-        <div style={{ height: 260, width: "100%" }}>
-          <ResponsiveContainer width="100%" height="100%">
+        <div style={{ height: 260, width: "100%", minHeight: 260 }}>
+          <ResponsiveContainer width="100%" height={260}>
             <LineChart data={dayData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4ede4" />
               <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#666' }} axisLine={false} tickLine={false} tickMargin={10} />
@@ -65,11 +65,11 @@ export default function LaporanPage({
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
         <div className={styles.card}>
           <div style={{ fontWeight: 800, fontSize: 14, color: "#1a4a1a", marginBottom: 14 }}>🧩 Distribusi Kategori</div>
-          <div style={{ height: 240, width: "100%" }}>
+          <div style={{ height: 240, width: "100%", minHeight: 240 }}>
             {catData.length === 0 ? (
               <div style={{ color: "#ccc", textAlign: "center", paddingTop: 80 }}>Tidak ada data</div>
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height={240}>
                 <PieChart>
                   <Pie data={catData} dataKey="rev" nameKey="cat" cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={3} animationDuration={1200}>
                     {catData.map((entry, index) => {
@@ -87,11 +87,11 @@ export default function LaporanPage({
 
         <div className={styles.card}>
           <div style={{ fontWeight: 800, fontSize: 14, color: "#1a4a1a", marginBottom: 14 }}>🏆 Top 5 Produk Terlaris</div>
-          <div style={{ height: 240, width: "100%" }}>
+          <div style={{ height: 240, width: "100%", minHeight: 240 }}>
             {topProds.length === 0 ? (
               <div style={{ color: "#ccc", textAlign: "center", paddingTop: 80 }}>Tidak ada data</div>
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={topProds.map(([name, qty]) => ({ name, qty }))} layout="vertical" margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f0f0f0" />
                   <XAxis type="number" hide />

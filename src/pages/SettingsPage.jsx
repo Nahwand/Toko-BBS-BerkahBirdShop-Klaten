@@ -105,7 +105,7 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
         <div style={{ fontSize: 12, color: "#888", marginBottom: 16 }}>Kirim peringatan stok habis via Telegram Bot secara instan</div>
 
         <div style={{ marginBottom: 12 }}>
-          <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Status Notifikasi</label>
+          <div style={{ fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Status Notifikasi</div>
           <div style={{ display: "flex", gap: 8 }}>
             {['true', 'false'].map(v => (
               <button key={v} onClick={() => setSettings(s => ({ ...s, notif_tg_enabled: v }))}
