@@ -1283,6 +1283,8 @@ function Main({ currentUser, onLogout, isOffline }) {
             {/* GLOBAL SEARCH */}
             <div style={{ position: "relative" }} ref={globalSearchRef}>
               <input
+                id="global-search"
+                name="global-search"
                 className={styles.inp}
                 style={{ width: showGlobalSearch ? 220 : 36, padding: showGlobalSearch ? "5px 10px" : "5px", transition: "width 0.2s", cursor: "pointer", fontSize: 12 }}
                 placeholder={showGlobalSearch ? "🔍 Cari produk, transaksi, supplier..." : "🔍"}
