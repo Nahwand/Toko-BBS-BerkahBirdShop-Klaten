@@ -97,7 +97,7 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
   };
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
+    <div className="excel-grid">
 
       {/* NOTIFIKASI TELEGRAM */}
       <div className={styles.card}>
