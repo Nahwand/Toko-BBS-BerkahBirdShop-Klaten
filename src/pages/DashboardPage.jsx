@@ -38,14 +38,14 @@ export default function DashboardPage({ transactions, products, activityLogs, to
       <div className="dash-grid">
         {/* Transaksi terbaru */}
         <div className={styles.card}>
-          <div className="font-extrabold text-sm text-[#1a4a1a] dark:text-[#a8e063] mb-3.5">Transaksi Terbaru</div>
+          <div className="font-extrabold text-sm text-bbs-green-dark dark:text-[#a8e063] mb-3.5">Transaksi Terbaru</div>
           {transactions.slice(0, 7).map((t) => (
             <div key={t.id} className="flex justify-between py-2 border-b border-[#f0f5f0] dark:border-[#243424] items-center">
               <div>
                 <div className="font-bold text-[13px]">{t.trx_code} — {t.customer}</div>
                 <div className="text-[10px] text-gray-400">{t.date} · {(t.items || []).length} item</div>
               </div>
-              <span className="font-extrabold text-[#2d7a2d] text-[13px]">{fmt(t.total)}</span>
+              <span className="font-extrabold text-bbs-green text-[13px]">{fmt(t.total)}</span>
             </div>
           ))}
         </div>
@@ -71,7 +71,7 @@ export default function DashboardPage({ transactions, products, activityLogs, to
 
         {/* Stok menipis */}
         <div className={styles.card}>
-          <div className="font-extrabold text-sm text-[#1a4a1a] dark:text-[#a8e063] mb-3.5">⚠ Stok Menipis</div>
+          <div className="font-extrabold text-sm text-bbs-green-dark dark:text-[#a8e063] mb-3.5">⚠ Stok Menipis</div>
           {lowStock.length === 0 ? (
             <div className="text-gray-300 text-[13px] text-center py-5">✅ Semua stok aman</div>
           ) : lowStock.slice(0, 7).map((p) => (
@@ -90,9 +90,9 @@ export default function DashboardPage({ transactions, products, activityLogs, to
       </div>
 
       {/* Activity log */}
-      <div className="mt-4 bg-white dark:bg-[#1a2a1a] rounded-xl border border-[#e4ede4] dark:border-[#2d4a2d]">
-        <div className="px-5 py-4 border-b border-[#e4ede4] dark:border-[#2d4a2d] flex justify-between items-center">
-          <div className="font-extrabold text-sm text-[#1a4a1a] dark:text-[#a8e063]">📋 Aktivitas Terbaru</div>
+      <div className="mt-4 bg-white dark:bg-[#1a2a1a] rounded-xl border border-bbs-border dark:border-[#2d4a2d]">
+        <div className="px-5 py-4 border-b border-bbs-border dark:border-[#2d4a2d] flex justify-between items-center">
+          <div className="font-extrabold text-sm text-bbs-green-dark dark:text-[#a8e063]">📋 Aktivitas Terbaru</div>
           <div className="text-[11px] text-gray-400">30 aktivitas terakhir</div>
         </div>
         {activityLogs.length === 0 ? (
@@ -106,7 +106,7 @@ export default function DashboardPage({ transactions, products, activityLogs, to
               const roleCls = log.user_role === "superadmin" ? "bg-purple-100 text-purple-800" : log.user_role === "admin" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-800";
               return (
                 <div key={log.id} className="flex items-center gap-3 px-5 py-3 border-b border-gray-50 dark:border-[#1f2d1a] hover:bg-green-50 dark:hover:bg-[#1f2d1a] transition-colors">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0" style={{ background: clr.bg }}>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0" style={{ background: clr.bg }}>
                     {ACTIVITY_ICONS[log.kategori] || "📝"}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -117,7 +117,7 @@ export default function DashboardPage({ transactions, products, activityLogs, to
                     </div>
                     {log.detail && <div className="text-xs text-gray-400 truncate">{log.detail}</div>}
                   </div>
-                  <div className="text-right flex-shrink-0">
+                  <div className="text-right shrink-0">
                     <div className="text-[11px] text-gray-500 font-semibold">{tgl.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</div>
                     <div className="text-[10px] text-gray-300">{tgl.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}</div>
                   </div>

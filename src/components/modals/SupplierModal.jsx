@@ -11,9 +11,9 @@ export default function SupplierModal({ supModal, supForm, setSupForm, saveSup, 
     { l: "Kategori", k: "category", t: "text", p: "Jenis produk..." },
   ];
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[999]" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-999" onClick={onClose}>
       <div className="bg-white dark:bg-[#1a2a1a] rounded-2xl p-6 w-[420px] max-h-[90vh] overflow-y-auto shadow-2xl text-gray-900 dark:text-[#e8f5e8]" onClick={(e) => e.stopPropagation()}>
-        <div className="text-base font-extrabold mb-4 text-[#1a4a1a] dark:text-[#a8e063]">
+        <div className="text-base font-extrabold mb-4 text-bbs-green-dark dark:text-[#a8e063]">
           {supModal === "add" ? "➕ Tambah Supplier" : "✏️ Edit Supplier"}
         </div>
         {fields.map((f) => (
@@ -36,8 +36,8 @@ export default function SupplierModal({ supModal, supForm, setSupForm, saveSup, 
             value={supForm.notes} onChange={(e) => setSupForm((s) => ({ ...s, notes: e.target.value }))} />
         </div>
         <div className="flex gap-2.5">
-          <button className="flex-1 py-3 text-sm font-bold bg-[#2d7a2d] text-white rounded-xl border-none cursor-pointer" onClick={saveSup}>💾 Simpan</button>
-          <button className="flex-1 py-3 text-sm font-bold bg-[#f0f5f0] dark:bg-[#2d4a2d] text-[#2d7a2d] dark:text-[#a8e063] rounded-xl border-none cursor-pointer" onClick={onClose}>Batal</button>
+          <button className="flex-1 py-3 text-sm font-bold bg-bbs-green text-white rounded-xl border-none cursor-pointer" onClick={saveSup}>💾 Simpan</button>
+          <button className="flex-1 py-3 text-sm font-bold bg-[#f0f5f0] dark:bg-[#2d4a2d] text-bbs-green dark:text-[#a8e063] rounded-xl border-none cursor-pointer" onClick={onClose}>Batal</button>
         </div>
       </div>
     </div>

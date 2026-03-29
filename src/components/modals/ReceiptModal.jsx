@@ -39,14 +39,14 @@ const PrintButtons = ({ printSize, setPrintSize, handlePrint, onClose, closeLabe
       <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400">Ukuran kertas:</span>
       {['58', '80'].map(size => (
         <button key={size} onClick={() => setPrintSize(size)}
-          className={`px-3.5 py-1 rounded-lg text-xs font-bold cursor-pointer transition-all border-2 ${printSize === size ? 'border-[#2d7a2d] bg-green-50 dark:bg-[#2d4a2d] text-[#1a4a1a] dark:text-[#a8e063] font-extrabold' : 'border-gray-200 dark:border-[#3a5a3a] bg-white dark:bg-[#1e2e1e] text-gray-500'}`}>
+          className={`px-3.5 py-1 rounded-lg text-xs font-bold cursor-pointer transition-all border-2 ${printSize === size ? 'border-bbs-green bg-green-50 dark:bg-[#2d4a2d] text-bbs-green-dark dark:text-[#a8e063] font-extrabold' : 'border-gray-200 dark:border-[#3a5a3a] bg-white dark:bg-[#1e2e1e] text-gray-500'}`}>
           {size}mm
         </button>
       ))}
     </div>
     <div className="flex gap-2">
-      <button className="flex-1 py-2.5 text-sm font-bold bg-[#f0f5f0] dark:bg-[#2d4a2d] text-[#2d7a2d] dark:text-[#a8e063] rounded-xl border-none cursor-pointer" onClick={handlePrint}>🖨️ Cetak</button>
-      <button className="flex-1 py-2.5 text-sm font-bold bg-[#2d7a2d] text-white rounded-xl border-none cursor-pointer" onClick={onClose}>{closeLabel}</button>
+      <button className="flex-1 py-2.5 text-sm font-bold bg-[#f0f5f0] dark:bg-[#2d4a2d] text-bbs-green dark:text-[#a8e063] rounded-xl border-none cursor-pointer" onClick={handlePrint}>🖨️ Cetak</button>
+      <button className="flex-1 py-2.5 text-sm font-bold bg-bbs-green text-white rounded-xl border-none cursor-pointer" onClick={onClose}>{closeLabel}</button>
     </div>
   </>
 );
@@ -63,7 +63,7 @@ export default function ReceiptModal({ receipt, customerName, onClose }) {
     setTimeout(() => document.getElementById('print-size-override')?.remove(), 1000);
   };
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[999]" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-999" onClick={onClose}>
       <div className="bg-white dark:bg-[#1a2a1a] rounded-2xl p-6 w-[320px] max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <StrukContent data={receipt} customerName={customerName} />
         <PrintButtons printSize={printSize} setPrintSize={setPrintSize} handlePrint={handlePrint} onClose={onClose} />

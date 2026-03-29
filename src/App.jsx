@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import * as XL from 'xlsx';
 import { sb } from './config/supabase';
 import styles from './styles/App.module.css';
-import { CATS, MONTHS, BADGE, ACCESS, TODAY, fmt, fmtN } from './utils/constants';
+import { CATS, MONTHS, ACCESS, TODAY, fmt } from './utils/constants';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-import Badge from './components/Badge';
 import Spin from './components/Spin';
 import LoginPage from './pages/LoginPage';
 import UsersPage from './pages/UsersPage';
@@ -111,7 +110,7 @@ function App() {
   return (
     <>
       {isOffline && (
-        <div className="bg-red-600 text-white text-center px-4 py-2 text-[13px] font-bold z-[9999] relative tracking-wide">
+        <div className="bg-red-600 text-white text-center px-4 py-2 text-[13px] font-bold z-9999 relative tracking-wide">
           ⚠️ Koneksi Internet Terputus: Kasir Berjalan dalam Mode Offline
         </div>
       )}
@@ -195,7 +194,6 @@ function Main({ currentUser, onLogout, isOffline }) {
   const [importLog, setImportLog] = useState([]);
   const [showLogout, setShowLogout] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const fileRef = useRef();
 
   // Dark mode
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('bbs_dark') === 'true');
@@ -887,7 +885,6 @@ function Main({ currentUser, onLogout, isOffline }) {
     const tt = rptTrx.filter((t) => t.date === ds);
     return { day: i + 1, rev: tt.reduce((s, t) => s + t.total, 0) };
   });
-  const maxDayRev = Math.max(...dayData.map((d) => d.rev), 1);
   const catData = CATS.filter((c) => c !== "Semua")
     .map((cat) => {
       let rev = 0;
@@ -1218,9 +1215,9 @@ function Main({ currentUser, onLogout, isOffline }) {
       {sidebarOpen && <div className="bbs-overlay open" onClick={() => setSidebarOpen(false)} />}
 
       {loading && (
-        <div className="fixed inset-0 bg-white/75 dark:bg-black/60 z-[9999] flex flex-col items-center justify-center gap-3">
+        <div className="fixed inset-0 bg-white/75 dark:bg-black/60 z-9999 flex flex-col items-center justify-center gap-3">
           <Spin />
-          <div className="text-[13px] text-[#2d7a2d] font-bold">Memuat data...</div>
+          <div className="text-[13px] text-bbs-green font-bold">Memuat data...</div>
         </div>
       )}
 
@@ -1233,7 +1230,7 @@ function Main({ currentUser, onLogout, isOffline }) {
             Klaten · {isOffline ? "🔴 Offline" : `🟢 Online${realtimeUsers.length > 1 ? ` · ${realtimeUsers.length} kasir aktif` : ""}`}
           </div>
         </div>
-        <div className="px-3.5 py-3 border-b border-white/[0.08] bg-white/5">
+        <div className="px-3.5 py-3 border-b border-white/8 bg-white/5">
           <div className="text-xs font-bold text-white">{currentUser.nama}</div>
           <div className="mt-0.5">
             <span className={`text-[10px] px-2 py-0.5 rounded-xl font-extrabold ${currentUser.role === "superadmin" ? "bg-[#a8e063]/20 text-[#a8e063]" : currentUser.role === "admin" ? "bg-[#ffc864]/20 text-[#ffc864]" : "bg-[#7eb8ff]/20 text-[#7eb8ff]"}`}>
@@ -1263,7 +1260,7 @@ function Main({ currentUser, onLogout, isOffline }) {
         )}
         {deferredPrompt && (
           <div className="px-3 pb-2.5">
-            <button onClick={handleInstallClick} className="w-full py-2 bg-white text-[#1a4a1a] border border-[#1a4a1a] rounded-lg cursor-pointer text-[13px] font-extrabold flex items-center justify-center gap-1.5">
+            <button onClick={handleInstallClick} className="w-full py-2 bg-white text-bbs-green-dark border border-bbs-green-dark rounded-lg cursor-pointer text-[13px] font-extrabold flex items-center justify-center gap-1.5">
               🚀 Install Aplikasi
             </button>
           </div>
@@ -1277,12 +1274,12 @@ function Main({ currentUser, onLogout, isOffline }) {
 
       {/* MAIN */}
       <div className="bbs-main">
-        <header className="bg-white dark:bg-[#162016] px-4 py-3 border-b border-[#e4ede4] dark:border-[#2d4a2d] flex justify-between items-center flex-shrink-0 shadow-sm">
+        <header className="bg-white dark:bg-[#162016] px-4 py-3 border-b border-bbs-border dark:border-[#2d4a2d] flex justify-between items-center shrink-0 shadow-sm">
           <div className="flex items-center gap-2.5">
             <button className="bbs-hamburger" onClick={() => setSidebarOpen(!sidebarOpen)}>
               <span className="text-xl leading-none">☰</span>
             </button>
-            <div className="text-base font-extrabold text-[#1a4a1a] dark:text-[#a8e063]">
+            <div className="text-base font-extrabold text-bbs-green-dark dark:text-[#a8e063]">
               {allNavs.find((n) => n.id === page)?.icon} {allNavs.find((n) => n.id === page)?.label}
             </div>
           </div>
@@ -1298,13 +1295,13 @@ function Main({ currentUser, onLogout, isOffline }) {
                 onBlur={() => setTimeout(() => { setShowGlobalSearch(false); setGlobalSearch(""); }, 200)}
               />
               {showGlobalSearch && globalResults.length > 0 && (
-                <div className="absolute top-full right-0 w-[300px] bg-white dark:bg-[#1a2a1a] rounded-xl shadow-xl border border-[#e4ede4] dark:border-[#2d4a2d] z-[999] mt-1 overflow-hidden">
+                <div className="absolute top-full right-0 w-[300px] bg-white dark:bg-[#1a2a1a] rounded-xl shadow-xl border border-bbs-border dark:border-[#2d4a2d] z-999 mt-1 overflow-hidden">
                   {globalResults.map((r, i) => (
                     <div key={i} onMouseDown={r.action}
                       className="px-3.5 py-2.5 cursor-pointer border-b border-gray-50 dark:border-[#243424] flex gap-2.5 items-center hover:bg-green-50 dark:hover:bg-[#1f2d1a] transition-colors">
                       <span className="text-lg">{r.icon}</span>
                       <div className="flex-1 min-w-0">
-                        <div className="text-[13px] font-bold text-[#1a4a1a] dark:text-[#a8e063]">{r.label}</div>
+                        <div className="text-[13px] font-bold text-bbs-green-dark dark:text-[#a8e063]">{r.label}</div>
                         <div className="text-[11px] text-gray-400 truncate">{r.sub}</div>
                       </div>
                       <span className="text-[10px] text-gray-400 bg-gray-100 dark:bg-[#243424] px-1.5 py-0.5 rounded-xl">{r.type}</span>
@@ -1313,12 +1310,12 @@ function Main({ currentUser, onLogout, isOffline }) {
                 </div>
               )}
               {showGlobalSearch && globalSearch.length >= 2 && globalResults.length === 0 && (
-                <div className="absolute top-full right-0 w-[240px] bg-white dark:bg-[#1a2a1a] rounded-xl shadow-xl border border-[#e4ede4] dark:border-[#2d4a2d] z-[999] mt-1 p-3.5 text-center text-gray-400 text-xs">
+                <div className="absolute top-full right-0 w-[240px] bg-white dark:bg-[#1a2a1a] rounded-xl shadow-xl border border-bbs-border dark:border-[#2d4a2d] z-999 mt-1 p-3.5 text-center text-gray-400 text-xs">
                   Tidak ada hasil untuk "{globalSearch}"
                 </div>
               )}
             </div>
-            <button className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-[#e8f0e8] dark:bg-[#2d4a2d] text-[#2d7a2d] dark:text-[#a8e063] border-none cursor-pointer" onClick={loadAll}>🔄 Refresh</button>
+            <button className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-[#e8f0e8] dark:bg-[#2d4a2d] text-bbs-green dark:text-[#a8e063] border-none cursor-pointer" onClick={loadAll}>🔄 Refresh</button>
             <button onClick={() => setDarkMode(d => !d)}
               className={`px-2.5 py-1 text-sm rounded-lg border-none cursor-pointer leading-none ${darkMode ? "bg-[#2d4a2d] text-[#a8e063]" : "bg-[#f0f5f0] text-gray-600"}`}
               title={darkMode ? "Mode Terang" : "Mode Gelap"}>
@@ -1355,21 +1352,21 @@ function Main({ currentUser, onLogout, isOffline }) {
       <RestockModal restockModal={restockModal} restockQty={restockQty} setRestockQty={setRestockQty} restockCatatan={restockCatatan} setRestockCatatan={setRestockCatatan} doRestock={doRestock} onClose={() => { setRestockModal(null); setRestockCatatan(""); }} />
 
       {showLogout && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[999]" onClick={() => setShowLogout(false)}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-999" onClick={() => setShowLogout(false)}>
           <div className="bg-white dark:bg-[#1a2a1a] rounded-2xl p-6 w-[340px] text-center shadow-2xl text-gray-900 dark:text-[#e8f5e8]" onClick={(e) => e.stopPropagation()}>
             <div className="text-4xl mb-3">🚪</div>
-            <div className="text-[17px] font-extrabold text-[#1a4a1a] dark:text-[#a8e063] mb-2">Keluar dari Sistem?</div>
+            <div className="text-[17px] font-extrabold text-bbs-green-dark dark:text-[#a8e063] mb-2">Keluar dari Sistem?</div>
             <div className="text-[13px] text-gray-400 mb-6">Anda akan kembali ke halaman login.<br />Pastikan semua transaksi sudah disimpan.</div>
             <div className="flex gap-2.5">
               <button className="flex-1 py-3 text-sm font-bold bg-[#dc3545] text-white rounded-xl border-none cursor-pointer" onClick={onLogout}>🚪 Ya, Keluar</button>
-              <button className="flex-1 py-3 text-sm font-bold bg-[#f0f5f0] dark:bg-[#2d4a2d] text-[#2d7a2d] dark:text-[#a8e063] rounded-xl border-none cursor-pointer" onClick={() => setShowLogout(false)}>Batal</button>
+              <button className="flex-1 py-3 text-sm font-bold bg-[#f0f5f0] dark:bg-[#2d4a2d] text-bbs-green dark:text-[#a8e063] rounded-xl border-none cursor-pointer" onClick={() => setShowLogout(false)}>Batal</button>
             </div>
           </div>
         </div>
       )}
 
       {notif && (
-        <div className={`fixed top-3.5 right-3.5 z-[9999] px-4 py-3 rounded-xl text-white text-[13px] font-extrabold shadow-xl ${notif.type === "error" ? "bg-[#dc3545]" : "bg-[#2d7a2d]"}`}
+        <div className={`fixed top-3.5 right-3.5 z-9999 px-4 py-3 rounded-xl text-white text-[13px] font-extrabold shadow-xl ${notif.type === "error" ? "bg-[#dc3545]" : "bg-bbs-green"}`}
           style={{ animation: "fadeIn 0.2s ease" }}>
           {notif.msg}
         </div>

@@ -20,7 +20,7 @@ export default function StokPage({
           </button>
         )}
       </div>
-      <div className="table-wrap bg-white dark:bg-[#1a2a1a] rounded-xl border border-[#e4ede4] dark:border-[#2d4a2d] overflow-auto">
+      <div className="table-wrap bg-white dark:bg-[#1a2a1a] rounded-xl border border-bbs-border dark:border-[#2d4a2d] overflow-auto">
         <table className="w-full border-collapse" style={{ minWidth: 600 }}>
           <thead>
             <tr>{["Foto", "Nama Produk", "Kategori", "Satuan", "Stok", "Min", "Status", "Aksi"].map(h => <th key={h} className={styles.th}>{h}</th>)}</tr>

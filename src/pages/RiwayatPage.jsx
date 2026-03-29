@@ -17,14 +17,14 @@ export default function RiwayatPage({
         <input id="riwayat-date" name="riwayat-date" className={`${styles.inp} w-[150px]`} type="date"
           value={filterDate} onChange={(e) => setFilterDate(e.target.value)} />
         {filterDate && (
-          <button className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#e8f0e8] text-[#2d7a2d] border-none cursor-pointer" onClick={() => setFilterDate("")}>✕ Reset</button>
+          <button className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#e8f0e8] text-bbs-green border-none cursor-pointer" onClick={() => setFilterDate("")}>✕ Reset</button>
         )}
         <button className="ml-auto px-4 py-1.5 rounded-lg text-xs font-bold bg-[#1565c0] text-white border-none cursor-pointer" onClick={() => exportExcel("transaksi")}>
           📥 Export Excel
         </button>
       </div>
 
-      <div className="table-wrap bg-white dark:bg-[#1a2a1a] rounded-xl border border-[#e4ede4] dark:border-[#2d4a2d] overflow-auto">
+      <div className="table-wrap bg-white dark:bg-[#1a2a1a] rounded-xl border border-bbs-border dark:border-[#2d4a2d] overflow-auto">
         <table className="w-full border-collapse" style={{ minWidth: 650 }}>
           <thead>
             <tr>{["ID", "Tanggal", "Pelanggan", "Item", "Total", "Bayar", "Kembalian"].map(h => <th key={h} className={styles.th}>{h}</th>)}</tr>
@@ -33,11 +33,11 @@ export default function RiwayatPage({
             {filtHist.map((t) => (
               <tr key={t.id} onClick={() => setHistReceipt(t)}
                 className="cursor-pointer hover:bg-green-50 dark:hover:bg-[#1f2d1a] transition-colors">
-                <td className={styles.td}><strong className="text-[#2d7a2d]">{t.trx_code}</strong></td>
+                <td className={styles.td}><strong className="text-bbs-green">{t.trx_code}</strong></td>
                 <td className={styles.td}>{t.date}</td>
                 <td className={styles.td}>{t.customer}</td>
                 <td className={styles.td}>{(t.items || []).map((i, idx) => <div key={idx} className="text-[10px] text-gray-500">{i.product_name} ×{i.qty}</div>)}</td>
-                <td className={styles.td}><strong className="text-[#2d7a2d]">{fmt(t.total)}</strong></td>
+                <td className={styles.td}><strong className="text-bbs-green">{fmt(t.total)}</strong></td>
                 <td className={styles.td}>{fmt(t.payment)}</td>
                 <td className={styles.td}>{fmt(t.change_amt)}</td>
               </tr>
@@ -48,32 +48,32 @@ export default function RiwayatPage({
           </tbody>
         </table>
 
-        <div className="px-4 py-3 border-t border-[#e4ede4] dark:border-[#2d4a2d] flex justify-between items-center flex-wrap gap-2">
+        <div className="px-4 py-3 border-t border-bbs-border dark:border-[#2d4a2d] flex justify-between items-center flex-wrap gap-2">
           <span className="text-[13px] text-gray-400">{totalCount} transaksi · halaman {page} dari {totalPages || 1}</span>
           <div className="flex items-center gap-1.5">
             {[{ label: '«', action: () => setPage(1), disabled: page === 1 },
               { label: '‹', action: () => setPage(p => Math.max(1, p - 1)), disabled: page === 1 }].map((b, i) => (
               <button key={i} onClick={b.action} disabled={b.disabled}
-                className="px-3 py-1 text-xs font-bold rounded-lg bg-[#e8f0e8] dark:bg-[#2d4a2d] text-[#2d7a2d] dark:text-[#a8e063] border-none cursor-pointer disabled:opacity-40">
+                className="px-3 py-1 text-xs font-bold rounded-lg bg-[#e8f0e8] dark:bg-[#2d4a2d] text-bbs-green dark:text-[#a8e063] border-none cursor-pointer disabled:opacity-40">
                 {b.label}
               </button>
             ))}
             {pageNums.map((n, i) => n === '...'
               ? <span key={`e${i}`} className="text-xs text-gray-400 px-1">…</span>
               : <button key={n} onClick={() => setPage(n)}
-                  className={`px-2.5 py-1 text-xs rounded-lg border cursor-pointer font-bold ${page === n ? 'bg-[#2d7a2d] text-white border-[#2d7a2d]' : 'bg-white dark:bg-[#1e2e1e] text-gray-700 dark:text-gray-300 border-gray-200 dark:border-[#3a5a3a]'}`}>
+                  className={`px-2.5 py-1 text-xs rounded-lg border cursor-pointer font-bold ${page === n ? 'bg-bbs-green text-white border-bbs-green' : 'bg-white dark:bg-[#1e2e1e] text-gray-700 dark:text-gray-300 border-gray-200 dark:border-[#3a5a3a]'}`}>
                   {n}
                 </button>
             )}
             {[{ label: '›', action: () => setPage(p => Math.min(totalPages, p + 1)), disabled: page === totalPages || totalPages === 0 },
               { label: '»', action: () => setPage(totalPages), disabled: page === totalPages || totalPages === 0 }].map((b, i) => (
               <button key={i} onClick={b.action} disabled={b.disabled}
-                className="px-3 py-1 text-xs font-bold rounded-lg bg-[#e8f0e8] dark:bg-[#2d4a2d] text-[#2d7a2d] dark:text-[#a8e063] border-none cursor-pointer disabled:opacity-40">
+                className="px-3 py-1 text-xs font-bold rounded-lg bg-[#e8f0e8] dark:bg-[#2d4a2d] text-bbs-green dark:text-[#a8e063] border-none cursor-pointer disabled:opacity-40">
                 {b.label}
               </button>
             ))}
           </div>
-          <strong className="text-[13px] text-[#2d7a2d]">Total: {fmt(filtHist.reduce((s, t) => s + t.total, 0))}</strong>
+          <strong className="text-[13px] text-bbs-green">Total: {fmt(filtHist.reduce((s, t) => s + t.total, 0))}</strong>
         </div>
       </div>
     </div>

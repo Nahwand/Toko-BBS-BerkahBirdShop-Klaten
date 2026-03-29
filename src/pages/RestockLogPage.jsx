@@ -15,7 +15,7 @@ export default function RestockLogPage({ restockLogs }) {
           placeholder="🔍 Cari produk / user..." value={search} onChange={(e) => setSearch(e.target.value)} />
         <span className="ml-auto text-xs text-gray-400">{filtered.length} entri restock</span>
       </div>
-      <div className="table-wrap bg-white dark:bg-[#1a2a1a] rounded-xl border border-[#e4ede4] dark:border-[#2d4a2d] overflow-auto">
+      <div className="table-wrap bg-white dark:bg-[#1a2a1a] rounded-xl border border-bbs-border dark:border-[#2d4a2d] overflow-auto">
         <table className="w-full border-collapse" style={{ minWidth: 650 }}>
           <thead>
             <tr>{["Waktu", "Produk", "Stok Sebelum", "Ditambah", "Stok Sesudah", "Oleh", "Catatan"].map(h => <th key={h} className={styles.th}>{h}</th>)}</tr>
@@ -33,7 +33,7 @@ export default function RestockLogPage({ restockLogs }) {
                   <span className="bg-green-100 text-green-800 px-2.5 py-0.5 rounded-full font-extrabold text-xs">+{r.qty_added}</span>
                 </td>
                 <td className={`${styles.td} text-center`}>
-                  <strong className="text-[#2d7a2d]">{r.qty_after} {r.unit}</strong>
+                  <strong className="text-bbs-green">{r.qty_after} {r.unit}</strong>
                 </td>
                 <td className={styles.td}>
                   <div className="text-xs font-bold">{r.user_nama}</div>

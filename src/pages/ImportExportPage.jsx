@@ -6,27 +6,27 @@ import { MONTHS } from '../utils/constants';
 export default function ImportExportPage({ exportExcel, exportingTitle, handleImport, importingState, importLog, rptMonth, rptYear }) {
   const fileRef = useRef();
   const exportItems = [
-    { label: "📦 Semua Data", sub: "4 sheet sekaligus", type: "all", cls: "bg-[#2d7a2d] text-white" },
+    { label: "📦 Semua Data", sub: "4 sheet sekaligus", type: "all", cls: "bg-bbs-green text-white" },
     { label: "📈 Laporan Bulanan", sub: `${MONTHS[rptMonth]} ${rptYear}`, type: "laporan", cls: "bg-[#1565c0] text-white" },
-    { label: "📋 Transaksi", sub: "Riwayat transaksi", type: "transaksi", cls: "border border-[#2d7a2d] text-[#2d7a2d] bg-transparent" },
-    { label: "📦 Produk", sub: "Daftar produk", type: "produk", cls: "border border-[#2d7a2d] text-[#2d7a2d] bg-transparent" },
-    { label: "📊 Stok", sub: "Status stok", type: "stok", cls: "border border-[#2d7a2d] text-[#2d7a2d] bg-transparent" },
-    { label: "🤝 Supplier", sub: "Data supplier", type: "supplier", cls: "border border-[#2d7a2d] text-[#2d7a2d] bg-transparent" },
+    { label: "📋 Transaksi", sub: "Riwayat transaksi", type: "transaksi", cls: "border border-bbs-green text-bbs-green bg-transparent" },
+    { label: "📦 Produk", sub: "Daftar produk", type: "produk", cls: "border border-bbs-green text-bbs-green bg-transparent" },
+    { label: "📊 Stok", sub: "Status stok", type: "stok", cls: "border border-bbs-green text-bbs-green bg-transparent" },
+    { label: "🤝 Supplier", sub: "Data supplier", type: "supplier", cls: "border border-bbs-green text-bbs-green bg-transparent" },
   ];
 
   return (
     <div className="excel-grid">
       {/* IMPORT */}
       <div className={styles.card}>
-        <div className="text-[15px] font-extrabold text-[#1a4a1a] dark:text-[#a8e063] mb-1">📤 Import dari Excel</div>
+        <div className="text-[15px] font-extrabold text-bbs-green-dark dark:text-[#a8e063] mb-1">📤 Import dari Excel</div>
         <div className="text-xs text-gray-400 mb-4">Upload .xlsx untuk update data produk massal</div>
         <div className={`bg-[#f8fdf8] dark:bg-[#1e2e1e] rounded-xl p-5 mb-3.5 border-2 border-dashed border-[#b8d4b8] dark:border-[#3a5a3a] text-center transition-opacity ${importingState ? 'opacity-60 pointer-events-none' : ''}`}>
           <div className="text-3xl mb-2">{importingState ? "⏳" : "📂"}</div>
-          <div className={`text-[13px] font-extrabold mb-3.5 ${importingState ? "text-[#2d7a2d]" : "text-gray-700 dark:text-gray-300"}`}>
+          <div className={`text-[13px] font-extrabold mb-3.5 ${importingState ? "text-bbs-green" : "text-gray-700 dark:text-gray-300"}`}>
             {importingState || "Pilih File Excel"}
           </div>
           <input id="import-file" name="import-file" type="file" accept=".xlsx,.xls" ref={fileRef} onChange={handleImport} className="hidden" />
-          <button className="px-6 py-2.5 rounded-lg font-bold text-sm bg-[#2d7a2d] text-white border-none cursor-pointer disabled:opacity-50"
+          <button className="px-6 py-2.5 rounded-lg font-bold text-sm bg-bbs-green text-white border-none cursor-pointer disabled:opacity-50"
             onClick={() => fileRef.current.click()} disabled={!!importingState}>
             {importingState ? <Spin size={16} color="#fff" /> : "📤 Upload File"}
           </button>
@@ -47,7 +47,7 @@ export default function ImportExportPage({ exportExcel, exportingTitle, handleIm
 
       {/* EXPORT */}
       <div className={styles.card}>
-        <div className="text-[15px] font-extrabold text-[#1a4a1a] dark:text-[#a8e063] mb-1">📥 Export ke Excel</div>
+        <div className="text-[15px] font-extrabold text-bbs-green-dark dark:text-[#a8e063] mb-1">📥 Export ke Excel</div>
         <div className="text-xs text-gray-400 mb-4">Unduh data ke file .xlsx</div>
         {exportItems.map((e) => (
           <div key={e.type} className="flex justify-between items-center py-3 border-b border-[#f0f5f0] dark:border-[#243424]">

@@ -9,9 +9,9 @@ export default function ProdukModal({ prodModal, prodForm, setProdForm, prodImag
     { l: "Min Stok", k: "min_stock", t: "number", p: "Min stok..." },
   ];
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[999]" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-999" onClick={onClose}>
       <div className="bg-white dark:bg-[#1a2a1a] rounded-2xl p-6 w-[420px] max-h-[90vh] overflow-y-auto shadow-2xl text-gray-900 dark:text-[#e8f5e8]" onClick={(e) => e.stopPropagation()}>
-        <div className="text-base font-extrabold mb-4 text-[#1a4a1a] dark:text-[#a8e063]">
+        <div className="text-base font-extrabold mb-4 text-bbs-green-dark dark:text-[#a8e063]">
           {prodModal === "add" ? "➕ Tambah Produk" : "✏️ Edit Produk"}
         </div>
 
@@ -21,7 +21,7 @@ export default function ProdukModal({ prodModal, prodForm, setProdForm, prodImag
           <input id="produk-foto" name="produk-foto" type="file" accept="image/*" onChange={(e) => setProdImage(e.target.files[0])} className={styles.inp} style={{ padding: 8 }} />
           {prodModal !== "add" && prodModal?.image_url && !prodImage && (
             <div className="mt-2">
-              <img src={prodModal.image_url} alt="Current" className="w-16 h-16 object-cover rounded-lg border-2 border-[#e4ede4]" />
+              <img src={prodModal.image_url} alt="Current" className="w-16 h-16 object-cover rounded-lg border-2 border-bbs-border" />
               <div className="text-[10px] text-gray-400 mt-1">Foto saat ini, biarkan kosong untuk tidak mengubah.</div>
             </div>
           )}
@@ -72,7 +72,7 @@ export default function ProdukModal({ prodModal, prodForm, setProdForm, prodImag
                   else current.push(s.nama);
                   setProdForm((p) => ({ ...p, unit: current.join(", ") }));
                 }}
-                  className={`px-3 py-1.5 rounded-lg border text-[13px] cursor-pointer select-none transition-all ${isSelected ? 'border-[#2d7a2d] bg-[#e4ede4] dark:bg-[#2d4a2d] text-[#1a4a1a] dark:text-[#a8e063] font-bold' : 'border-gray-200 dark:border-[#3a5a3a] bg-white dark:bg-[#1e2e1e] text-gray-500 dark:text-gray-400'}`}>
+                  className={`px-3 py-1.5 rounded-lg border text-[13px] cursor-pointer select-none transition-all ${isSelected ? 'border-bbs-green bg-bbs-border dark:bg-[#2d4a2d] text-bbs-green-dark dark:text-[#a8e063] font-bold' : 'border-gray-200 dark:border-[#3a5a3a] bg-white dark:bg-[#1e2e1e] text-gray-500 dark:text-gray-400'}`}>
                   {s.nama}
                 </div>
               );
@@ -90,8 +90,8 @@ export default function ProdukModal({ prodModal, prodForm, setProdForm, prodImag
         </div>
 
         <div className="flex gap-2.5">
-          <button className="flex-1 py-3 text-sm font-bold bg-[#2d7a2d] text-white rounded-xl border-none cursor-pointer" onClick={saveProd}>💾 Simpan</button>
-          <button className="flex-1 py-3 text-sm font-bold bg-[#f0f5f0] dark:bg-[#2d4a2d] text-[#2d7a2d] dark:text-[#a8e063] rounded-xl border-none cursor-pointer" onClick={onClose}>Batal</button>
+          <button className="flex-1 py-3 text-sm font-bold bg-bbs-green text-white rounded-xl border-none cursor-pointer" onClick={saveProd}>💾 Simpan</button>
+          <button className="flex-1 py-3 text-sm font-bold bg-[#f0f5f0] dark:bg-[#2d4a2d] text-bbs-green dark:text-[#a8e063] rounded-xl border-none cursor-pointer" onClick={onClose}>Batal</button>
         </div>
       </div>
     </div>
