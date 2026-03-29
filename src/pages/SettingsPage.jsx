@@ -3,14 +3,11 @@ import styles from '../styles/App.module.css';
 
 export default function SettingsPage({ sb, showNotif, products, transactions, suppliers, kategoris, satuans, onRestore }) {
   const [settings, setSettings] = useState({
-    notif_wa_token: '', notif_wa_number: '', notif_enabled: 'false',
     notif_tg_bot_token: '', notif_tg_chat_id: '', notif_tg_enabled: 'false',
   });
   const [saving, setSaving] = useState(false);
-  const [testingWa, setTestingWa] = useState(false);
   const [testingTg, setTestingTg] = useState(false);
   const [restoring, setRestoring] = useState(false);
-  const [showWaToken, setShowWaToken] = useState(false);
   const [showTgToken, setShowTgToken] = useState(false);
 
   useEffect(() => {
@@ -36,40 +33,9 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
     setSaving(false);
   };
 
-  const testWA = async () => {
-    if (!settings.notif_wa_token || !settings.notif_wa_number) {
-      showNotif('Isi Token dan Nomor WA terlebih dahulu!', 'error');
-      return;
-    }
-    setTestingWa(true);
-    try {
-      let nomorWA = settings.notif_wa_number.trim().replace(/\s+/g, '');
-      if (nomorWA.startsWith('0')) nomorWA = '62' + nomorWA.slice(1);
-      if (nomorWA.startsWith('+')) nomorWA = nomorWA.slice(1);
-      const now = new Date().toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' });
-      const msg = `🌿 *BerkahBirdShop*\n━━━━━━━━━━━━━━━━\n✅ *Notifikasi Aktif!*\n\nSistem notifikasi Toko BBS berhasil terhubung dan siap digunakan.\n\n📅 ${now}\n\n_Pesan ini dikirim otomatis oleh sistem Toko BBS._`;
-      const res = await fetch('https://api.fonnte.com/send', {
-        method: 'POST',
-        headers: { 'Authorization': settings.notif_wa_token },
-        body: new URLSearchParams({ target: nomorWA, message: msg }),
-      });
-      const data = await res.json();
-      if (data.status) {
-        const today = new Date().toISOString().slice(0, 10);
-        localStorage.removeItem(`bbs_notif_sent_${today}`);
-        showNotif('✅ Pesan WA terkirim!');
-      } else {
-        showNotif('Gagal kirim WA: ' + (data.reason || 'Unknown'), 'error');
-      }
-    } catch (e) {
-      showNotif('Error: ' + e.message, 'error');
-    }
-    setTestingWa(false);
-  };
-
   const testTelegram = async () => {
     if (!settings.notif_tg_bot_token || !settings.notif_tg_chat_id) {
-      showNotif('Isi Bot Token dan Chat ID Telegram terlebih dahulu!', 'error');
+      showNotif('Isi Bot Token dan Chat ID terlebih dahulu!', 'error');
       return;
     }
     setTestingTg(true);
@@ -87,7 +53,7 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
         localStorage.removeItem(`bbs_notif_sent_${today}`);
         showNotif('✅ Pesan Telegram terkirim!');
       } else {
-        showNotif('Gagal kirim Telegram: ' + (data.description || 'Unknown'), 'error');
+        showNotif('Gagal: ' + (data.description || 'Unknown'), 'error');
       }
     } catch (e) {
       showNotif('Error: ' + e.message, 'error');
@@ -95,7 +61,6 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
     setTestingTg(false);
   };
 
-  // BACKUP
   const handleBackup = () => {
     const backup = { version: '1.0', exported_at: new Date().toISOString(), products, transactions, suppliers, kategoris, satuans };
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
@@ -108,7 +73,6 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
     showNotif('Backup berhasil diunduh!');
   };
 
-  // RESTORE
   const handleRestore = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -135,111 +99,68 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
 
-      {/* NOTIFIKASI */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {/* NOTIFIKASI TELEGRAM */}
+      <div className={styles.card}>
+        <div style={{ fontWeight: 800, fontSize: 15, color: "#1a4a1a", marginBottom: 4 }}>✈️ Notifikasi Telegram</div>
+        <div style={{ fontSize: 12, color: "#888", marginBottom: 16 }}>Kirim peringatan stok habis via Telegram Bot secara instan</div>
 
-        {/* WhatsApp */}
-        <div className={styles.card}>
-          <div style={{ fontWeight: 800, fontSize: 15, color: "#1a4a1a", marginBottom: 4 }}>📱 Notifikasi WhatsApp</div>
-          <div style={{ fontSize: 12, color: "#888", marginBottom: 12 }}>Kirim peringatan stok habis via WhatsApp (Fonnte)</div>
-          <div style={{ marginBottom: 10 }}>
-            <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Status</label>
-            <div style={{ display: "flex", gap: 8 }}>
-              {['true', 'false'].map(v => (
-                <button key={v} onClick={() => setSettings(s => ({ ...s, notif_enabled: v }))}
-                  style={{ padding: "5px 14px", borderRadius: 8, border: `2px solid ${settings.notif_enabled === v ? '#2d7a2d' : '#ddd'}`, background: settings.notif_enabled === v ? '#e8f5e9' : '#fff', color: settings.notif_enabled === v ? '#1a4a1a' : '#666', fontWeight: settings.notif_enabled === v ? 800 : 500, fontSize: 12, cursor: "pointer" }}>
-                  {v === 'true' ? '✅ Aktif' : '❌ Nonaktif'}
-                </button>
-              ))}
-            </div>
+        <div style={{ marginBottom: 12 }}>
+          <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Status Notifikasi</label>
+          <div style={{ display: "flex", gap: 8 }}>
+            {['true', 'false'].map(v => (
+              <button key={v} onClick={() => setSettings(s => ({ ...s, notif_tg_enabled: v }))}
+                style={{ padding: "6px 18px", borderRadius: 8, border: `2px solid ${settings.notif_tg_enabled === v ? '#0088cc' : '#ddd'}`, background: settings.notif_tg_enabled === v ? '#e3f2fd' : '#fff', color: settings.notif_tg_enabled === v ? '#0088cc' : '#666', fontWeight: settings.notif_tg_enabled === v ? 800 : 500, fontSize: 12, cursor: "pointer" }}>
+                {v === 'true' ? '✅ Aktif' : '❌ Nonaktif'}
+              </button>
+            ))}
           </div>
-          <div style={{ marginBottom: 10 }}>
-            <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>
-              Token Fonnte
-              <a href="https://fonnte.com" target="_blank" rel="noreferrer" style={{ marginLeft: 6, fontSize: 10, color: "#1565c0" }}>fonnte.com →</a>
-            </label>
-            <div style={{ position: "relative" }}>
-              <input className={styles.inp} style={{ paddingRight: 40, filter: showWaToken ? "none" : "blur(4px)", transition: "filter 0.2s", userSelect: showWaToken ? "auto" : "none" }}
-                type="text"
-                placeholder="Token dari dashboard Fonnte..."
-                value={settings.notif_wa_token}
-                onFocus={() => setShowWaToken(true)}
-                onBlur={() => setShowWaToken(false)}
-                onChange={(e) => setSettings(s => ({ ...s, notif_wa_token: e.target.value }))} />
-              {!showWaToken && settings.notif_wa_token && (
-                <div onClick={() => setShowWaToken(true)}
-                  style={{ position: "absolute", inset: 0, cursor: "pointer", borderRadius: 8 }} />
-              )}
-            </div>
-          </div>
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Nomor WA (08xxx atau 628xxx)</label>
-            <input className={styles.inp} placeholder="085701025909"
-              value={settings.notif_wa_number} onChange={(e) => setSettings(s => ({ ...s, notif_wa_number: e.target.value }))} />
-          </div>
-          <button className={`${styles.btn} ${styles.btnprimary}`} style={{ width: "100%", padding: 9 }} onClick={testWA} disabled={testingWa}>
-            {testingWa ? '⏳...' : '📱 Test WhatsApp'}
-          </button>
         </div>
 
-        {/* Telegram */}
-        <div className={styles.card}>
-          <div style={{ fontWeight: 800, fontSize: 15, color: "#1a4a1a", marginBottom: 4 }}>✈️ Notifikasi Telegram</div>
-          <div style={{ fontSize: 12, color: "#888", marginBottom: 12 }}>Kirim peringatan stok habis via Telegram Bot</div>
-          <div style={{ marginBottom: 10 }}>
-            <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Status</label>
-            <div style={{ display: "flex", gap: 8 }}>
-              {['true', 'false'].map(v => (
-                <button key={v} onClick={() => setSettings(s => ({ ...s, notif_tg_enabled: v }))}
-                  style={{ padding: "5px 14px", borderRadius: 8, border: `2px solid ${settings.notif_tg_enabled === v ? '#0088cc' : '#ddd'}`, background: settings.notif_tg_enabled === v ? '#e3f2fd' : '#fff', color: settings.notif_tg_enabled === v ? '#0088cc' : '#666', fontWeight: settings.notif_tg_enabled === v ? 800 : 500, fontSize: 12, cursor: "pointer" }}>
-                  {v === 'true' ? '✅ Aktif' : '❌ Nonaktif'}
-                </button>
-              ))}
-            </div>
+        <div style={{ marginBottom: 12 }}>
+          <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>
+            Bot Token
+            <a href="https://t.me/BotFather" target="_blank" rel="noreferrer" style={{ marginLeft: 6, fontSize: 10, color: "#0088cc" }}>@BotFather →</a>
+          </label>
+          <div style={{ position: "relative" }}>
+            <input className={styles.inp}
+              style={{ filter: showTgToken ? "none" : "blur(4px)", transition: "filter 0.2s", userSelect: showTgToken ? "auto" : "none" }}
+              type="text"
+              placeholder="123456789:ABCdef..."
+              value={settings.notif_tg_bot_token}
+              onFocus={() => setShowTgToken(true)}
+              onBlur={() => setShowTgToken(false)}
+              onChange={(e) => setSettings(s => ({ ...s, notif_tg_bot_token: e.target.value }))} />
+            {!showTgToken && settings.notif_tg_bot_token && (
+              <div onClick={() => setShowTgToken(true)} style={{ position: "absolute", inset: 0, cursor: "pointer", borderRadius: 8 }} />
+            )}
           </div>
-          <div style={{ marginBottom: 10 }}>
-            <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>
-              Bot Token
-              <a href="https://t.me/BotFather" target="_blank" rel="noreferrer" style={{ marginLeft: 6, fontSize: 10, color: "#0088cc" }}>Buat bot di @BotFather →</a>
-            </label>
-            <div style={{ position: "relative" }}>
-              <input className={styles.inp} style={{ paddingRight: 40, filter: showTgToken ? "none" : "blur(4px)", transition: "filter 0.2s", userSelect: showTgToken ? "auto" : "none" }}
-                type="text"
-                placeholder="123456789:ABCdef..."
-                value={settings.notif_tg_bot_token}
-                onFocus={() => setShowTgToken(true)}
-                onBlur={() => setShowTgToken(false)}
-                onChange={(e) => setSettings(s => ({ ...s, notif_tg_bot_token: e.target.value }))} />
-              {!showTgToken && settings.notif_tg_bot_token && (
-                <div onClick={() => setShowTgToken(true)}
-                  style={{ position: "absolute", inset: 0, cursor: "pointer", borderRadius: 8 }} />
-              )}
-            </div>
-          </div>
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>
-              Chat ID
-              <a href="https://t.me/userinfobot" target="_blank" rel="noreferrer" style={{ marginLeft: 6, fontSize: 10, color: "#0088cc" }}>Cek ID di @userinfobot →</a>
-            </label>
-            <input className={styles.inp} placeholder="123456789"
-              value={settings.notif_tg_chat_id} onChange={(e) => setSettings(s => ({ ...s, notif_tg_chat_id: e.target.value }))} />
-          </div>
-          <button style={{ width: "100%", padding: 9, borderRadius: 8, border: "none", background: "#0088cc", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }} onClick={testTelegram} disabled={testingTg}>
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>
+            Chat ID
+            <a href="https://t.me/userinfobot" target="_blank" rel="noreferrer" style={{ marginLeft: 6, fontSize: 10, color: "#0088cc" }}>@userinfobot →</a>
+          </label>
+          <input className={styles.inp} placeholder="123456789"
+            value={settings.notif_tg_chat_id} onChange={(e) => setSettings(s => ({ ...s, notif_tg_chat_id: e.target.value }))} />
+        </div>
+
+        <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+          <button style={{ flex: 1, padding: 10, borderRadius: 8, border: "none", background: "#0088cc", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}
+            onClick={testTelegram} disabled={testingTg}>
             {testingTg ? '⏳...' : '✈️ Test Telegram'}
           </button>
-
-          {/* Panduan singkat */}
-          <div style={{ marginTop: 12, padding: "10px 12px", background: "#e3f2fd", borderRadius: 8, fontSize: 11, color: "#1565c0" }}>
-            <strong>Cara setup:</strong><br />
-            1. Chat <a href="https://t.me/BotFather" target="_blank" rel="noreferrer" style={{ color: "#0088cc" }}>@BotFather</a> → /newbot → copy token<br />
-            2. Chat <a href="https://t.me/userinfobot" target="_blank" rel="noreferrer" style={{ color: "#0088cc" }}>@userinfobot</a> → copy Chat ID Anda<br />
-            3. Isi keduanya di atas → Test → Simpan
-          </div>
+          <button className={`${styles.btn} ${styles.btnprimary}`} style={{ flex: 1, padding: 10 }} onClick={saveAll} disabled={saving}>
+            {saving ? '⏳...' : '💾 Simpan'}
+          </button>
         </div>
 
-        <button className={`${styles.btn} ${styles.btnprimary}`} style={{ padding: 11 }} onClick={saveAll} disabled={saving}>
-          {saving ? '⏳ Menyimpan...' : '💾 Simpan Semua Pengaturan'}
-        </button>
+        <div style={{ padding: "10px 12px", background: "#e3f2fd", borderRadius: 8, fontSize: 11, color: "#1565c0" }}>
+          <strong>Cara setup:</strong><br />
+          1. Chat <a href="https://t.me/BotFather" target="_blank" rel="noreferrer" style={{ color: "#0088cc" }}>@BotFather</a> → /newbot → copy token<br />
+          2. Chat <a href="https://t.me/userinfobot" target="_blank" rel="noreferrer" style={{ color: "#0088cc" }}>@userinfobot</a> → copy Chat ID<br />
+          3. Isi keduanya → Test → Simpan
+        </div>
       </div>
 
       {/* BACKUP & RESTORE */}

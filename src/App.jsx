@@ -224,49 +224,28 @@ function Main({ currentUser, onLogout, isOffline }) {
       if (!settingsData) return;
       const cfg = {};
       settingsData.forEach(s => { cfg[s.key] = s.value; });
-      if (cfg.notif_enabled !== 'true') return;
+      if (cfg.notif_tg_enabled !== 'true') return;
 
       const habis = prods.filter(p => Number(p.stock) === 0);
       if (!habis.length) return;
 
-      // Cek produk mana yang BELUM pernah dinotif hari ini
       const today = new Date().toISOString().slice(0, 10);
       const cacheKey = `bbs_notif_sent_${today}`;
       const alreadySent = JSON.parse(localStorage.getItem(cacheKey) || '[]').map(String);
       const belumDinotif = habis.filter(p => !alreadySent.includes(String(p.id)));
       if (!belumDinotif.length) return;
 
-      // Simpan yang sudah dinotif
-      const newSent = [...alreadySent, ...belumDinotif.map(p => String(p.id))];
-      localStorage.setItem(cacheKey, JSON.stringify(newSent));
+      localStorage.setItem(cacheKey, JSON.stringify([...alreadySent, ...belumDinotif.map(p => String(p.id))]));
 
-      // Auto-format nomor: 08xxx → 628xxx
-      let nomorWA = (cfg.notif_wa_number || '').trim().replace(/\s+/g, '');
-      if (nomorWA.startsWith('0')) nomorWA = '62' + nomorWA.slice(1);
-      if (nomorWA.startsWith('+')) nomorWA = nomorWA.slice(1);
+      if (!cfg.notif_tg_bot_token || !cfg.notif_tg_chat_id) return;
 
       const now = new Date().toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' });
-      const msg = `🌿 *BerkahBirdShop - Peringatan Stok!*\n━━━━━━━━━━━━━━━━\n🚨 *${belumDinotif.length} Produk Stok HABIS*\n\n${belumDinotif.map((p, i) => `${i + 1}. ❌ ${p.name}`).join('\n')}\n\n━━━━━━━━━━━━━━━━\n📅 ${now}\n\n⚡ Segera lakukan restock agar penjualan tidak terganggu.\n\n_Notifikasi otomatis dari sistem Toko BBS_`;
-
-      if (cfg.notif_wa_token && nomorWA) {
-        const res = await fetch('https://api.fonnte.com/send', {
-          method: 'POST',
-          headers: { 'Authorization': cfg.notif_wa_token },
-          body: new URLSearchParams({ target: nomorWA, message: msg }),
-        });
-        const result = await res.json();
-        console.log('[BBS Notif] WA result:', result);
-      }
-
-      // Kirim ke Telegram jika aktif
-      if (cfg.notif_tg_enabled === 'true' && cfg.notif_tg_bot_token && cfg.notif_tg_chat_id) {
-        const tgMsg = `🌿 <b>BerkahBirdShop - Peringatan Stok!</b>\n━━━━━━━━━━━━━━━━\n🚨 <b>${belumDinotif.length} Produk Stok HABIS</b>\n\n${belumDinotif.map((p, i) => `${i + 1}. ❌ ${p.name}`).join('\n')}\n\n━━━━━━━━━━━━━━━━\n📅 ${now}\n\n⚡ Segera lakukan restock!\n\n<i>Notifikasi otomatis dari sistem Toko BBS</i>`;
-        await fetch(`https://api.telegram.org/bot${cfg.notif_tg_bot_token}/sendMessage`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chat_id: cfg.notif_tg_chat_id, text: tgMsg, parse_mode: 'HTML' }),
-        });
-      }
+      const tgMsg = `🌿 <b>BerkahBirdShop - Peringatan Stok!</b>\n━━━━━━━━━━━━━━━━\n🚨 <b>${belumDinotif.length} Produk Stok HABIS</b>\n\n${belumDinotif.map((p, i) => `${i + 1}. ❌ ${p.name}`).join('\n')}\n\n━━━━━━━━━━━━━━━━\n📅 ${now}\n\n⚡ Segera lakukan restock!\n\n<i>Notifikasi otomatis dari sistem Toko BBS</i>`;
+      await fetch(`https://api.telegram.org/bot${cfg.notif_tg_bot_token}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: cfg.notif_tg_chat_id, text: tgMsg, parse_mode: 'HTML' }),
+      });
     } catch (e) {
       console.error('Notif error:', e);
     }
