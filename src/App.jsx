@@ -197,6 +197,13 @@ function Main({ currentUser, onLogout, isOffline }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const fileRef = useRef();
 
+  // Dark mode
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('bbs_dark') === 'true');
+  useEffect(() => {
+    document.body.classList.toggle('dark', darkMode);
+    localStorage.setItem('bbs_dark', darkMode);
+  }, [darkMode]);
+
   // Pagination riwayat
   const [histPage, setHistPage] = useState(1);
   const HIST_PER_PAGE = 20;
@@ -1270,7 +1277,7 @@ function Main({ currentUser, onLogout, isOffline }) {
 
       {/* MAIN */}
       <div className="bbs-main" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        <header style={{ background: "#fff", padding: "11px 16px", borderBottom: "1px solid #e4ede4", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+        <header style={{ background: darkMode ? "var(--bg-header)" : "#fff", padding: "11px 16px", borderBottom: `1px solid ${darkMode ? "var(--border)" : "#e4ede4"}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <button className="bbs-hamburger" onClick={() => setSidebarOpen(!sidebarOpen)}>
               <span style={{ fontSize: 20, lineHeight: 1 }}>☰</span>
@@ -1317,6 +1324,11 @@ function Main({ currentUser, onLogout, isOffline }) {
               )}
             </div>
             <button className={styles.btndefault} style={{ padding: "5px 10px", fontSize: 11 }} onClick={loadAll}>🔄 Refresh</button>
+            <button onClick={() => setDarkMode(d => !d)}
+              style={{ padding: "5px 10px", fontSize: 14, borderRadius: 8, border: "none", background: darkMode ? "#2d4a2d" : "#f0f5f0", cursor: "pointer", lineHeight: 1 }}
+              title={darkMode ? "Mode Terang" : "Mode Gelap"}>
+              {darkMode ? "☀️" : "🌙"}
+            </button>
             <div className="hide-mobile" style={{ fontSize: 11, color: "#888" }}>
               {new Date().toLocaleDateString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
             </div>

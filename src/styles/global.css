@@ -3,9 +3,52 @@
   margin: 0;
   padding: 0;
 }
+
+/* ── CSS VARIABLES (Light Mode default) ── */
+:root {
+  --bg: #f4f7f2;
+  --bg-card: #ffffff;
+  --bg-header: #ffffff;
+  --bg-input: #ffffff;
+  --bg-table-head: #f0f5f0;
+  --bg-table-row: #ffffff;
+  --bg-table-alt: #fffaf0;
+  --border: #e4ede4;
+  --border-input: #cde4cd;
+  --text: #1a1a1a;
+  --text-muted: #555555;
+  --text-faint: #888888;
+  --text-placeholder: #aaaaaa;
+  --td-border: #f0f5f0;
+  --modal-bg: #ffffff;
+  --shadow: rgba(0,0,0,0.08);
+}
+
+/* ── DARK MODE ── */
+body.dark {
+  --bg: #0f1a0f;
+  --bg-card: #1a2a1a;
+  --bg-header: #162016;
+  --bg-input: #1e2e1e;
+  --bg-table-head: #1a2a1a;
+  --bg-table-row: #1a2a1a;
+  --bg-table-alt: #1f2d1a;
+  --border: #2d4a2d;
+  --border-input: #3a5a3a;
+  --text: #e8f5e8;
+  --text-muted: #a8c8a8;
+  --text-faint: #6a8a6a;
+  --text-placeholder: #4a6a4a;
+  --td-border: #243424;
+  --modal-bg: #1a2a1a;
+  --shadow: rgba(0,0,0,0.4);
+}
+
 body {
   font-family: "Segoe UI", Tahoma, sans-serif;
-  background: #f4f7f2;
+  background: var(--bg);
+  color: var(--text);
+  transition: background 0.3s, color 0.3s;
 }
 ::-webkit-scrollbar {
   width: 5px;
@@ -287,4 +330,32 @@ textarea {
   #struk-print td {
     padding: 1mm 0;
   }
+}
+
+/* ── DARK MODE OVERRIDES ── */
+body.dark .bbs-main > header {
+  background: var(--bg-header) !important;
+  border-bottom-color: var(--border) !important;
+}
+body.dark .bbs-content {
+  background: var(--bg) !important;
+}
+body.dark table {
+  background: var(--bg-card);
+}
+body.dark tr {
+  background: var(--bg-table-row) !important;
+}
+body.dark .table-wrap {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+}
+body.dark select option {
+  background: var(--bg-input);
+  color: var(--text);
+}
+body.dark input,
+body.dark select,
+body.dark textarea {
+  color-scheme: dark;
 }
