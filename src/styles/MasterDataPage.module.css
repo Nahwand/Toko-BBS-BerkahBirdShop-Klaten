@@ -1,328 +1,44 @@
-.tabContainer {
-  display: flex;
-  gap: 0;
-  margin-bottom: 20px;
-  background: #fff;
-  border-radius: 12px;
-  padding: 6px;
-  border: 1px solid #e4ede4;
-  width: fit-content;
-}
+@reference "tailwindcss";
 
-.tabBtn {
-  padding: 9px 20px;
-  border-radius: 9px;
-  border: none;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: transparent;
-  color: #666;
-}
-
-.tabBtnActive {
-  background: #2d7a2d;
-  color: #fff;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.countText {
-  font-size: 13px;
-  color: #666;
-}
-
-.btnPrimary {
-  padding: 7px 15px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 700;
-  border: none;
-  font-family: inherit;
-  background: #2d7a2d;
-  color: #fff;
-}
-
-.btnOutline {
-  padding: 4px 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 11px;
-  font-weight: 700;
-  font-family: inherit;
-  background: transparent;
-  color: #2d7a2d;
-  border: 1.5px solid #2d7a2d;
-  flex: 1;
-}
-
-.btnDanger {
-  padding: 4px 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 11px;
-  font-weight: 700;
-  font-family: inherit;
-  background: #dc3545;
-  color: #fff;
-  border: none;
-  flex: 1;
-}
-
-.btnDefault {
-  padding: 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 700;
-  font-family: inherit;
-  background: #e8f0e8;
-  color: #2d7a2d;
-  border: none;
-  flex: 1;
-}
-
-.saveBtn {
-  padding: 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 700;
-  font-family: inherit;
-  background: #2d7a2d;
-  color: #fff;
-  border: none;
-  flex: 1;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 16px;
-}
-
-.card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 16px 18px;
-  border: 1px solid #e4ede4;
-}
-
-.cardHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.badge {
-  padding: 5px 14px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.colorBox {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  flex-shrink: 0;
-}
-
-.actionBtns {
-  display: flex;
-  gap: 6px;
-}
-
-.modalOverlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
-}
-
-.modal {
-  background: #fff;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-}
-
-.modalKategori {
-  width: 420px;
-}
-
-.modalSatuan {
-  width: 380px;
-}
-
-.modalHeader {
-  font-size: 16px;
-  font-weight: 800;
-  margin-bottom: 18px;
-  color: #1a4a1a;
-}
-
-.formGroup {
-  margin-bottom: 16px;
-}
-
-.label {
-  display: block;
-  font-size: 11px;
-  font-weight: 800;
-  color: #555;
-  margin-bottom: 5px;
-}
-
-.labelHint {
-  font-size: 10px;
-  font-weight: 400;
-  color: #aaa;
-}
-
-.inputField {
-  padding: 9px 12px;
-  border-radius: 8px;
-  border: 1px solid #cde4cd;
-  font-size: 13px;
-  outline: none;
-  background: #fff;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.colorGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
-
-.colorOption {
-  border-radius: 8px;
-  padding: 10px;
-  text-align: center;
-  cursor: pointer;
-  transition: border 0.1s;
-}
-
-.colorOptionText {
-  font-weight: 800;
-  font-size: 12px;
-}
-
-.previewBox {
-  margin-bottom: 18px;
-  padding: 12px 14px;
-  background: #f8fdf8;
-  border-radius: 10px;
-  border: 1px solid #e4ede4;
-}
-
-.previewLabel {
-  font-size: 11px;
-  color: #888;
-  margin-bottom: 6px;
-}
-
-.previewText {
-  padding: 5px 16px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.previewSubtext {
-  margin-left: 10px;
-  font-size: 12px;
-  color: #666;
-}
-
-.modalActions {
-  display: flex;
-  gap: 10px;
-}
-
-.tableContainer {
-  background: #fff;
-  border-radius: 12px;
-  border: 1px solid #e4ede4;
-  overflow: auto;
-}
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.th {
-  padding: 10px 16px;
-  background: #f0f5f0;
-  font-weight: 700;
-  text-align: left;
-  font-size: 11px;
-  color: #555;
-  border-bottom: 1px solid #e4ede4;
-}
-
-.td {
-  padding: 12px 16px;
-  border-bottom: 1px solid #f0f5f0;
-}
-
-.tdPadded {
-  padding: 12px 16px;
-  border-bottom: 1px solid #f0f5f0;
-  font-size: 13px;
-  color: #666;
-}
-
-.satuanBadge {
-  background: #e8f0e8;
-  color: #2d7a2d;
-  padding: 4px 14px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.satuanActionBtns {
-  display: flex;
-  gap: 6px;
-}
-
-.satuanBtnOutline {
-  padding: 4px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 11px;
-  font-weight: 700;
-  font-family: inherit;
-  background: transparent;
-  color: #2d7a2d;
-  border: 1.5px solid #2d7a2d;
-}
-
-.satuanBtnDanger {
-  padding: 4px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 11px;
-  font-weight: 700;
-  font-family: inherit;
-  background: #dc3545;
-  color: #fff;
-  border: none;
-}
+.tabContainer { @apply flex gap-0 mb-5 bg-white dark:bg-[#1a2a1a] rounded-xl p-1.5 border border-[#e4ede4] dark:border-[#2d4a2d] w-fit; }
+.tabBtn { @apply px-5 py-2 rounded-[9px] border-none cursor-pointer text-[13px] font-bold flex items-center gap-1.5 bg-transparent text-gray-500 dark:text-gray-400; }
+.tabBtnActive { @apply bg-[#2d7a2d] text-white; }
+.header { @apply flex justify-between items-center mb-4; }
+.countText { @apply text-[13px] text-gray-500; }
+.btnPrimary { @apply px-4 py-1.5 rounded-lg cursor-pointer text-xs font-bold border-none bg-[#2d7a2d] text-white; }
+.btnOutline { @apply px-2.5 py-1 rounded-lg cursor-pointer text-[11px] font-bold bg-transparent text-[#2d7a2d] border border-[#2d7a2d] flex-1; }
+.btnDanger { @apply px-2.5 py-1 rounded-lg cursor-pointer text-[11px] font-bold bg-[#dc3545] text-white border-none flex-1; }
+.btnDefault { @apply p-3 rounded-lg cursor-pointer text-sm font-bold bg-[#e8f0e8] text-[#2d7a2d] border-none flex-1; }
+.saveBtn { @apply p-3 rounded-lg cursor-pointer text-sm font-bold bg-[#2d7a2d] text-white border-none flex-1; }
+.grid { @apply grid gap-4; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+.card { @apply bg-white dark:bg-[#1a2a1a] rounded-xl p-4 border border-[#e4ede4] dark:border-[#2d4a2d]; }
+.cardHeader { @apply flex items-center justify-between mb-3; }
+.badge { @apply px-3.5 py-1 rounded-full text-[13px] font-extrabold; }
+.colorBox { @apply w-7 h-7 rounded-lg flex-shrink-0; }
+.actionBtns { @apply flex gap-1.5; }
+.modalOverlay { @apply fixed inset-0 bg-black/50 flex items-center justify-center z-[999]; }
+.modal { @apply bg-white dark:bg-[#1a2a1a] rounded-2xl p-6 shadow-2xl; }
+.modalKategori { @apply w-[420px]; }
+.modalSatuan { @apply w-[380px]; }
+.modalHeader { @apply text-base font-extrabold mb-4 text-[#1a4a1a] dark:text-[#a8e063]; }
+.formGroup { @apply mb-4; }
+.label { @apply block text-[11px] font-extrabold text-gray-500 dark:text-gray-400 mb-1; }
+.labelHint { @apply text-[10px] font-normal text-gray-400; }
+.inputField { @apply w-full px-3 py-2 rounded-lg border border-[#cde4cd] dark:border-[#3a5a3a] text-[13px] outline-none bg-white dark:bg-[#1e2e1e] text-gray-900 dark:text-[#e8f5e8] box-border; }
+.colorGrid { @apply grid grid-cols-3 gap-2; }
+.colorOption { @apply rounded-lg p-2.5 text-center cursor-pointer transition-all; }
+.colorOptionText { @apply font-extrabold text-xs; }
+.previewBox { @apply mb-4 p-3 bg-[#f8fdf8] dark:bg-[#1a2a1a] rounded-xl border border-[#e4ede4] dark:border-[#2d4a2d]; }
+.previewLabel { @apply text-[11px] text-gray-400 mb-1.5; }
+.previewText { @apply px-4 py-1 rounded-full text-[13px] font-extrabold; }
+.previewSubtext { @apply ml-2.5 text-xs text-gray-500; }
+.modalActions { @apply flex gap-2.5; }
+.tableContainer { @apply bg-white dark:bg-[#1a2a1a] rounded-xl border border-[#e4ede4] dark:border-[#2d4a2d] overflow-auto; }
+.table { @apply w-full border-collapse; }
+.th { @apply px-4 py-2.5 bg-[#f0f5f0] dark:bg-[#1a2a1a] font-bold text-left text-[11px] text-gray-500 dark:text-gray-400 border-b border-[#e4ede4] dark:border-[#2d4a2d]; }
+.td { @apply px-4 py-3 border-b border-[#f0f5f0] dark:border-[#243424]; }
+.tdPadded { @apply px-4 py-3 border-b border-[#f0f5f0] dark:border-[#243424] text-[13px] text-gray-500 dark:text-gray-400; }
+.satuanBadge { @apply bg-[#e8f0e8] text-[#2d7a2d] px-3.5 py-1 rounded-full text-[13px] font-extrabold; }
+.satuanActionBtns { @apply flex gap-1.5; }
+.satuanBtnOutline { @apply px-3 py-1 rounded-lg cursor-pointer text-[11px] font-bold bg-transparent text-[#2d7a2d] border border-[#2d7a2d]; }
+.satuanBtnDanger { @apply px-3 py-1 rounded-lg cursor-pointer text-[11px] font-bold bg-[#dc3545] text-white border-none; }

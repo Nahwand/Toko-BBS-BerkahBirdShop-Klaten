@@ -1,133 +1,125 @@
-import React from 'react';
 import styles from '../styles/App.module.css';
-import { fmt, fmtN, MONTHS } from '../utils/constants';
+import { fmt, fmtN } from '../utils/constants';
 
-export default function DashboardPage({
-  transactions, products, activityLogs,
-  todayTrx, todayRev, weekTrx, weekRev,
-  outStock, lowStock,
-}) {
+const ACTIVITY_COLORS = {
+  "Transaksi Baru": { bg: "#e8f5e9", c: "#2e7d32" }, "Tambah Produk": { bg: "#e3f2fd", c: "#1565c0" },
+  "Edit Produk": { bg: "#fff8e1", c: "#e65100" }, "Hapus Produk": { bg: "#fee2e2", c: "#dc2626" },
+  "Restock Stok": { bg: "#f3e5f5", c: "#6a1b9a" }, "Tambah Supplier": { bg: "#e3f2fd", c: "#1565c0" },
+  "Edit Supplier": { bg: "#fff8e1", c: "#e65100" }, "Hapus Supplier": { bg: "#fee2e2", c: "#dc2626" },
+  "Tambah Akun": { bg: "#e3f2fd", c: "#1565c0" }, "Edit Akun": { bg: "#fff8e1", c: "#e65100" },
+  "Hapus Akun": { bg: "#fee2e2", c: "#dc2626" }, "Export Excel": { bg: "#e3f2fd", c: "#1565c0" },
+  "Import Excel": { bg: "#f3e5f5", c: "#6a1b9a" },
+};
+const ACTIVITY_ICONS = { Kasir: "🤝", Produk: "📦", Stok: "📊", Supplier: "🤝", Akun: "👥", "Master Data": "🗂️", "Import/Export": "📗" };
+
+export default function DashboardPage({ transactions, products, activityLogs, todayTrx, todayRev, weekTrx, weekRev, outStock, lowStock }) {
+  const stats = [
+    { label: "Pendapatan Hari Ini", value: fmt(todayRev), sub: `${todayTrx.length} transaksi`, bg: "bg-green-100 dark:bg-green-900/30", color: "text-green-800 dark:text-green-300" },
+    { label: "Pendapatan Minggu Ini", value: fmt(weekRev), sub: `${weekTrx.length} transaksi`, bg: "bg-amber-100 dark:bg-amber-900/30", color: "text-amber-700 dark:text-amber-300" },
+    { label: "Total Produk", value: fmtN(products.length), sub: "jenis produk", bg: "bg-blue-100 dark:bg-blue-900/30", color: "text-blue-800 dark:text-blue-300" },
+    { label: "Stok Habis", value: fmtN(outStock.length), sub: "item kosong", bg: outStock.length > 0 ? "bg-red-100 dark:bg-red-900/30" : "bg-green-50 dark:bg-green-900/20", color: outStock.length > 0 ? "text-red-700 dark:text-red-300" : "text-green-700 dark:text-green-400" },
+    { label: "Stok Menipis", value: fmtN(lowStock.length), sub: "perlu restock", bg: lowStock.length > 0 ? "bg-orange-100 dark:bg-orange-900/30" : "bg-green-50 dark:bg-green-900/20", color: lowStock.length > 0 ? "text-orange-700 dark:text-orange-300" : "text-green-700 dark:text-green-400" },
+  ];
+
   return (
     <div>
+      {/* Stat cards */}
       <div className="stat-grid">
-        {[
-          { label: "Pendapatan Hari Ini", value: fmt(todayRev), sub: `${todayTrx.length} transaksi`, bg: "#e8f5e9", color: "#2e7d32" },
-          { label: "Pendapatan Minggu Ini", value: fmt(weekRev), sub: `${weekTrx.length} transaksi`, bg: "#fff8e1", color: "#e65100" },
-          { label: "Total Produk", value: fmtN(products.length), sub: "jenis produk", bg: "#e3f2fd", color: "#1565c0" },
-          { label: "Stok Habis", value: fmtN(outStock.length), sub: "item kosong", bg: outStock.length > 0 ? "#ffebee" : "#f1f8e9", color: outStock.length > 0 ? "#c62828" : "#33691e" },
-          { label: "Stok Menipis", value: fmtN(lowStock.length), sub: "perlu restock", bg: lowStock.length > 0 ? "#fff3e0" : "#f1f8e9", color: lowStock.length > 0 ? "#e65100" : "#33691e" },
-        ].map((s, i) => (
-          <div key={i} style={{ background: s.bg, borderRadius: 12, padding: "16px 18px", border: `1px solid ${s.color}22` }}>
-            <div style={{ fontSize: 10, color: s.color, fontWeight: 800, marginBottom: 8, textTransform: "uppercase" }}>{s.label}</div>
-            <div style={{ fontSize: 24, fontWeight: 900, color: s.color }}>{s.value}</div>
-            <div style={{ fontSize: 11, color: "#999", marginTop: 4 }}>{s.sub}</div>
+        {stats.map((s, i) => (
+          <div key={i} className={`${s.bg} rounded-xl p-4 border border-transparent`}>
+            <div className={`text-[10px] font-extrabold uppercase mb-2 ${s.color}`}>{s.label}</div>
+            <div className={`text-2xl font-black ${s.color}`}>{s.value}</div>
+            <div className="text-[11px] text-gray-400 mt-1">{s.sub}</div>
           </div>
         ))}
       </div>
 
+      {/* Dash grid */}
       <div className="dash-grid">
+        {/* Transaksi terbaru */}
         <div className={styles.card}>
-          <div style={{ fontWeight: 800, fontSize: 14, color: "#1a4a1a", marginBottom: 14 }}>Transaksi Terbaru</div>
+          <div className="font-extrabold text-sm text-[#1a4a1a] dark:text-[#a8e063] mb-3.5">Transaksi Terbaru</div>
           {transactions.slice(0, 7).map((t) => (
-            <div key={t.id} style={{ display: "flex", justifyContent: "space-between", padding: "9px 0", borderBottom: "1px solid #f0f5f0", alignItems: "center" }}>
+            <div key={t.id} className="flex justify-between py-2 border-b border-[#f0f5f0] dark:border-[#243424] items-center">
               <div>
-                <div style={{ fontWeight: 700, fontSize: 13 }}>{t.trx_code} — {t.customer}</div>
-                <div style={{ fontSize: 10, color: "#aaa" }}>{t.date} · {(t.items || []).length} item</div>
+                <div className="font-bold text-[13px]">{t.trx_code} — {t.customer}</div>
+                <div className="text-[10px] text-gray-400">{t.date} · {(t.items || []).length} item</div>
               </div>
-              <span style={{ fontWeight: 800, color: "#2d7a2d", fontSize: 13 }}>{fmt(t.total)}</span>
+              <span className="font-extrabold text-[#2d7a2d] text-[13px]">{fmt(t.total)}</span>
             </div>
           ))}
         </div>
 
+        {/* Stok habis */}
         {outStock.length > 0 && (
-          <div className={styles.card} style={{ borderLeft: '4px solid #ef4444' }}>
-            <div style={{ fontWeight: 800, fontSize: 14, color: "#c62828", marginBottom: 14 }}>❌ Stok Habis (Segera Restock!)</div>
+          <div className={`${styles.card} border-l-4 border-red-500`}>
+            <div className="font-extrabold text-sm text-red-700 dark:text-red-400 mb-3.5">❌ Stok Habis (Segera Restock!)</div>
             {outStock.slice(0, 10).map((p) => (
-              <div key={p.id} style={{ display: "flex", justifyContent: "space-between", padding: "9px 0", borderBottom: "1px solid #f9ecec" }}>
+              <div key={p.id} className="flex justify-between py-2 border-b border-red-50 dark:border-red-900/20">
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 13, color: '#c62828' }}>{p.name}</div>
-                  <div style={{ fontSize: 10, color: "#aaa" }}>{p.category}</div>
+                  <div className="font-bold text-[13px] text-red-700 dark:text-red-400">{p.name}</div>
+                  <div className="text-[10px] text-gray-400">{p.category}</div>
                 </div>
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontWeight: 800, color: "#c62828", fontSize: 12 }}>Habis</div>
-                  <div style={{ fontSize: 9, color: "#ccc" }}>min: {p.min_stock}</div>
+                <div className="text-right">
+                  <div className="font-extrabold text-red-600 text-xs">Habis</div>
+                  <div className="text-[9px] text-gray-300">min: {p.min_stock}</div>
                 </div>
               </div>
             ))}
           </div>
         )}
 
+        {/* Stok menipis */}
         <div className={styles.card}>
-          <div style={{ fontWeight: 800, fontSize: 14, color: "#1a4a1a", marginBottom: 14 }}>⚠ Stok Menipis</div>
+          <div className="font-extrabold text-sm text-[#1a4a1a] dark:text-[#a8e063] mb-3.5">⚠ Stok Menipis</div>
           {lowStock.length === 0 ? (
-            <div style={{ color: "#bbb", fontSize: 13, textAlign: "center", padding: "20px 0" }}>✅ Semua stok aman</div>
-          ) : (
-            lowStock.slice(0, 7).map((p) => (
-              <div key={p.id} style={{ display: "flex", justifyContent: "space-between", padding: "9px 0", borderBottom: "1px solid #f0f5f0" }}>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 13 }}>{p.name}</div>
-                  <div style={{ fontSize: 10, color: "#aaa" }}>{p.category}</div>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontWeight: 800, color: p.stock === 0 ? "#dc3545" : "#e65100", fontSize: 15 }}>
-                    {p.stock} {(p.unit || "").split(",")[0]}
-                  </div>
-                  <div style={{ fontSize: 9, color: "#ccc" }}>min:{p.min_stock}</div>
-                </div>
+            <div className="text-gray-300 text-[13px] text-center py-5">✅ Semua stok aman</div>
+          ) : lowStock.slice(0, 7).map((p) => (
+            <div key={p.id} className="flex justify-between py-2 border-b border-[#f0f5f0] dark:border-[#243424]">
+              <div>
+                <div className="font-bold text-[13px]">{p.name}</div>
+                <div className="text-[10px] text-gray-400">{p.category}</div>
               </div>
-            ))
-          )}
+              <div className="text-right">
+                <div className={`font-extrabold text-[15px] ${p.stock === 0 ? "text-red-500" : "text-orange-500"}`}>{p.stock} {(p.unit || "").split(",")[0]}</div>
+                <div className="text-[9px] text-gray-300">min:{p.min_stock}</div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* ACTIVITY LOG */}
-      <div style={{ marginTop: 18, background: "#fff", borderRadius: 12, border: "1px solid #e4ede4" }}>
-        <div style={{ padding: "16px 20px", borderBottom: "1px solid #e4ede4", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ fontWeight: 800, fontSize: 14, color: "#1a4a1a" }}>📋 Aktivitas Terbaru</div>
-          <div style={{ fontSize: 11, color: "#aaa" }}>30 aktivitas terakhir</div>
+      {/* Activity log */}
+      <div className="mt-4 bg-white dark:bg-[#1a2a1a] rounded-xl border border-[#e4ede4] dark:border-[#2d4a2d]">
+        <div className="px-5 py-4 border-b border-[#e4ede4] dark:border-[#2d4a2d] flex justify-between items-center">
+          <div className="font-extrabold text-sm text-[#1a4a1a] dark:text-[#a8e063]">📋 Aktivitas Terbaru</div>
+          <div className="text-[11px] text-gray-400">30 aktivitas terakhir</div>
         </div>
         {activityLogs.length === 0 ? (
-          <div style={{ padding: "24px", textAlign: "center", color: "#bbb", fontSize: 13 }}>Belum ada aktivitas tercatat</div>
+          <div className="p-6 text-center text-gray-300 text-[13px]">Belum ada aktivitas tercatat</div>
         ) : (
-          <div style={{ maxHeight: 320, overflowY: "auto" }}>
+          <div className="max-h-[320px] overflow-y-auto">
             {activityLogs.map((log) => {
-              const ICONS = { Kasir: "🤝", Produk: "📦", Stok: "📊", Supplier: "🤝", Akun: "👥", "Master Data": "🗂️", "Import/Export": "📗" };
-              const COLORS = {
-                "Transaksi Baru": { bg: "#e8f5e9", c: "#2e7d32" }, "Tambah Produk": { bg: "#e3f2fd", c: "#1565c0" },
-                "Edit Produk": { bg: "#fff8e1", c: "#e65100" }, "Hapus Produk": { bg: "#fee2e2", c: "#dc2626" },
-                "Restock Stok": { bg: "#f3e5f5", c: "#6a1b9a" }, "Tambah Supplier": { bg: "#e3f2fd", c: "#1565c0" },
-                "Edit Supplier": { bg: "#fff8e1", c: "#e65100" }, "Hapus Supplier": { bg: "#fee2e2", c: "#dc2626" },
-                "Tambah Akun": { bg: "#e3f2fd", c: "#1565c0" }, "Edit Akun": { bg: "#fff8e1", c: "#e65100" },
-                "Hapus Akun": { bg: "#fee2e2", c: "#dc2626" }, "Export Excel": { bg: "#e3f2fd", c: "#1565c0" },
-                "Import Excel": { bg: "#f3e5f5", c: "#6a1b9a" },
-              };
-              const clr = COLORS[log.aksi] || { bg: "#f5f5f5", c: "#666" };
+              const clr = ACTIVITY_COLORS[log.aksi] || { bg: "#f5f5f5", c: "#666" };
               const tgl = new Date(log.created_at);
-              const tglStr = tgl.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
-              const jamStr = tgl.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
-              const roleClr = log.user_role === "superadmin" ? "#7b1fa2" : log.user_role === "admin" ? "#e65100" : "#1565c0";
-              const roleBg = log.user_role === "superadmin" ? "#f3e5f5" : log.user_role === "admin" ? "#fff8e1" : "#e3f2fd";
+              const roleLabel = log.user_role === "superadmin" ? "👑 Super Admin" : log.user_role === "admin" ? "🛡️ Admin" : "👤 Pegawai";
+              const roleCls = log.user_role === "superadmin" ? "bg-purple-100 text-purple-800" : log.user_role === "admin" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-800";
               return (
-                <div key={log.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 20px", borderBottom: "1px solid #f8f8f8" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#f9fdf9")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                >
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: clr.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>
-                    {ICONS[log.kategori] || "📝"}
+                <div key={log.id} className="flex items-center gap-3 px-5 py-3 border-b border-gray-50 dark:border-[#1f2d1a] hover:bg-green-50 dark:hover:bg-[#1f2d1a] transition-colors">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0" style={{ background: clr.bg }}>
+                    {ACTIVITY_ICONS[log.kategori] || "📝"}
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3, flexWrap: "wrap" }}>
-                      <span style={{ background: clr.bg, color: clr.c, padding: "2px 9px", borderRadius: 20, fontSize: 11, fontWeight: 800 }}>{log.aksi}</span>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: "#333" }}>{log.user_nama}</span>
-                      <span style={{ background: roleBg, color: roleClr, padding: "1px 7px", borderRadius: 20, fontSize: 10, fontWeight: 700 }}>
-                        {log.user_role === "superadmin" ? "👑 Super Admin" : log.user_role === "admin" ? "🛡️ Admin" : "👤 Pegawai"}
-                      </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                      <span className="px-2 py-0.5 rounded-full text-[11px] font-extrabold" style={{ background: clr.bg, color: clr.c }}>{log.aksi}</span>
+                      <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{log.user_nama}</span>
+                      <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${roleCls}`}>{roleLabel}</span>
                     </div>
-                    {log.detail && <div style={{ fontSize: 12, color: "#888", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{log.detail}</div>}
+                    {log.detail && <div className="text-xs text-gray-400 truncate">{log.detail}</div>}
                   </div>
-                  <div style={{ textAlign: "right", flexShrink: 0 }}>
-                    <div style={{ fontSize: 11, color: "#555", fontWeight: 600 }}>{jamStr}</div>
-                    <div style={{ fontSize: 10, color: "#bbb" }}>{tglStr}</div>
+                  <div className="text-right flex-shrink-0">
+                    <div className="text-[11px] text-gray-500 font-semibold">{tgl.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</div>
+                    <div className="text-[10px] text-gray-300">{tgl.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}</div>
                   </div>
                 </div>
               );

@@ -111,7 +111,7 @@ function App() {
   return (
     <>
       {isOffline && (
-        <div style={{ background: '#dc2626', color: '#fff', textAlign: 'center', padding: '8px 16px', fontSize: 13, fontWeight: 700, zIndex: 9999, position: 'relative', letterSpacing: 0.5 }}>
+        <div className="bg-red-600 text-white text-center px-4 py-2 text-[13px] font-bold z-[9999] relative tracking-wide">
           ⚠️ Koneksi Internet Terputus: Kasir Berjalan dalam Mode Offline
         </div>
       )}
@@ -1214,86 +1214,83 @@ function Main({ currentUser, onLogout, isOffline }) {
 
 
   return (
-    <div className="bbs-app" style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
+    <div className="bbs-app">
       {sidebarOpen && <div className="bbs-overlay open" onClick={() => setSidebarOpen(false)} />}
 
       {loading && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(255,255,255,0.75)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
+        <div className="fixed inset-0 bg-white/75 dark:bg-black/60 z-[9999] flex flex-col items-center justify-center gap-3">
           <Spin />
-          <div style={{ fontSize: 13, color: "#2d7a2d", fontWeight: 700 }}>Memuat data...</div>
+          <div className="text-[13px] text-[#2d7a2d] font-bold">Memuat data...</div>
         </div>
       )}
 
       {/* SIDEBAR */}
-      <aside className={`bbs-sidebar${sidebarOpen ? " open" : ""}`} style={{ background: "linear-gradient(180deg,#1b4d1b,#0e2e0e)", color: "#fff", display: "flex", flexDirection: "column", flexShrink: 0 }}>
-        <div style={{ padding: "16px 14px 14px", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
-          <div style={{ fontSize: 20, fontWeight: 900, color: "#a8e063" }}>🌿 BBS</div>
-          <div style={{ fontSize: 11, color: "#a8e063", fontWeight: 700 }}>BerkahBirdShop</div>
-          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)" }}>
+      <aside className={`bbs-sidebar${sidebarOpen ? " open" : ""}`}>
+        <div className="px-3.5 pt-4 pb-3.5 border-b border-white/10">
+          <div className="text-xl font-black text-[#a8e063]">🌿 BBS</div>
+          <div className="text-[11px] text-[#a8e063] font-bold">BerkahBirdShop</div>
+          <div className="text-[9px] text-white/40">
             Klaten · {isOffline ? "🔴 Offline" : `🟢 Online${realtimeUsers.length > 1 ? ` · ${realtimeUsers.length} kasir aktif` : ""}`}
           </div>
         </div>
-        <div style={{ padding: "12px 14px", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.05)" }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>{currentUser.nama}</div>
-          <div style={{ marginTop: 3 }}>
-            <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 10, fontWeight: 800, background: currentUser.role === "superadmin" ? "rgba(168,224,99,0.2)" : currentUser.role === "admin" ? "rgba(255,200,100,0.2)" : "rgba(100,160,255,0.2)", color: currentUser.role === "superadmin" ? "#a8e063" : currentUser.role === "admin" ? "#ffc864" : "#7eb8ff" }}>
+        <div className="px-3.5 py-3 border-b border-white/[0.08] bg-white/5">
+          <div className="text-xs font-bold text-white">{currentUser.nama}</div>
+          <div className="mt-0.5">
+            <span className={`text-[10px] px-2 py-0.5 rounded-xl font-extrabold ${currentUser.role === "superadmin" ? "bg-[#a8e063]/20 text-[#a8e063]" : currentUser.role === "admin" ? "bg-[#ffc864]/20 text-[#ffc864]" : "bg-[#7eb8ff]/20 text-[#7eb8ff]"}`}>
               {currentUser.role === "superadmin" ? "👑 Super Admin" : currentUser.role === "admin" ? "🛡️ Admin" : "👤 Pegawai"}
             </span>
           </div>
         </div>
-        <nav style={{ padding: "8px 0", flex: 1, overflowY: "auto" }}>
+        <nav className="py-2 flex-1 overflow-y-auto">
           {navs.map((n) => (
             <div key={n.id} onClick={() => { setPage(n.id); setSidebarOpen(false); }}
-              style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", cursor: "pointer", borderLeft: page === n.id ? "3px solid #a8e063" : "3px solid transparent", background: page === n.id ? "rgba(168,224,99,0.12)" : "transparent", color: page === n.id ? "#a8e063" : "rgba(255,255,255,0.65)", fontSize: 12, fontWeight: page === n.id ? 700 : 400 }}>
-              <span style={{ fontSize: 15 }}>{n.icon}</span>{n.label}
+              className={`flex items-center gap-2 px-3.5 py-2.5 cursor-pointer text-xs transition-colors border-l-[3px] ${page === n.id ? "border-[#a8e063] bg-[#a8e063]/12 text-[#a8e063] font-bold" : "border-transparent text-white/65 hover:text-white/90 hover:bg-white/5"}`}>
+              <span className="text-[15px]">{n.icon}</span>{n.label}
             </div>
           ))}
         </nav>
         {outStock.length > 0 && (
-          <div style={{ margin: "0 10px 10px", padding: "10px 12px", background: "rgba(239,68,68,0.18)", borderRadius: 8, borderLeft: "3px solid #ef4444" }}>
-            <div style={{ fontSize: 9, color: "#ef4444", fontWeight: 800 }}>❌ STOK HABIS</div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.55)", marginTop: 2 }}>{outStock.length} produk</div>
+          <div className="mx-2.5 mb-2.5 px-3 py-2.5 bg-red-500/18 rounded-lg border-l-[3px] border-red-500">
+            <div className="text-[9px] text-red-400 font-extrabold">❌ STOK HABIS</div>
+            <div className="text-[10px] text-white/55 mt-0.5">{outStock.length} produk</div>
           </div>
         )}
         {lowStock.length > 0 && (
-          <div style={{ margin: "0 10px 10px", padding: "10px 12px", background: "rgba(245,158,11,0.18)", borderRadius: 8, borderLeft: "3px solid #f59e0b" }}>
-            <div style={{ fontSize: 9, color: "#f59e0b", fontWeight: 800 }}>⚠ STOK MENIPIS</div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.55)", marginTop: 2 }}>{lowStock.length} produk</div>
+          <div className="mx-2.5 mb-2.5 px-3 py-2.5 bg-amber-500/18 rounded-lg border-l-[3px] border-amber-500">
+            <div className="text-[9px] text-amber-400 font-extrabold">⚠ STOK MENIPIS</div>
+            <div className="text-[10px] text-white/55 mt-0.5">{lowStock.length} produk</div>
           </div>
         )}
         {deferredPrompt && (
-          <div style={{ padding: "0 12px 10px" }}>
-            <button onClick={handleInstallClick} style={{ width: "100%", padding: "9px", background: "#fff", color: "#1a4a1a", border: "1px solid #1a4a1a", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+          <div className="px-3 pb-2.5">
+            <button onClick={handleInstallClick} className="w-full py-2 bg-white text-[#1a4a1a] border border-[#1a4a1a] rounded-lg cursor-pointer text-[13px] font-extrabold flex items-center justify-center gap-1.5">
               🚀 Install Aplikasi
             </button>
           </div>
         )}
-        <div style={{ padding: "10px 12px 14px" }}>
-          <button onClick={() => setShowLogout(true)} style={{ width: "100%", padding: "9px", background: "rgba(220,53,69,0.15)", color: "#ff8080", border: "1px solid rgba(220,53,69,0.3)", borderRadius: 8, cursor: "pointer", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+        <div className="px-3 pb-3.5">
+          <button onClick={() => setShowLogout(true)} className="w-full py-2 bg-red-500/15 text-[#ff8080] border border-red-500/30 rounded-lg cursor-pointer text-xs font-bold flex items-center justify-center gap-1.5">
             🚪 Keluar
           </button>
         </div>
       </aside>
 
       {/* MAIN */}
-      <div className="bbs-main" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        <header style={{ background: darkMode ? "var(--bg-header)" : "#fff", padding: "11px 16px", borderBottom: `1px solid ${darkMode ? "var(--border)" : "#e4ede4"}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <div className="bbs-main">
+        <header className="bg-white dark:bg-[#162016] px-4 py-3 border-b border-[#e4ede4] dark:border-[#2d4a2d] flex justify-between items-center flex-shrink-0 shadow-sm">
+          <div className="flex items-center gap-2.5">
             <button className="bbs-hamburger" onClick={() => setSidebarOpen(!sidebarOpen)}>
-              <span style={{ fontSize: 20, lineHeight: 1 }}>☰</span>
+              <span className="text-xl leading-none">☰</span>
             </button>
-            <div style={{ fontSize: 16, fontWeight: 800, color: "#1a4a1a" }}>
+            <div className="text-base font-extrabold text-[#1a4a1a] dark:text-[#a8e063]">
               {allNavs.find((n) => n.id === page)?.icon} {allNavs.find((n) => n.id === page)?.label}
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {/* GLOBAL SEARCH */}
-            <div style={{ position: "relative" }} ref={globalSearchRef}>
-              <input
-                id="global-search"
-                name="global-search"
-                className={styles.inp}
-                style={{ width: showGlobalSearch ? 220 : 36, padding: showGlobalSearch ? "5px 10px" : "5px", transition: "width 0.2s", cursor: "pointer", fontSize: 12 }}
+          <div className="flex items-center gap-2">
+            <div className="relative" ref={globalSearchRef}>
+              <input id="global-search" name="global-search"
+                className={`${styles.inp} transition-all duration-200 cursor-pointer`}
+                style={{ width: showGlobalSearch ? 220 : 36, padding: showGlobalSearch ? "5px 10px" : "5px", fontSize: 12 }}
                 placeholder={showGlobalSearch ? "🔍 Cari produk, transaksi, supplier..." : "🔍"}
                 value={globalSearch}
                 onFocus={() => setShowGlobalSearch(true)}
@@ -1301,129 +1298,79 @@ function Main({ currentUser, onLogout, isOffline }) {
                 onBlur={() => setTimeout(() => { setShowGlobalSearch(false); setGlobalSearch(""); }, 200)}
               />
               {showGlobalSearch && globalResults.length > 0 && (
-                <div style={{ position: "absolute", top: "100%", right: 0, width: 300, background: "#fff", borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", border: "1px solid #e4ede4", zIndex: 999, marginTop: 4, overflow: "hidden" }}>
+                <div className="absolute top-full right-0 w-[300px] bg-white dark:bg-[#1a2a1a] rounded-xl shadow-xl border border-[#e4ede4] dark:border-[#2d4a2d] z-[999] mt-1 overflow-hidden">
                   {globalResults.map((r, i) => (
                     <div key={i} onMouseDown={r.action}
-                      style={{ padding: "10px 14px", cursor: "pointer", borderBottom: "1px solid #f5f5f5", display: "flex", gap: 10, alignItems: "center" }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = "#f0f7f0"}
-                      onMouseLeave={(e) => e.currentTarget.style.background = ""}>
-                      <span style={{ fontSize: 18 }}>{r.icon}</span>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: "#1a4a1a" }}>{r.label}</div>
-                        <div style={{ fontSize: 11, color: "#888", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.sub}</div>
+                      className="px-3.5 py-2.5 cursor-pointer border-b border-gray-50 dark:border-[#243424] flex gap-2.5 items-center hover:bg-green-50 dark:hover:bg-[#1f2d1a] transition-colors">
+                      <span className="text-lg">{r.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[13px] font-bold text-[#1a4a1a] dark:text-[#a8e063]">{r.label}</div>
+                        <div className="text-[11px] text-gray-400 truncate">{r.sub}</div>
                       </div>
-                      <span style={{ fontSize: 10, color: "#aaa", background: "#f5f5f5", padding: "2px 7px", borderRadius: 10 }}>{r.type}</span>
+                      <span className="text-[10px] text-gray-400 bg-gray-100 dark:bg-[#243424] px-1.5 py-0.5 rounded-xl">{r.type}</span>
                     </div>
                   ))}
                 </div>
               )}
               {showGlobalSearch && globalSearch.length >= 2 && globalResults.length === 0 && (
-                <div style={{ position: "absolute", top: "100%", right: 0, width: 240, background: "#fff", borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", border: "1px solid #e4ede4", zIndex: 999, marginTop: 4, padding: "14px", textAlign: "center", color: "#aaa", fontSize: 12 }}>
+                <div className="absolute top-full right-0 w-[240px] bg-white dark:bg-[#1a2a1a] rounded-xl shadow-xl border border-[#e4ede4] dark:border-[#2d4a2d] z-[999] mt-1 p-3.5 text-center text-gray-400 text-xs">
                   Tidak ada hasil untuk "{globalSearch}"
                 </div>
               )}
             </div>
-            <button className={styles.btndefault} style={{ padding: "5px 10px", fontSize: 11 }} onClick={loadAll}>🔄 Refresh</button>
+            <button className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-[#e8f0e8] dark:bg-[#2d4a2d] text-[#2d7a2d] dark:text-[#a8e063] border-none cursor-pointer" onClick={loadAll}>🔄 Refresh</button>
             <button onClick={() => setDarkMode(d => !d)}
-              style={{ padding: "5px 10px", fontSize: 14, borderRadius: 8, border: "none", background: darkMode ? "#2d4a2d" : "#f0f5f0", cursor: "pointer", lineHeight: 1 }}
+              className={`px-2.5 py-1 text-sm rounded-lg border-none cursor-pointer leading-none ${darkMode ? "bg-[#2d4a2d] text-[#a8e063]" : "bg-[#f0f5f0] text-gray-600"}`}
               title={darkMode ? "Mode Terang" : "Mode Gelap"}>
               {darkMode ? "☀️" : "🌙"}
             </button>
-            <div className="hide-mobile" style={{ fontSize: 11, color: "#888" }}>
+            <div className="hide-mobile text-[11px] text-gray-400">
               {new Date().toLocaleDateString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
             </div>
           </div>
         </header>
 
         <div className="bbs-content">
-          {page === "dashboard" && (
-            <DashboardPage transactions={transactions} products={products} activityLogs={activityLogs}
-              todayTrx={todayTrx} todayRev={todayRev} weekTrx={weekTrx} weekRev={weekRev}
-              outStock={outStock} lowStock={lowStock} />
-          )}
-          {page === "kasir" && (
-            <KasirPage filtProd={filtProd} searchProd={searchProd} setSearchProd={setSearchProd}
-              filterCat={filterCat} setFilterCat={setFilterCat} cart={cart} customerName={customerName}
-              setCustomerName={setCustomerName} paymentInput={paymentInput} setPaymentInput={setPaymentInput}
-              cartTotal={cartTotal} payNum={payNum} change={change} addToCart={addToCart}
-              updCart={updCart} processPayment={processPayment} setCart={setCart} isOffline={isOffline} />
-          )}
-          {page === "produk" && (
-            <ProdukPage filtProd={filtProd} suppliers={suppliers} searchProd={searchProd}
-              setSearchProd={setSearchProd} filterCat={filterCat} setFilterCat={setFilterCat}
-              setProdForm={setProdForm} setProdImage={setProdImage} setProdModal={setProdModal} delProd={delProd} />
-          )}
-          {page === "riwayat" && (
-            <RiwayatPage filtHist={histPaged} histSearch={histSearch} setHistSearch={setHistSearch}
-              filterDate={filterDate} setFilterDate={setFilterDate} exportExcel={exportExcel} setHistReceipt={setHistReceipt}
-              totalCount={filtHist.length} page={histPage} setPage={setHistPage} totalPages={histTotalPages} perPage={HIST_PER_PAGE} />
-          )}
-          {page === "stok" && (
-            <StokPage filtProd={filtProd} searchProd={searchProd} setSearchProd={setSearchProd}
-              filterCat={filterCat} setFilterCat={setFilterCat} isSuperAdmin={isSuperAdmin}
-              exportExcel={exportExcel} setRestockModal={setRestockModal} setRestockQty={setRestockQty} />
-          )}
-          {page === "laporan" && (
-            <LaporanPage rptMonth={rptMonth} setRptMonth={setRptMonth} rptYear={rptYear} setRptYear={setRptYear}
-              rptTrx={rptTrx} rptRev={rptRev} dayData={dayData} catData={catData} topProds={topProds}
-              exportExcel={exportExcel} exportPDF={exportPDF} showExportPDFLoading={showExportPDFLoading} />
-          )}
-          {page === "supplier" && (
-            <SupplierPage suppliers={suppliers} products={products} exportExcel={exportExcel}
-              setSupForm={setSupForm} setSupModal={setSupModal} delSup={delSup} />
-          )}
-          {page === "excel" && (
-            <ImportExportPage exportExcel={exportExcel} exportingTitle={exportingTitle}
-              handleImport={handleImport} importingState={importingState} importLog={importLog}
-              rptMonth={rptMonth} rptYear={rptYear} />
-          )}
-          {page === "users" && (
-            <UsersPage sb={sb} showNotif={showNotif} currentUser={currentUser} logActivity={logActivity} />
-          )}
-          {page === "masterdata" && (
-            <MasterDataPage sb={sb} showNotif={showNotif} kategoris={kategoris} satuans={satuans} onReload={loadAll} logActivity={logActivity} />
-          )}
-          {page === "restocklog" && (
-            <RestockLogPage restockLogs={restockLogs} products={products} />
-          )}
-          {page === "settings" && (
-            <SettingsPage sb={sb} showNotif={showNotif} products={products} transactions={transactions}
-              suppliers={suppliers} kategoris={kategoris} satuans={satuans} onRestore={loadAll} />
-          )}
+          {page === "dashboard" && <DashboardPage transactions={transactions} products={products} activityLogs={activityLogs} todayTrx={todayTrx} todayRev={todayRev} weekTrx={weekTrx} weekRev={weekRev} outStock={outStock} lowStock={lowStock} />}
+          {page === "kasir" && <KasirPage filtProd={filtProd} searchProd={searchProd} setSearchProd={setSearchProd} filterCat={filterCat} setFilterCat={setFilterCat} cart={cart} customerName={customerName} setCustomerName={setCustomerName} paymentInput={paymentInput} setPaymentInput={setPaymentInput} cartTotal={cartTotal} payNum={payNum} change={change} addToCart={addToCart} updCart={updCart} processPayment={processPayment} setCart={setCart} isOffline={isOffline} />}
+          {page === "produk" && <ProdukPage filtProd={filtProd} suppliers={suppliers} searchProd={searchProd} setSearchProd={setSearchProd} filterCat={filterCat} setFilterCat={setFilterCat} setProdForm={setProdForm} setProdImage={setProdImage} setProdModal={setProdModal} delProd={delProd} />}
+          {page === "riwayat" && <RiwayatPage filtHist={histPaged} histSearch={histSearch} setHistSearch={setHistSearch} filterDate={filterDate} setFilterDate={setFilterDate} exportExcel={exportExcel} setHistReceipt={setHistReceipt} totalCount={filtHist.length} page={histPage} setPage={setHistPage} totalPages={histTotalPages} perPage={HIST_PER_PAGE} />}
+          {page === "stok" && <StokPage filtProd={filtProd} searchProd={searchProd} setSearchProd={setSearchProd} filterCat={filterCat} setFilterCat={setFilterCat} isSuperAdmin={isSuperAdmin} exportExcel={exportExcel} setRestockModal={setRestockModal} setRestockQty={setRestockQty} />}
+          {page === "laporan" && <LaporanPage rptMonth={rptMonth} setRptMonth={setRptMonth} rptYear={rptYear} setRptYear={setRptYear} rptTrx={rptTrx} rptRev={rptRev} dayData={dayData} catData={catData} topProds={topProds} exportExcel={exportExcel} exportPDF={exportPDF} showExportPDFLoading={showExportPDFLoading} />}
+          {page === "supplier" && <SupplierPage suppliers={suppliers} products={products} exportExcel={exportExcel} setSupForm={setSupForm} setSupModal={setSupModal} delSup={delSup} />}
+          {page === "excel" && <ImportExportPage exportExcel={exportExcel} exportingTitle={exportingTitle} handleImport={handleImport} importingState={importingState} importLog={importLog} rptMonth={rptMonth} rptYear={rptYear} />}
+          {page === "users" && <UsersPage sb={sb} showNotif={showNotif} currentUser={currentUser} logActivity={logActivity} />}
+          {page === "masterdata" && <MasterDataPage sb={sb} showNotif={showNotif} kategoris={kategoris} satuans={satuans} onReload={loadAll} logActivity={logActivity} />}
+          {page === "restocklog" && <RestockLogPage restockLogs={restockLogs} products={products} />}
+          {page === "settings" && <SettingsPage sb={sb} showNotif={showNotif} products={products} transactions={transactions} suppliers={suppliers} kategoris={kategoris} satuans={satuans} onRestore={loadAll} />}
         </div>
       </div>
 
       {/* MODALS */}
-      <ConfirmModal confirm={confirm}
-        onConfirm={() => { confirmResolve.current?.(true); setConfirm(null); }}
-        onCancel={() => { confirmResolve.current?.(false); setConfirm(null); }} />
+      <ConfirmModal confirm={confirm} onConfirm={() => { confirmResolve.current?.(true); setConfirm(null); }} onCancel={() => { confirmResolve.current?.(false); setConfirm(null); }} />
       <HistReceiptModal histReceipt={histReceipt} onClose={() => setHistReceipt(null)} />
       <ReceiptModal receipt={receipt} customerName={customerName} onClose={() => setReceipt(null)} />
-      <ProdukModal prodModal={prodModal} prodForm={prodForm} setProdForm={setProdForm} prodImage={prodImage}
-        setProdImage={setProdImage} kategoris={kategoris} satuans={satuans} suppliers={suppliers}
-        saveProd={saveProd} onClose={() => setProdModal(null)} />
+      <ProdukModal prodModal={prodModal} prodForm={prodForm} setProdForm={setProdForm} prodImage={prodImage} setProdImage={setProdImage} kategoris={kategoris} satuans={satuans} suppliers={suppliers} saveProd={saveProd} onClose={() => setProdModal(null)} />
       <SupplierModal supModal={supModal} supForm={supForm} setSupForm={setSupForm} saveSup={saveSup} onClose={() => setSupModal(null)} />
-      <RestockModal restockModal={restockModal} restockQty={restockQty} setRestockQty={setRestockQty}
-        restockCatatan={restockCatatan} setRestockCatatan={setRestockCatatan}
-        doRestock={doRestock} onClose={() => { setRestockModal(null); setRestockCatatan(""); }} />
+      <RestockModal restockModal={restockModal} restockQty={restockQty} setRestockQty={setRestockQty} restockCatatan={restockCatatan} setRestockCatatan={setRestockCatatan} doRestock={doRestock} onClose={() => { setRestockModal(null); setRestockCatatan(""); }} />
 
-      {/* KONFIRMASI LOGOUT */}
       {showLogout && (
-        <div className={styles.overlay} onClick={() => setShowLogout(false)}>
-          <div className={styles.modal} style={{ width: 340, textAlign: "center" }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>🚪</div>
-            <div style={{ fontSize: 17, fontWeight: 800, color: "#1a4a1a", marginBottom: 8 }}>Keluar dari Sistem?</div>
-            <div style={{ fontSize: 13, color: "#888", marginBottom: 24 }}>Anda akan kembali ke halaman login.<br />Pastikan semua transaksi sudah disimpan.</div>
-            <div style={{ display: "flex", gap: 10 }}>
-              <button className={`${styles.btn} ${styles.btndanger}`} style={{ flex: 1, padding: 12, fontSize: 14 }} onClick={onLogout}>🚪 Ya, Keluar</button>
-              <button style={{ flex: 1, padding: 12, fontSize: 14, borderRadius: 10, border: "none", background: "#f0f5f0", color: "#2d7a2d", fontWeight: 700, cursor: "pointer" }} onClick={() => setShowLogout(false)}>Batal</button>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[999]" onClick={() => setShowLogout(false)}>
+          <div className="bg-white dark:bg-[#1a2a1a] rounded-2xl p-6 w-[340px] text-center shadow-2xl text-gray-900 dark:text-[#e8f5e8]" onClick={(e) => e.stopPropagation()}>
+            <div className="text-4xl mb-3">🚪</div>
+            <div className="text-[17px] font-extrabold text-[#1a4a1a] dark:text-[#a8e063] mb-2">Keluar dari Sistem?</div>
+            <div className="text-[13px] text-gray-400 mb-6">Anda akan kembali ke halaman login.<br />Pastikan semua transaksi sudah disimpan.</div>
+            <div className="flex gap-2.5">
+              <button className="flex-1 py-3 text-sm font-bold bg-[#dc3545] text-white rounded-xl border-none cursor-pointer" onClick={onLogout}>🚪 Ya, Keluar</button>
+              <button className="flex-1 py-3 text-sm font-bold bg-[#f0f5f0] dark:bg-[#2d4a2d] text-[#2d7a2d] dark:text-[#a8e063] rounded-xl border-none cursor-pointer" onClick={() => setShowLogout(false)}>Batal</button>
             </div>
           </div>
         </div>
       )}
 
       {notif && (
-        <div style={{ position: "fixed", top: 14, right: 14, zIndex: 9999, padding: "12px 18px", borderRadius: 12, background: notif.type === "error" ? "#dc3545" : "#2d7a2d", color: "#fff", fontSize: 13, fontWeight: 800, boxShadow: "0 6px 20px rgba(0,0,0,0.25)", animation: "fadeIn 0.2s ease" }}>
+        <div className={`fixed top-3.5 right-3.5 z-[9999] px-4 py-3 rounded-xl text-white text-[13px] font-extrabold shadow-xl ${notif.type === "error" ? "bg-[#dc3545]" : "bg-[#2d7a2d]"}`}
+          style={{ animation: "fadeIn 0.2s ease" }}>
           {notif.msg}
         </div>
       )}

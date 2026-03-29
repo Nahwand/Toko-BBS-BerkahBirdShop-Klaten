@@ -1,71 +1,67 @@
-import React, { useRef } from 'react';
+import { useRef } from 'react';
 import styles from '../styles/App.module.css';
 import Spin from '../components/Spin';
 import { MONTHS } from '../utils/constants';
 
-export default function ImportExportPage({
-  exportExcel, exportingTitle, handleImport, importingState, importLog, rptMonth, rptYear,
-}) {
+export default function ImportExportPage({ exportExcel, exportingTitle, handleImport, importingState, importLog, rptMonth, rptYear }) {
   const fileRef = useRef();
+  const exportItems = [
+    { label: "📦 Semua Data", sub: "4 sheet sekaligus", type: "all", cls: "bg-[#2d7a2d] text-white" },
+    { label: "📈 Laporan Bulanan", sub: `${MONTHS[rptMonth]} ${rptYear}`, type: "laporan", cls: "bg-[#1565c0] text-white" },
+    { label: "📋 Transaksi", sub: "Riwayat transaksi", type: "transaksi", cls: "border border-[#2d7a2d] text-[#2d7a2d] bg-transparent" },
+    { label: "📦 Produk", sub: "Daftar produk", type: "produk", cls: "border border-[#2d7a2d] text-[#2d7a2d] bg-transparent" },
+    { label: "📊 Stok", sub: "Status stok", type: "stok", cls: "border border-[#2d7a2d] text-[#2d7a2d] bg-transparent" },
+    { label: "🤝 Supplier", sub: "Data supplier", type: "supplier", cls: "border border-[#2d7a2d] text-[#2d7a2d] bg-transparent" },
+  ];
+
   return (
     <div className="excel-grid">
-
-      {/* IMPORT — di kiri (desktop) / atas (mobile) */}
-      <div>
-        <div className={styles.card}>
-          <div style={{ fontWeight: 800, fontSize: 15, color: "#1a4a1a", marginBottom: 4 }}>📤 Import dari Excel</div>
-          <div style={{ fontSize: 12, color: "#888", marginBottom: 16 }}>Upload .xlsx untuk update data produk massal</div>
-          <div style={{ background: "#f8fdf8", borderRadius: 12, padding: "20px", marginBottom: 14, border: "2px dashed #b8d4b8", textAlign: "center", opacity: importingState ? 0.6 : 1, pointerEvents: importingState ? "none" : "auto" }}>
-            <div style={{ fontSize: 32, marginBottom: 8 }}>{importingState ? "⏳" : "📂"}</div>
-            <div style={{ fontSize: 13, fontWeight: 800, color: importingState ? "#2d7a2d" : "#333", marginBottom: 14 }}>
-              {importingState ? importingState : "Pilih File Excel"}
-            </div>
-            <input id="import-file" name="import-file" type="file" accept=".xlsx,.xls" ref={fileRef} onChange={handleImport} style={{ display: "none" }} />
-            <button className={`${styles.btn} ${styles.btnprimary}`} style={{ padding: "10px 24px" }}
-              onClick={() => fileRef.current.click()} disabled={!!importingState}>
-              {importingState ? <Spin size={16} color="#fff" /> : "📤 Upload File"}
-            </button>
+      {/* IMPORT */}
+      <div className={styles.card}>
+        <div className="text-[15px] font-extrabold text-[#1a4a1a] dark:text-[#a8e063] mb-1">📤 Import dari Excel</div>
+        <div className="text-xs text-gray-400 mb-4">Upload .xlsx untuk update data produk massal</div>
+        <div className={`bg-[#f8fdf8] dark:bg-[#1e2e1e] rounded-xl p-5 mb-3.5 border-2 border-dashed border-[#b8d4b8] dark:border-[#3a5a3a] text-center transition-opacity ${importingState ? 'opacity-60 pointer-events-none' : ''}`}>
+          <div className="text-3xl mb-2">{importingState ? "⏳" : "📂"}</div>
+          <div className={`text-[13px] font-extrabold mb-3.5 ${importingState ? "text-[#2d7a2d]" : "text-gray-700 dark:text-gray-300"}`}>
+            {importingState || "Pilih File Excel"}
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 14px", background: "#fff8e1", borderRadius: 10, border: "1px solid #fde68a" }}>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 700 }}>📄 Download Template</div>
-              <div style={{ fontSize: 11, color: "#888" }}>Format kolom yang benar</div>
-            </div>
-            <button className={`${styles.btn} ${styles.btnwarning}`} style={{ padding: "8px 14px" }} onClick={() => exportExcel("template")}>⬇ Unduh</button>
-          </div>
-          {importLog.length > 0 && (
-            <div style={{ marginTop: 12, background: "#f0fdf4", borderRadius: 10, padding: "12px 14px", border: "1px solid #bbf7d0" }}>
-              {importLog.map((l, i) => <div key={i} style={{ fontSize: 12, color: "#333", marginBottom: 3 }}>{l}</div>)}
-            </div>
-          )}
+          <input id="import-file" name="import-file" type="file" accept=".xlsx,.xls" ref={fileRef} onChange={handleImport} className="hidden" />
+          <button className="px-6 py-2.5 rounded-lg font-bold text-sm bg-[#2d7a2d] text-white border-none cursor-pointer disabled:opacity-50"
+            onClick={() => fileRef.current.click()} disabled={!!importingState}>
+            {importingState ? <Spin size={16} color="#fff" /> : "📤 Upload File"}
+          </button>
         </div>
+        <div className="flex justify-between items-center p-3.5 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-700">
+          <div>
+            <div className="text-[13px] font-bold text-gray-700 dark:text-gray-300">📄 Download Template</div>
+            <div className="text-[11px] text-gray-400">Format kolom yang benar</div>
+          </div>
+          <button className="px-3.5 py-2 rounded-lg text-xs font-bold bg-[#f59e0b] text-white border-none cursor-pointer" onClick={() => exportExcel("template")}>⬇ Unduh</button>
+        </div>
+        {importLog.length > 0 && (
+          <div className="mt-3 bg-green-50 dark:bg-green-900/20 rounded-xl p-3.5 border border-green-200 dark:border-green-700">
+            {importLog.map((l, i) => <div key={i} className="text-xs text-gray-700 dark:text-gray-300 mb-0.5">{l}</div>)}
+          </div>
+        )}
       </div>
 
-      {/* EXPORT — di kanan (desktop) / bawah (mobile) */}
+      {/* EXPORT */}
       <div className={styles.card}>
-        <div style={{ fontWeight: 800, fontSize: 15, color: "#1a4a1a", marginBottom: 4 }}>📥 Export ke Excel</div>
-        <div style={{ fontSize: 12, color: "#888", marginBottom: 16 }}>Unduh data ke file .xlsx</div>
-        {[
-          { label: "📦 Semua Data", sub: "4 sheet sekaligus", type: "all", color: "primary" },
-          { label: "📈 Laporan Bulanan", sub: `${MONTHS[rptMonth]} ${rptYear}`, type: "laporan", color: "blue" },
-          { label: "📋 Transaksi", sub: "Riwayat transaksi", type: "transaksi", color: "outline" },
-          { label: "📦 Produk", sub: "Daftar produk", type: "produk", color: "outline" },
-          { label: "📊 Stok", sub: "Status stok", type: "stok", color: "outline" },
-          { label: "🤝 Supplier", sub: "Data supplier", type: "supplier", color: "outline" },
-        ].map((e) => (
-          <div key={e.type} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "11px 0", borderBottom: "1px solid #f0f5f0" }}>
+        <div className="text-[15px] font-extrabold text-[#1a4a1a] dark:text-[#a8e063] mb-1">📥 Export ke Excel</div>
+        <div className="text-xs text-gray-400 mb-4">Unduh data ke file .xlsx</div>
+        {exportItems.map((e) => (
+          <div key={e.type} className="flex justify-between items-center py-3 border-b border-[#f0f5f0] dark:border-[#243424]">
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700 }}>{e.label}</div>
-              <div style={{ fontSize: 11, color: "#aaa" }}>{e.sub}</div>
+              <div className="text-[13px] font-bold text-gray-800 dark:text-gray-200">{e.label}</div>
+              <div className="text-[11px] text-gray-400">{e.sub}</div>
             </div>
-            <button className={`${styles.btn} ${styles['btn' + e.color]}`} style={{ flexShrink: 0, minWidth: 100 }}
+            <button className={`px-4 py-1.5 rounded-lg text-xs font-bold cursor-pointer min-w-[100px] ${e.cls} disabled:opacity-50`}
               onClick={() => exportExcel(e.type)} disabled={exportingTitle === e.type}>
               {exportingTitle === e.type ? "⏳..." : "Download"}
             </button>
           </div>
         ))}
       </div>
-
     </div>
   );
 }

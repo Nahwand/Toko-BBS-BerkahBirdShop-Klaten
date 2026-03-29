@@ -1,4 +1,3 @@
-import React from 'react';
 import styles from '../styles/App.module.css';
 import Badge from '../components/Badge';
 import { CATS, fmt } from '../utils/constants';
@@ -6,88 +5,83 @@ import { CATS, fmt } from '../utils/constants';
 export default function KasirPage({
   filtProd, searchProd, setSearchProd, filterCat, setFilterCat,
   cart, customerName, setCustomerName, paymentInput, setPaymentInput,
-  cartTotal, payNum, change, addToCart, updCart, processPayment, setCart,
-  isOffline,
+  cartTotal, payNum, change, addToCart, updCart, processPayment, setCart, isOffline,
 }) {
   return (
     <div className="kasir-grid">
+      {/* Produk grid */}
       <div>
-        <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-          <input id="kasir-search" name="kasir-search" className={styles.inp} style={{ flex: 1 }} placeholder="🔍 Cari produk..."
-            value={searchProd} onChange={(e) => setSearchProd(e.target.value)} />
-          <select id="kasir-filter-cat" name="kasir-filter-cat" className={styles.inp} style={{ width: 150 }} value={filterCat} onChange={(e) => setFilterCat(e.target.value)}>
+        <div className="flex gap-2 mb-3.5">
+          <input id="kasir-search" name="kasir-search" className={`${styles.inp} flex-1`}
+            placeholder="🔍 Cari produk..." value={searchProd} onChange={(e) => setSearchProd(e.target.value)} />
+          <select id="kasir-cat" name="kasir-cat" className={`${styles.inp} w-[150px]`} value={filterCat} onChange={(e) => setFilterCat(e.target.value)}>
             {CATS.map((c) => <option key={c}>{c}</option>)}
           </select>
         </div>
         <div className="prod-grid">
           {filtProd.length === 0 ? (
-            <div style={{ padding: 30, textAlign: "center", color: "#888", gridColumn: "1 / -1" }}>
-              {searchProd ? "Produk tidak ditemukan." :
-                isOffline ? "Belum ada produk di memori offline. Harap sambungkan internet sekali saja untuk menyinkronkan data produk." :
-                  "Tidak ada produk."}
+            <div className="col-span-full py-8 text-center text-gray-400 text-sm">
+              {searchProd ? "Produk tidak ditemukan." : isOffline ? "Belum ada produk di memori offline. Harap sambungkan internet sekali saja." : "Tidak ada produk."}
             </div>
-          ) : (
-            filtProd.map((p) => (
-              <div key={p.id} onClick={() => addToCart(p)}
-                style={{ background: "#fff", borderRadius: 10, padding: "13px", border: "1px solid #e4ede4", cursor: p.stock > 0 ? "pointer" : "not-allowed", opacity: p.stock <= 0 ? 0.5 : 1, transition: "border 0.1s,transform 0.1s" }}
-                onMouseEnter={(e) => { if (p.stock > 0) { e.currentTarget.style.borderColor = "#2d7a2d"; e.currentTarget.style.transform = "translateY(-2px)"; } }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#e4ede4"; e.currentTarget.style.transform = ""; }}
-              >
-                <Badge cat={p.category} />
-                <div style={{ marginTop: 10, height: 100, width: "100%", background: p.image_url ? `url(${p.image_url}) center/cover` : "#f5f5f5", borderRadius: 8, display: "flex", border: "1px solid #efefef" }}>
-                  {!p.image_url && <span style={{ fontSize: 28, margin: "auto", opacity: 0.2 }}>📦</span>}
-                </div>
-                <div style={{ fontWeight: 700, fontSize: 13, marginTop: 8, marginBottom: 3, lineHeight: 1.3 }}>{p.name}</div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: "#2d7a2d" }}>{fmt(p.price)}</div>
-                <div style={{ fontSize: 9, color: "#ccc" }}>/{p.unit}</div>
-                <div style={{ fontSize: 10, marginTop: 5, color: p.stock <= p.min_stock ? "#e65100" : "#aaa" }}>Stok: {p.stock} {p.unit}</div>
+          ) : filtProd.map((p) => (
+            <div key={p.id} onClick={() => addToCart(p)}
+              className={`bg-white dark:bg-[#1a2a1a] rounded-xl p-3 border border-[#e4ede4] dark:border-[#2d4a2d] transition-all ${p.stock > 0 ? 'cursor-pointer hover:border-[#2d7a2d] hover:-translate-y-0.5' : 'cursor-not-allowed opacity-50'}`}>
+              <Badge cat={p.category} />
+              <div className="mt-2.5 h-[100px] w-full rounded-lg border border-gray-100 dark:border-[#2d4a2d] flex overflow-hidden"
+                style={{ background: p.image_url ? `url(${p.image_url}) center/cover` : "#f5f5f5" }}>
+                {!p.image_url && <span className="m-auto text-3xl opacity-20">📦</span>}
               </div>
-            ))
-          )}
+              <div className="font-bold text-[13px] mt-2 mb-0.5 leading-tight">{p.name}</div>
+              <div className="text-[15px] font-extrabold text-[#2d7a2d]">{fmt(p.price)}</div>
+              <div className="text-[9px] text-gray-300">/{p.unit}</div>
+              <div className={`text-[10px] mt-1 ${p.stock <= p.min_stock ? "text-orange-500" : "text-gray-400"}`}>Stok: {p.stock} {p.unit}</div>
+            </div>
+          ))}
         </div>
       </div>
 
-      <div className="kasir-cart" style={{ background: "#fff", borderRadius: 12, padding: "18px 20px", border: "1px solid #e4ede4" }}>
-        <div style={{ fontWeight: 800, fontSize: 14, color: "#1a4a1a", marginBottom: 14 }}>🤝 Keranjang</div>
-        <input id="kasir-customer-name" name="kasir-customer-name" className={styles.inp} style={{ marginBottom: 10 }} placeholder="Nama pelanggan..."
-          value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
+      {/* Keranjang */}
+      <div className="kasir-cart bg-white dark:bg-[#1a2a1a] rounded-xl p-5 border border-[#e4ede4] dark:border-[#2d4a2d]">
+        <div className="font-extrabold text-sm text-[#1a4a1a] dark:text-[#a8e063] mb-3.5">🤝 Keranjang</div>
+        <input id="kasir-customer" name="kasir-customer" className={`${styles.inp} mb-2.5`}
+          placeholder="Nama pelanggan..." value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
         {cart.length === 0 ? (
-          <div style={{ color: "#ccc", textAlign: "center", padding: "28px 0", fontSize: 13 }}>Ketuk produk untuk menambahkan</div>
+          <div className="text-gray-300 text-center py-7 text-[13px]">Ketuk produk untuk menambahkan</div>
         ) : (
           <>
-            <div style={{ maxHeight: 250, overflowY: "auto" }}>
+            <div className="max-h-[250px] overflow-y-auto">
               {cart.map((item) => (
-                <div key={item.product_id} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 0", borderBottom: "1px solid #f0f5f0" }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700 }}>{item.name}</div>
-                    <div style={{ fontSize: 10, color: "#aaa" }}>{fmt(item.price)}/{item.unit}</div>
+                <div key={item.product_id} className="flex items-center gap-1.5 py-1.5 border-b border-[#f0f5f0] dark:border-[#243424]">
+                  <div className="flex-1">
+                    <div className="text-xs font-bold">{item.name}</div>
+                    <div className="text-[10px] text-gray-400">{fmt(item.price)}/{item.unit}</div>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                    <button onClick={() => updCart(item.product_id, item.qty - 1)} style={{ width: 24, height: 24, borderRadius: 6, border: "1px solid #ddd", cursor: "pointer", background: "#f5f5f5", fontWeight: 800, fontSize: 16, lineHeight: 1 }}>−</button>
-                    <span style={{ fontSize: 13, fontWeight: 800, minWidth: 22, textAlign: "center" }}>{item.qty}</span>
-                    <button onClick={() => updCart(item.product_id, item.qty + 1)} style={{ width: 24, height: 24, borderRadius: 6, border: "1px solid #ddd", cursor: "pointer", background: "#f5f5f5", fontWeight: 800, fontSize: 16, lineHeight: 1 }}>+</button>
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => updCart(item.product_id, item.qty - 1)} className="w-6 h-6 rounded-md border border-gray-200 dark:border-[#3a5a3a] bg-gray-50 dark:bg-[#243424] font-extrabold text-base leading-none cursor-pointer">−</button>
+                    <span className="text-[13px] font-extrabold min-w-[22px] text-center">{item.qty}</span>
+                    <button onClick={() => updCart(item.product_id, item.qty + 1)} className="w-6 h-6 rounded-md border border-gray-200 dark:border-[#3a5a3a] bg-gray-50 dark:bg-[#243424] font-extrabold text-base leading-none cursor-pointer">+</button>
                   </div>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: "#2d7a2d", minWidth: 62, textAlign: "right" }}>{fmt(item.price * item.qty)}</div>
+                  <div className="text-xs font-extrabold text-[#2d7a2d] min-w-[62px] text-right">{fmt(item.price * item.qty)}</div>
                 </div>
               ))}
             </div>
-            <div style={{ marginTop: 12, paddingTop: 12, borderTop: "2px solid #e4ede4" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-                <span style={{ fontWeight: 800, fontSize: 15 }}>TOTAL</span>
-                <span style={{ fontWeight: 900, fontSize: 18, color: "#2d7a2d" }}>{fmt(cartTotal)}</span>
+            <div className="mt-3 pt-3 border-t-2 border-[#e4ede4] dark:border-[#2d4a2d]">
+              <div className="flex justify-between mb-2.5">
+                <span className="font-extrabold text-[15px]">TOTAL</span>
+                <span className="font-black text-lg text-[#2d7a2d]">{fmt(cartTotal)}</span>
               </div>
-              <input id="kasir-payment" name="kasir-payment" className={styles.inp} style={{ marginBottom: 8, fontSize: 15, fontWeight: 700 }}
+              <input id="kasir-payment" name="kasir-payment" className={`${styles.inp} mb-2 text-[15px] font-bold`}
                 type="number" placeholder="Nominal pembayaran..." value={paymentInput} onChange={(e) => setPaymentInput(e.target.value)} />
               {payNum > 0 && (
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 10, color: change >= 0 ? "#2d7a2d" : "#dc3545", fontWeight: 800 }}>
+                <div className={`flex justify-between text-[13px] mb-2.5 font-extrabold ${change >= 0 ? "text-[#2d7a2d]" : "text-red-500"}`}>
                   <span>Kembalian</span>
                   <span>{change >= 0 ? fmt(change) : "Kurang " + fmt(Math.abs(change))}</span>
                 </div>
               )}
-              <button className={`${styles.btn} ${styles.btnprimary}`} style={{ width: "100%", padding: "11px", fontSize: 14, borderRadius: 10 }} onClick={processPayment}>
+              <button className="w-full py-3 text-sm font-bold bg-[#2d7a2d] text-white rounded-xl border-none cursor-pointer mb-2" onClick={processPayment}>
                 ✅ Proses Pembayaran
               </button>
-              <button className={styles.btndefault} style={{ width: "100%", marginTop: 8, padding: "9px", fontSize: 12, borderRadius: 10 }} onClick={() => setCart([])}>
+              <button className="w-full py-2 text-xs font-bold bg-[#e8f0e8] dark:bg-[#2d4a2d] text-[#2d7a2d] dark:text-[#a8e063] rounded-xl border-none cursor-pointer" onClick={() => setCart([])}>
                 🗑 Kosongkan
               </button>
             </div>

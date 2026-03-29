@@ -1,231 +1,50 @@
+@reference "tailwindcss";
+
 .container {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  @apply min-h-screen flex items-center justify-center relative overflow-hidden;
   background: linear-gradient(135deg, #1a4a1a 0%, #2d7a2d 40%, #1a4a1a 100%);
-  position: relative;
-  overflow: hidden;
 }
-
-.decor1 {
-  position: absolute;
-  width: 400px;
-  height: 400px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.03);
-  top: -100px;
-  right: -100px;
-}
-
-.decor2 {
-  position: absolute;
-  width: 300px;
-  height: 300px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.03);
-  bottom: -80px;
-  left: -80px;
-}
-
-.decor3 {
-  position: absolute;
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  background: rgba(168, 224, 99, 0.08);
-  top: 30%;
-  left: 10%;
-}
-
+.decor1 { @apply absolute w-[400px] h-[400px] rounded-full -top-[100px] -right-[100px]; background: rgba(255,255,255,0.03); }
+.decor2 { @apply absolute w-[300px] h-[300px] rounded-full -bottom-[80px] -left-[80px]; background: rgba(255,255,255,0.03); }
+.decor3 { @apply absolute w-[200px] h-[200px] rounded-full top-[30%] left-[10%]; background: rgba(168,224,99,0.08); }
 .loginBox {
-  background: #fff;
-  border-radius: 20px;
+  @apply bg-white rounded-[20px] w-[420px] relative z-10 shadow-2xl;
   padding: 40px 44px;
-  width: 420px;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
   animation: slideUp 0.4s ease;
-  position: relative;
-  z-index: 1;
 }
-
-.logoContainer {
-  text-align: center;
-  margin-bottom: 32px;
-}
-
+.logoContainer { @apply text-center mb-8; }
 .logoCircle {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
+  @apply w-[72px] h-[72px] rounded-full flex items-center justify-center text-[32px] mx-auto mb-3.5;
   background: linear-gradient(135deg, #1a4a1a, #2d7a2d);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32px;
-  margin: 0 auto 14px;
 }
-
-.logoText {
-  font-size: 24px;
-  font-weight: 900;
-  color: #1a4a1a;
-  letter-spacing: 0.5px;
-}
-
-.logoSub {
-  font-size: 13px;
-  color: #888;
-  margin-top: 4px;
-}
-
-.logoLine {
-  width: 40px;
-  height: 3px;
-  background: linear-gradient(90deg, #2d7a2d, #a8e063);
-  border-radius: 2px;
-  margin: 12px auto 0;
-}
-
-.title {
-  font-size: 14px;
-  font-weight: 700;
-  color: #333;
-  margin-bottom: 20px;
-  text-align: center;
-}
-
+.logoText { @apply text-2xl font-black text-[#1a4a1a] tracking-wide; }
+.logoSub { @apply text-[13px] text-gray-400 mt-1; }
+.logoLine { @apply w-10 h-[3px] rounded-full mx-auto mt-3; background: linear-gradient(90deg, #2d7a2d, #a8e063); }
+.title { @apply text-sm font-bold text-gray-700 mb-5 text-center; }
 .errorBox {
-  background: #fff5f5;
-  border: 1px solid #fca5a5;
-  border-radius: 10px;
-  padding: 10px 14px;
-  margin-bottom: 16px;
-  font-size: 13px;
-  color: #dc2626;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  @apply bg-red-50 border border-red-300 rounded-xl px-3.5 py-2.5 mb-4 text-sm text-red-600 flex items-center gap-2;
   animation: fadeIn 0.2s ease;
 }
-
-.errorIcon {
-  font-size: 16px;
-}
-
-.formGroup {
-  margin-bottom: 16px;
-}
-
-.formGroupLarge {
-  margin-bottom: 24px;
-}
-
-.label {
-  display: block;
-  font-size: 11px;
-  font-weight: 800;
-  color: #555;
-  margin-bottom: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.inputGroup {
-  position: relative;
-}
-
-.inputIcon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 16px;
-}
-
+.errorIcon { @apply text-base; }
+.formGroup { @apply mb-4; }
+.formGroupLarge { @apply mb-6; }
+.label { @apply block text-[11px] font-extrabold text-gray-500 mb-1.5 uppercase tracking-wide; }
+.inputGroup { @apply relative; }
+.inputIcon { @apply absolute left-3 top-1/2 -translate-y-1/2 text-base; }
 .inputField {
-  width: 100%;
-  padding: 11px 12px 11px 38px;
-  border-radius: 10px;
-  border: 1.5px solid #d0e4d0;
-  font-size: 14px;
-  outline: none;
-  transition: border 0.2s;
-  box-sizing: border-box;
+  @apply w-full pl-9 pr-3 py-[11px] rounded-[10px] border border-[#d0e4d0] text-sm outline-none transition-colors box-border;
 }
-
-.inputField:focus {
-  border-color: #2d7a2d;
-}
-
+.inputField:focus { @apply border-[#2d7a2d]; }
 .inputFieldPass {
-  width: 100%;
-  padding: 11px 40px 11px 38px;
-  border-radius: 10px;
-  border: 1.5px solid #d0e4d0;
-  font-size: 14px;
-  outline: none;
-  transition: border 0.2s;
-  box-sizing: border-box;
+  @apply w-full pl-9 pr-10 py-[11px] rounded-[10px] border border-[#d0e4d0] text-sm outline-none transition-colors box-border;
 }
-
-.inputFieldPass:focus {
-  border-color: #2d7a2d;
-}
-
-.passToggleBtn {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  padding: 0;
-}
-
+.inputFieldPass:focus { @apply border-[#2d7a2d]; }
+.passToggleBtn { @apply absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-base p-0; }
 .submitBtn {
-  width: 100%;
-  padding: 13px;
+  @apply w-full py-[13px] text-white border-none rounded-[10px] text-[15px] font-extrabold cursor-pointer flex items-center justify-center gap-2.5 transition-opacity;
   background: linear-gradient(135deg, #1a4a1a, #2d7a2d);
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 800;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  transition: opacity 0.2s;
 }
-
-.submitBtn:disabled {
-  background: #aaa;
-  cursor: not-allowed;
-}
-
-.footerText {
-  text-align: center;
-  margin-top: 16px;
-  font-size: 11px;
-  color: #ccc;
-}
-
-.copyrightLink {
-  display: block;
-  text-align: center;
-  margin-top: 6px;
-  font-size: 11px;
-  color: #a8e063;
-  text-decoration: none;
-  cursor: pointer;
-  transition: color 0.2s, text-decoration 0.2s;
-}
-
-.copyrightLink:hover {
-  color: #2d7a2d;
-  text-decoration: underline;
-}
+.submitBtn:disabled { @apply bg-gray-400 cursor-not-allowed; background: none; }
+.footerText { @apply text-center mt-4 text-[11px] text-gray-300; }
+.copyrightLink { @apply block text-center mt-1.5 text-[11px] text-[#a8e063] no-underline cursor-pointer transition-colors; }
+.copyrightLink:hover { @apply text-[#2d7a2d] underline; }

@@ -1,4 +1,3 @@
-import React from 'react';
 import styles from '../styles/App.module.css';
 import { MONTHS, BADGE, fmt, fmtN } from '../utils/constants';
 import {
@@ -6,50 +5,52 @@ import {
   BarChart, Bar, PieChart, Pie, Cell,
 } from 'recharts';
 
-export default function LaporanPage({
-  rptMonth, setRptMonth, rptYear, setRptYear,
-  rptTrx, rptRev, dayData, catData, topProds,
-  exportExcel, exportPDF, showExportPDFLoading,
-}) {
+export default function LaporanPage({ rptMonth, setRptMonth, rptYear, setRptYear, rptTrx, rptRev, dayData, catData, topProds, exportExcel, exportPDF, showExportPDFLoading }) {
+  const summaryStats = [
+    { label: "Total Pendapatan", value: fmt(rptRev), cls: "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-700" },
+    { label: "Jumlah Transaksi", value: fmtN(rptTrx.length), cls: "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-700" },
+    { label: "Rata-rata / Transaksi", value: fmt(rptTrx.length > 0 ? Math.round(rptRev / rptTrx.length) : 0), cls: "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-700" },
+  ];
+
   return (
-    <div id="laporan-container" style={{ padding: 10, background: "#f8fdf8" }}>
-      <div id="laporan-actions" style={{ display: "flex", gap: 10, marginBottom: 18, alignItems: "center", flexWrap: "wrap" }} data-html2canvas-ignore="true">
-        <select id="laporan-month" name="laporan-month" className={styles.inp} style={{ width: 140 }} value={rptMonth} onChange={(e) => setRptMonth(parseInt(e.target.value))}>
+    <div id="laporan-container" className="p-2.5 bg-[#f8fdf8] dark:bg-[#0f1a0f]">
+      {/* Actions */}
+      <div id="laporan-actions" className="flex gap-2.5 mb-4 items-center flex-wrap" data-html2canvas-ignore="true">
+        <select id="laporan-month" name="laporan-month" className={`${styles.inp} w-[140px]`} value={rptMonth} onChange={(e) => setRptMonth(parseInt(e.target.value))}>
           {MONTHS.map((m, i) => <option key={i} value={i}>{m}</option>)}
         </select>
-        <select id="laporan-year" name="laporan-year" className={styles.inp} style={{ width: 90 }} value={rptYear} onChange={(e) => setRptYear(parseInt(e.target.value))}>
+        <select id="laporan-year" name="laporan-year" className={`${styles.inp} w-[90px]`} value={rptYear} onChange={(e) => setRptYear(parseInt(e.target.value))}>
           {[2024, 2025, 2026, 2027].map((y) => <option key={y}>{y}</option>)}
         </select>
-        <button className={`${styles.btn} ${styles.btnblue}`} onClick={() => exportExcel("laporan")}>📥 Export Excel</button>
-        <button className={styles.btn} style={{ background: "#dc2626", color: "#fff", minWidth: 140 }} onClick={exportPDF} disabled={showExportPDFLoading}>
+        <button className="px-4 py-1.5 rounded-lg text-xs font-bold bg-[#1565c0] text-white border-none cursor-pointer" onClick={() => exportExcel("laporan")}>📥 Export Excel</button>
+        <button className="px-4 py-1.5 rounded-lg text-xs font-bold bg-red-600 text-white border-none cursor-pointer min-w-[140px] disabled:opacity-50" onClick={exportPDF} disabled={showExportPDFLoading}>
           {showExportPDFLoading ? "⏳ Memproses..." : "🖨️ Cetak Jurnal PDF"}
         </button>
       </div>
 
-      <div style={{ textAlign: "center", marginBottom: 20 }}>
-        <h2 style={{ color: "#1a4a1a", margin: 0, textTransform: "uppercase" }}>Laporan Performa Keuangan Toko BBS</h2>
-        <p style={{ color: "#666", margin: "5px 0 0 0", fontWeight: 600 }}>Periode Pembukuan: {MONTHS[rptMonth]} {rptYear}</p>
+      {/* Title */}
+      <div className="text-center mb-5">
+        <h2 className="text-[#1a4a1a] dark:text-[#a8e063] m-0 uppercase font-black text-lg">Laporan Performa Keuangan Toko BBS</h2>
+        <p className="text-gray-500 mt-1 font-semibold text-sm">Periode Pembukuan: {MONTHS[rptMonth]} {rptYear}</p>
       </div>
 
-      <div className="rpt-grid" style={{ marginBottom: 20 }}>
-        {[
-          { label: "Total Pendapatan", value: fmt(rptRev), color: "#2d7a2d", bg: "#e8f5e9" },
-          { label: "Jumlah Transaksi", value: fmtN(rptTrx.length), color: "#1565c0", bg: "#e3f2fd" },
-          { label: "Rata-rata Pendapatan / Transaksi", value: fmt(rptTrx.length > 0 ? Math.round(rptRev / rptTrx.length) : 0), color: "#7b1fa2", bg: "#f3e5f5" },
-        ].map((s, i) => (
-          <div key={i} style={{ background: s.bg, borderRadius: 12, padding: "16px 18px", border: `1px solid ${s.color}33` }}>
-            <div style={{ fontSize: 10, color: s.color, fontWeight: 800, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>{s.label}</div>
-            <div style={{ fontSize: 22, fontWeight: 900, color: s.color }}>{s.value}</div>
+      {/* Summary */}
+      <div className="rpt-grid mb-5">
+        {summaryStats.map((s, i) => (
+          <div key={i} className={`rounded-xl p-4 border ${s.cls}`}>
+            <div className="text-[10px] font-extrabold uppercase mb-2 tracking-wide opacity-80">{s.label}</div>
+            <div className="text-[22px] font-black">{s.value}</div>
           </div>
         ))}
       </div>
 
-      <div className={styles.card} style={{ marginBottom: 20 }}>
-        <div style={{ fontWeight: 800, fontSize: 14, color: "#1a4a1a", marginBottom: 14, display: "flex", justifyContent: "space-between" }}>
+      {/* Line chart */}
+      <div className={`${styles.card} mb-5`}>
+        <div className="font-extrabold text-sm text-[#1a4a1a] dark:text-[#a8e063] mb-3.5 flex justify-between">
           <span>📈 Tren Pendapatan Harian</span>
-          <span style={{ color: "#aaa", fontSize: 12, fontWeight: 500 }}>{MONTHS[rptMonth]} {rptYear}</span>
+          <span className="text-gray-400 text-xs font-normal">{MONTHS[rptMonth]} {rptYear}</span>
         </div>
-        <div style={{ height: 260, width: "100%", minHeight: 260 }}>
+        <div style={{ height: 260, minHeight: 260 }}>
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={dayData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4ede4" />
@@ -62,13 +63,12 @@ export default function LaporanPage({
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
+      {/* Pie + Bar */}
+      <div className="grid gap-5" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" }}>
         <div className={styles.card}>
-          <div style={{ fontWeight: 800, fontSize: 14, color: "#1a4a1a", marginBottom: 14 }}>🧩 Distribusi Kategori</div>
-          <div style={{ height: 240, width: "100%", minHeight: 240 }}>
-            {catData.length === 0 ? (
-              <div style={{ color: "#ccc", textAlign: "center", paddingTop: 80 }}>Tidak ada data</div>
-            ) : (
+          <div className="font-extrabold text-sm text-[#1a4a1a] dark:text-[#a8e063] mb-3.5">🧩 Distribusi Kategori</div>
+          <div style={{ height: 240, minHeight: 240 }}>
+            {catData.length === 0 ? <div className="text-gray-300 text-center pt-20">Tidak ada data</div> : (
               <ResponsiveContainer width="100%" height={240}>
                 <PieChart>
                   <Pie data={catData} dataKey="rev" nameKey="cat" cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={3} animationDuration={1200}>
@@ -84,23 +84,18 @@ export default function LaporanPage({
             )}
           </div>
         </div>
-
         <div className={styles.card}>
-          <div style={{ fontWeight: 800, fontSize: 14, color: "#1a4a1a", marginBottom: 14 }}>🏆 Top 5 Produk Terlaris</div>
-          <div style={{ height: 240, width: "100%", minHeight: 240 }}>
-            {topProds.length === 0 ? (
-              <div style={{ color: "#ccc", textAlign: "center", paddingTop: 80 }}>Tidak ada data</div>
-            ) : (
+          <div className="font-extrabold text-sm text-[#1a4a1a] dark:text-[#a8e063] mb-3.5">🏆 Top 5 Produk Terlaris</div>
+          <div style={{ height: 240, minHeight: 240 }}>
+            {topProds.length === 0 ? <div className="text-gray-300 text-center pt-20">Tidak ada data</div> : (
               <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={topProds.map(([name, qty]) => ({ name, qty }))} layout="vertical" margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f0f0f0" />
                   <XAxis type="number" hide />
                   <YAxis dataKey="name" type="category" width={110} tick={{ fontSize: 11, fill: '#444' }} axisLine={false} tickLine={false} />
                   <RTooltip formatter={(value) => [`${fmtN(value)} Terjual`, "Kuantitas"]} contentStyle={{ borderRadius: 8, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} />
-                  <Bar dataKey="qty" fill="#1565c0" radius={[0, 6, 6, 0]} barSize={20} animationDuration={1200}>
-                    {topProds.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={index === 0 ? '#ea580c' : '#2563eb'} />
-                    ))}
+                  <Bar dataKey="qty" radius={[0, 6, 6, 0]} barSize={20} animationDuration={1200}>
+                    {topProds.map((_, index) => <Cell key={`cell-${index}`} fill={index === 0 ? '#ea580c' : '#2563eb'} />)}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
