@@ -145,7 +145,7 @@ function Main({ currentUser, onLogout, isOffline }) {
   const [prodForm, setProdForm] = useState({
     name: "",
     category: "Pakan Jadi",
-    unit: "kg",
+    unit: "",
     price: "",
     stock: "",
     min_stock: "",

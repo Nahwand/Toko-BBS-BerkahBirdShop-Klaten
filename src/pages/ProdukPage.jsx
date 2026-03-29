@@ -17,7 +17,7 @@ export default function ProdukPage({
         </select>
         <button className={`${styles.btn} ${styles.btnprimary}`} style={{ marginLeft: "auto" }}
           onClick={() => {
-            setProdForm({ name: "", category: "Pakan Jadi", unit: "kg", price: "", stock: "", min_stock: "", supplier_id: "" });
+            setProdForm({ name: "", category: "Pakan Jadi", unit: "", price: "", stock: "", min_stock: "", supplier_id: "" });
             setProdImage(null);
             setProdModal("add");
           }}>
