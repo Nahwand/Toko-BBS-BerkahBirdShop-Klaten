@@ -10,6 +10,8 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
   const [testingWa, setTestingWa] = useState(false);
   const [testingTg, setTestingTg] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const [showWaToken, setShowWaToken] = useState(false);
+  const [showTgToken, setShowTgToken] = useState(false);
 
   useEffect(() => {
     sb.from('settings').select('*').then(({ data }) => {
@@ -156,8 +158,17 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
               Token Fonnte
               <a href="https://fonnte.com" target="_blank" rel="noreferrer" style={{ marginLeft: 6, fontSize: 10, color: "#1565c0" }}>fonnte.com →</a>
             </label>
-            <input className={styles.inp} placeholder="Token dari dashboard Fonnte..."
-              value={settings.notif_wa_token} onChange={(e) => setSettings(s => ({ ...s, notif_wa_token: e.target.value }))} />
+            <div style={{ position: "relative" }}>
+              <input className={styles.inp} style={{ paddingRight: 40 }}
+                type={showWaToken ? "text" : "password"}
+                placeholder="Token dari dashboard Fonnte..."
+                value={settings.notif_wa_token}
+                onChange={(e) => setSettings(s => ({ ...s, notif_wa_token: e.target.value }))} />
+              <button onClick={() => setShowWaToken(v => !v)}
+                style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", fontSize: 15, color: "#888" }}>
+                {showWaToken ? "🙈" : "👁️"}
+              </button>
+            </div>
           </div>
           <div style={{ marginBottom: 12 }}>
             <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Nomor WA (08xxx atau 628xxx)</label>
@@ -189,8 +200,17 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
               Bot Token
               <a href="https://t.me/BotFather" target="_blank" rel="noreferrer" style={{ marginLeft: 6, fontSize: 10, color: "#0088cc" }}>Buat bot di @BotFather →</a>
             </label>
-            <input className={styles.inp} placeholder="123456789:ABCdef..."
-              value={settings.notif_tg_bot_token} onChange={(e) => setSettings(s => ({ ...s, notif_tg_bot_token: e.target.value }))} />
+            <div style={{ position: "relative" }}>
+              <input className={styles.inp} style={{ paddingRight: 40 }}
+                type={showTgToken ? "text" : "password"}
+                placeholder="123456789:ABCdef..."
+                value={settings.notif_tg_bot_token}
+                onChange={(e) => setSettings(s => ({ ...s, notif_tg_bot_token: e.target.value }))} />
+              <button onClick={() => setShowTgToken(v => !v)}
+                style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", fontSize: 15, color: "#888" }}>
+                {showTgToken ? "🙈" : "👁️"}
+              </button>
+            </div>
           </div>
           <div style={{ marginBottom: 12 }}>
             <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>
