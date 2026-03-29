@@ -8,33 +8,11 @@ export default function ImportExportPage({
 }) {
   const fileRef = useRef();
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
-      <div className={styles.card}>
-        <div style={{ fontWeight: 800, fontSize: 15, color: "#1a4a1a", marginBottom: 4 }}>📥 Export ke Excel</div>
-        <div style={{ fontSize: 12, color: "#888", marginBottom: 16 }}>Unduh data ke file .xlsx</div>
-        {[
-          { label: "📦 Semua Data", sub: "4 sheet sekaligus", type: "all", color: "primary" },
-          { label: "📈 Laporan Bulanan", sub: `${MONTHS[rptMonth]} ${rptYear}`, type: "laporan", color: "blue" },
-          { label: "📋 Transaksi", sub: "Riwayat transaksi", type: "transaksi", color: "outline" },
-          { label: "📦 Produk", sub: "Daftar produk", type: "produk", color: "outline" },
-          { label: "📊 Stok", sub: "Status stok", type: "stok", color: "outline" },
-          { label: "🤝 Supplier", sub: "Data supplier", type: "supplier", color: "outline" },
-        ].map((e) => (
-          <div key={e.type} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "11px 0", borderBottom: "1px solid #f0f5f0" }}>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 700 }}>{e.label}</div>
-              <div style={{ fontSize: 11, color: "#aaa" }}>{e.sub}</div>
-            </div>
-            <button className={`${styles.btn} ${styles['btn' + e.color]}`} style={{ flexShrink: 0, minWidth: 100 }}
-              onClick={() => exportExcel(e.type)} disabled={exportingTitle === e.type}>
-              {exportingTitle === e.type ? "⏳..." : "Download"}
-            </button>
-          </div>
-        ))}
-      </div>
+    <div className="excel-grid">
 
+      {/* IMPORT — di kiri (desktop) / atas (mobile) */}
       <div>
-        <div className={styles.card} style={{ marginBottom: 14 }}>
+        <div className={styles.card}>
           <div style={{ fontWeight: 800, fontSize: 15, color: "#1a4a1a", marginBottom: 4 }}>📤 Import dari Excel</div>
           <div style={{ fontSize: 12, color: "#888", marginBottom: 16 }}>Upload .xlsx untuk update data produk massal</div>
           <div style={{ background: "#f8fdf8", borderRadius: 12, padding: "20px", marginBottom: 14, border: "2px dashed #b8d4b8", textAlign: "center", opacity: importingState ? 0.6 : 1, pointerEvents: importingState ? "none" : "auto" }}>
@@ -62,6 +40,32 @@ export default function ImportExportPage({
           )}
         </div>
       </div>
+
+      {/* EXPORT — di kanan (desktop) / bawah (mobile) */}
+      <div className={styles.card}>
+        <div style={{ fontWeight: 800, fontSize: 15, color: "#1a4a1a", marginBottom: 4 }}>📥 Export ke Excel</div>
+        <div style={{ fontSize: 12, color: "#888", marginBottom: 16 }}>Unduh data ke file .xlsx</div>
+        {[
+          { label: "📦 Semua Data", sub: "4 sheet sekaligus", type: "all", color: "primary" },
+          { label: "📈 Laporan Bulanan", sub: `${MONTHS[rptMonth]} ${rptYear}`, type: "laporan", color: "blue" },
+          { label: "📋 Transaksi", sub: "Riwayat transaksi", type: "transaksi", color: "outline" },
+          { label: "📦 Produk", sub: "Daftar produk", type: "produk", color: "outline" },
+          { label: "📊 Stok", sub: "Status stok", type: "stok", color: "outline" },
+          { label: "🤝 Supplier", sub: "Data supplier", type: "supplier", color: "outline" },
+        ].map((e) => (
+          <div key={e.type} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "11px 0", borderBottom: "1px solid #f0f5f0" }}>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700 }}>{e.label}</div>
+              <div style={{ fontSize: 11, color: "#aaa" }}>{e.sub}</div>
+            </div>
+            <button className={`${styles.btn} ${styles['btn' + e.color]}`} style={{ flexShrink: 0, minWidth: 100 }}
+              onClick={() => exportExcel(e.type)} disabled={exportingTitle === e.type}>
+              {exportingTitle === e.type ? "⏳..." : "Download"}
+            </button>
+          </div>
+        ))}
+      </div>
+
     </div>
   );
 }
