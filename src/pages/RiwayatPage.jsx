@@ -32,7 +32,7 @@ export default function RiwayatPage({
           <tbody>
             {filtHist.map((t) => (
               <tr key={t.id} onClick={() => setHistReceipt(t)}
-                className="cursor-pointer hover:bg-green-50 dark:hover:bg-[#1f2d1a] transition-colors">
+                className="cursor-pointer bg-white dark:bg-[#1a2a1a] hover:bg-green-50 dark:hover:bg-[#1f2d1a] transition-colors">
                 <td className={styles.td}><strong className="text-bbs-green">{t.trx_code}</strong></td>
                 <td className={styles.td}>{t.date}</td>
                 <td className={styles.td}>{t.customer}</td>

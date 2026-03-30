@@ -28,7 +28,7 @@ export default function ProdukPage({
             {filtProd.map((p) => {
               const s = suppliers.find((s) => s.id === p.supplier_id);
               return (
-                <tr key={p.id} className={p.stock <= p.min_stock ? "bg-amber-50 dark:bg-amber-900/10" : ""}>
+                <tr key={p.id} className={p.stock <= p.min_stock ? "bg-amber-50 dark:bg-amber-900/10" : "bg-white dark:bg-[#1a2a1a]"}>
                   <td className={styles.td}>
                     {p.image_url
                       ? <img src={p.image_url} alt={p.name} className="w-11 h-11 object-cover rounded-lg border border-gray-200" />

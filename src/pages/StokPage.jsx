@@ -28,7 +28,7 @@ export default function StokPage({
           <tbody>
             {[...filtProd].sort((a, b) => a.stock / a.min_stock - b.stock / b.min_stock).map((p) => {
               const st = p.stock === 0 ? "Habis" : p.stock <= p.min_stock ? "Menipis" : "Aman";
-              const rowBg = p.stock === 0 ? "bg-red-50 dark:bg-red-900/10" : p.stock <= p.min_stock ? "bg-amber-50 dark:bg-amber-900/10" : "";
+              const rowBg = p.stock === 0 ? "bg-red-50 dark:bg-red-900/10" : p.stock <= p.min_stock ? "bg-amber-50 dark:bg-amber-900/10" : "bg-white dark:bg-[#1a2a1a]";
               return (
                 <tr key={p.id} className={rowBg}>
                   <td className={styles.td}>

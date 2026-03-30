@@ -22,7 +22,7 @@ export default function RestockLogPage({ restockLogs }) {
           </thead>
           <tbody>
             {filtered.map((r) => (
-              <tr key={r.id} className="hover:bg-green-50 dark:hover:bg-[#1f2d1a] transition-colors">
+              <tr key={r.id} className="bg-white dark:bg-[#1a2a1a] hover:bg-green-50 dark:hover:bg-[#1f2d1a] transition-colors">
                 <td className={`${styles.td} whitespace-nowrap`}>
                   <div className="text-xs">{new Date(r.created_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}</div>
                   <div className="text-[10px] text-gray-400">{new Date(r.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</div>

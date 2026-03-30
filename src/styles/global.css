@@ -120,7 +120,7 @@ input, select, button, textarea { font-family: inherit; }
   #struk-print td { padding: 1mm 0; }
 }
 
-/* ── Dark mode overrides for inline-styled elements ── */
+/* ── Dark mode overrides — hanya untuk elemen yang pakai inline style ── */
 body:not(.dark) .bbs-content { background: #f4f7f2; }
 body:not(.dark) .bbs-main > header { background: #ffffff; border-bottom-color: #e4ede4; }
 body:not(.dark) .table-wrap { background: #ffffff; border-color: #e4ede4; }
@@ -128,7 +128,5 @@ body:not(.dark) .table-wrap { background: #ffffff; border-color: #e4ede4; }
 body.dark .bbs-main > header { background: #162016 !important; border-bottom-color: #2d4a2d !important; }
 body.dark .bbs-content { background: #0f1a0f !important; }
 body.dark .table-wrap { background: #1a2a1a !important; border-color: #2d4a2d !important; }
-body.dark tr { background: #1a2a1a !important; }
-body.dark table { background: #1a2a1a; }
 body.dark select option { background: #1e2e1e; color: #e8f5e8; }
 body.dark input, body.dark select, body.dark textarea { color-scheme: dark; }
