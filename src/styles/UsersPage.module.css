@@ -1,6 +1,7 @@
 ﻿@reference "tailwindcss";
 
-
+/* ── Force class-based dark mode ── */
+@variant dark (&:where(.dark, .dark *));
 .header { @apply flex justify-between items-center mb-4; }
 .accountCount { @apply text-[13px] text-gray-500; }
 .btnPrimary { @apply px-4 py-1.5 rounded-lg cursor-pointer text-xs font-bold border-none bg-[#2d7a2d] text-white; }

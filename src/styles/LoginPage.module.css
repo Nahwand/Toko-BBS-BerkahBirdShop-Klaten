@@ -1,5 +1,8 @@
 @reference "tailwindcss";
 
+/* ── Force class-based dark mode ── */
+@variant dark (&:where(.dark, .dark *));
+
 .container {
   @apply min-h-screen flex items-center justify-center relative overflow-hidden;
   background: linear-gradient(135deg, #1a4a1a 0%, #2d7a2d 40%, #1a4a1a 100%);

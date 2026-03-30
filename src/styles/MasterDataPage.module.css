@@ -1,5 +1,8 @@
 @reference "tailwindcss";
 
+/* ── Force class-based dark mode ── */
+@variant dark (&:where(.dark, .dark *));
+
 .tabContainer { @apply flex gap-0 mb-5 bg-white dark:bg-[#1a2a1a] rounded-xl p-1.5 border border-[#e4ede4] dark:border-[#2d4a2d] w-fit; }
 .tabBtn { @apply px-5 py-2 rounded-[9px] border-none cursor-pointer text-[13px] font-bold flex items-center gap-1.5 bg-transparent text-gray-500 dark:text-gray-400; }
 .tabBtnActive { @apply bg-[#2d7a2d] text-white; }

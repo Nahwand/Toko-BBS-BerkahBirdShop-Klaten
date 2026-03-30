@@ -1,5 +1,8 @@
 @reference "tailwindcss";
 
+/* ── Force class-based dark mode ── */
+@variant dark (&:where(.dark, .dark *));
+
 /* Card */
 .card {
   @apply bg-white dark:bg-[#1a2a1a] rounded-xl p-5 border border-[#e4ede4] dark:border-[#2d4a2d] text-gray-900 dark:text-[#e8f5e8];
