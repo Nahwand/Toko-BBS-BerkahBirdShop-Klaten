@@ -16,7 +16,7 @@ export const ACCESS = {
     "dashboard", "kasir", "produk", "riwayat", "stok", "restocklog",
     "laporan", "excel", "masterdata", "auditlog",
   ],
-  pegawai: ["dashboard", "kasir", "produk", "stok"],
+  pegawai: ["dashboard", "kasir", "produk"],
 };
 
 export const TODAY = new Date().toISOString().slice(0, 10);

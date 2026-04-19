@@ -7,8 +7,9 @@ const PER_PAGE = 20;
 
 export default function ProdukPage({
   filtProd, suppliers, searchProd, setSearchProd, filterCat, setFilterCat, kategoris,
-  setProdForm, setProdImage, setProdModal, delProd,
+  setProdForm, setProdImage, setProdModal, delProd, currentUser,
 }) {
+  const isPegawai = currentUser?.role === 'pegawai';
   const [page, setPage] = useState(1);
   const [exporting, setExporting] = useState(false);
   const catList = ["Semua", ...(kategoris || []).map(k => k.nama)];
@@ -48,15 +49,17 @@ export default function ProdukPage({
           onClick={exportProduk} disabled={exporting}>
           {exporting ? "⏳..." : "📥 Export Excel"}
         </button>
-        <button className="px-4 py-1.5 rounded-lg text-xs font-bold bg-bbs-green text-white border-none cursor-pointer"
-          onClick={() => { setProdForm({ name: "", category: "Pakan Jadi", unit: "", price: "", stock: "", min_stock: "", supplier_id: "", jenis: "", varian: "" }); setProdImage(null); setProdModal("add"); }}>
-          + Tambah Produk
-        </button>
+        {!isPegawai && (
+          <button className="px-4 py-1.5 rounded-lg text-xs font-bold bg-bbs-green text-white border-none cursor-pointer"
+            onClick={() => { setProdForm({ name: "", category: "Pakan Jadi", unit: "", price: "", stock: "", min_stock: "", supplier_id: "", jenis: "", varian: "" }); setProdImage(null); setProdModal("add"); }}>
+            + Tambah Produk
+          </button>
+        )}
       </div>
       <div className="bg-white rounded-xl border border-bbs-border overflow-auto">
         <table className="w-full border-collapse">
           <thead>
-            <tr>{["Foto", "Nama", "Kategori", "Jenis", "Varian", "Satuan", "Harga", "Stok", "Min", "Supplier", "Aksi"].map(h => <th key={h} className={styles.th}>{h}</th>)}</tr>
+            <tr>{["Foto", "Nama", "Kategori", "Jenis", "Varian", "Satuan", "Harga", "Stok", "Min", "Supplier", ...(!isPegawai ? ["Aksi"] : [])].map(h => <th key={h} className={styles.th}>{h}</th>)}</tr>
           </thead>
           <tbody>
             {paged.map((p) => {
@@ -78,13 +81,15 @@ export default function ProdukPage({
                   <td className={styles.td}><strong className={`text-base ${p.stock <= p.min_stock ? "text-orange-600" : "text-gray-800"}`}>{p.stock}</strong></td>
                   <td className={styles.td}>{p.min_stock}</td>
                   <td className={styles.td}><span className="text-[11px] text-gray-500">{s?.name || "—"}</span></td>
-                  <td className={styles.td}>
-                    <div className="flex gap-1">
-                      <button className="px-2.5 py-1 text-[11px] font-bold rounded-lg border border-bbs-green text-bbs-green bg-transparent cursor-pointer"
-                        onClick={() => { setProdForm({ name: p.name, category: p.category, unit: p.unit, price: String(p.price), stock: String(p.stock), min_stock: String(p.min_stock), supplier_id: String(p.supplier_id || ""), jenis: p.jenis || "", varian: p.varian || "" }); setProdImage(null); setProdModal(p); }}>Edit</button>
-                      <button className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-[#dc3545] text-white border-none cursor-pointer" onClick={() => delProd(p.id)}>Hapus</button>
-                    </div>
-                  </td>
+                  {!isPegawai && (
+                    <td className={styles.td}>
+                      <div className="flex gap-1">
+                        <button className="px-2.5 py-1 text-[11px] font-bold rounded-lg border border-bbs-green text-bbs-green bg-transparent cursor-pointer"
+                          onClick={() => { setProdForm({ name: p.name, category: p.category, unit: p.unit, price: String(p.price), stock: String(p.stock), min_stock: String(p.min_stock), supplier_id: String(p.supplier_id || ""), jenis: p.jenis || "", varian: p.varian || "" }); setProdImage(null); setProdModal(p); }}>Edit</button>
+                        <button className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-[#dc3545] text-white border-none cursor-pointer" onClick={() => delProd(p.id)}>Hapus</button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               );
             })}
