@@ -1,6 +1,6 @@
-import { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { sb } from '../config/supabase';
-import { fmt } from '../utils/constants';
+import { fmt, canVoid, validateVoidReason } from '../utils/constants';
 
 const AppContext = createContext(null);
 export const useApp = () => useContext(AppContext);
@@ -192,11 +192,53 @@ export function AppProvider({ currentUser, isOffline, children }) {
     return () => { sb.removeChannel(channel); };
   }, [isOffline]);
 
+  const voidTransaction = useCallback(async (trxId, alasan) => {
+    const trx = transactions.find(t => t.id === trxId);
+    if (!trx) throw new Error('Transaksi tidak ditemukan.');
+    if (!canVoid(currentUser, trx)) {
+      if (currentUser.role === 'pegawai') throw new Error('Anda tidak memiliki izin untuk membatalkan transaksi.');
+      throw new Error('Hanya transaksi hari ini yang dapat dibatalkan oleh Admin.');
+    }
+    if (!validateVoidReason(alasan)) throw new Error('Alasan void wajib diisi.');
+
+    // 1. Update status transaksi
+    const { error: e1 } = await sb.from('transactions').update({
+      status: 'void',
+      void_reason: alasan.trim(),
+      voided_by: currentUser.nama,
+      voided_at: new Date().toISOString(),
+    }).eq('id', trxId);
+    if (e1) throw new Error('Gagal membatalkan transaksi. Silakan coba lagi.');
+
+    // 2. Kembalikan stok setiap item
+    const items = trx.items || [];
+    for (const item of items) {
+      if (!item.product_id) continue;
+      const { data: pData } = await sb.from('products').select('stock').eq('id', item.product_id).single();
+      if (pData) {
+        await sb.from('products').update({ stock: pData.stock + item.qty }).eq('id', item.product_id);
+      }
+    }
+
+    // 3. Catat activity log (non-blocking)
+    try {
+      await sb.from('activity_logs').insert({
+        user_nama: currentUser.nama,
+        user_role: currentUser.role,
+        aksi: 'Void Transaksi',
+        kategori: 'Kasir',
+        detail: `${trx.trx_code} - ${trx.customer} - ${fmt(trx.total)} | Alasan: ${alasan.trim()}`,
+      });
+    } catch (e) { console.error('Log void error:', e); }
+
+    await loadAll();
+  }, [currentUser, transactions, loadAll]);
+
   const todayStr = new Date().toISOString().slice(0, 10);
-  const todayTrx = useMemo(() => transactions.filter(t => t.date === todayStr), [transactions, todayStr]);
+  const todayTrx = useMemo(() => transactions.filter(t => t.date === todayStr && t.status !== 'void'), [transactions, todayStr]);
   const todayRev = useMemo(() => todayTrx.reduce((s, t) => s + t.total, 0), [todayTrx]);
   const weekStart = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
-  const weekTrx = useMemo(() => transactions.filter(t => t.date >= weekStart), [transactions, weekStart]);
+  const weekTrx = useMemo(() => transactions.filter(t => t.date >= weekStart && t.status !== 'void'), [transactions, weekStart]);
   const weekRev = useMemo(() => weekTrx.reduce((s, t) => s + t.total, 0), [weekTrx]);
   const outStock = useMemo(() => products.filter(p => Number(p.stock) === 0), [products]);
   const lowStock = useMemo(() => products.filter(p => Number(p.stock) > 0 && Number(p.stock) <= Number(p.min_stock)), [products]);
@@ -208,7 +250,7 @@ export function AppProvider({ currentUser, isOffline, children }) {
       activityLogs, restockLogs, loading, setLoading,
       notif, showNotif, logActivity, sendStockNotif, loadAll,
       todayTrx, todayRev, weekTrx, weekRev, outStock, lowStock,
-      realtimeUsers,
+      realtimeUsers, voidTransaction,
     }}>
       {children}
     </AppContext.Provider>

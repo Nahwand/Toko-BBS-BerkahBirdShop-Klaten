@@ -26,6 +26,7 @@ import ProdukModal from './components/modals/ProdukModal';
 import SupplierModal from './components/modals/SupplierModal';
 import RestockModal from './components/modals/RestockModal';
 import ConfirmModal from './components/modals/ConfirmModal';
+import VoidModal from './components/modals/VoidModal';
 
 function App() {
   const [currentUser, setCurrentUser] = useState(() => {
@@ -156,7 +157,7 @@ function Main({ currentUser, onLogout, isOffline }) {
     activityLogs, restockLogs, loading, setLoading,
     notif, showNotif, logActivity, sendStockNotif, loadAll,
     todayTrx, todayRev, weekTrx, weekRev, outStock, lowStock,
-    realtimeUsers,
+    realtimeUsers, voidTransaction,
   } = useApp();
 
   const [page, setPage] = useState(allowedPages[0]);
@@ -180,6 +181,8 @@ function Main({ currentUser, onLogout, isOffline }) {
   const [histReceipt, setHistReceipt] = useState(null);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [discount, setDiscount] = useState('');
+  const [voidTarget, setVoidTarget] = useState(null);
+  const [filterStatus, setFilterStatus] = useState('Semua');
 
   useEffect(() => {
     const handler = (e) => {
@@ -577,6 +580,17 @@ function Main({ currentUser, onLogout, isOffline }) {
     }
   };
 
+  const handleVoidConfirm = async (alasan) => {
+    if (!voidTarget) return;
+    try {
+      await voidTransaction(voidTarget.id, alasan);
+      showNotif(`Transaksi ${voidTarget.trx_code} berhasil dibatalkan.`);
+      setVoidTarget(null);
+    } catch (e) {
+      showNotif(e.message || 'Gagal membatalkan transaksi.', 'error');
+    }
+  };
+
   const rptTrx = transactions.filter((t) => {
     const [y, m] = t.date.split("-").map(Number);
     return y === rptYear && m === rptMonth + 1;
@@ -620,11 +634,14 @@ function Main({ currentUser, onLogout, isOffline }) {
     const ms =
       t.trx_code?.toLowerCase().includes(histSearch.toLowerCase()) ||
       t.customer?.toLowerCase().includes(histSearch.toLowerCase());
-    return md && ms;
+    const mst = filterStatus === 'Semua' ? true :
+      filterStatus === 'Void' ? t.status === 'void' :
+      t.status !== 'void';
+    return md && ms && mst;
   });
 
   // Reset ke halaman 1 saat filter berubah
-  useEffect(() => { setHistPage(1); }, [histSearch, filterDate, filterDateEnd]);
+  useEffect(() => { setHistPage(1); }, [histSearch, filterDate, filterDateEnd, filterStatus]);
 
   const histTotalPages = Math.ceil(filtHist.length / HIST_PER_PAGE);
   const histPaged = filtHist.slice((histPage - 1) * HIST_PER_PAGE, histPage * HIST_PER_PAGE);
@@ -776,7 +793,7 @@ function Main({ currentUser, onLogout, isOffline }) {
           {page === "dashboard" && <DashboardPage transactions={transactions} products={products} activityLogs={activityLogs} todayTrx={todayTrx} todayRev={todayRev} weekTrx={weekTrx} weekRev={weekRev} outStock={outStock} lowStock={lowStock} />}
           {page === "kasir" && <KasirPage filtProd={filtProd} searchProd={searchProd} setSearchProd={setSearchProd} filterCat={filterCat} setFilterCat={setFilterCat} kategoris={kategoris} cart={cart} customerName={customerName} setCustomerName={setCustomerName} paymentInput={paymentInput} setPaymentInput={setPaymentInput} cartTotal={cartTotal} payNum={payNum} addToCart={addToCart} updCart={updCart} processPayment={processPayment} setCart={setCart} isOffline={isOffline} discount={discount} setDiscount={setDiscount} />}
           {page === "produk" && <ProdukPage filtProd={filtProd} suppliers={suppliers} searchProd={searchProd} setSearchProd={setSearchProd} filterCat={filterCat} setFilterCat={setFilterCat} kategoris={kategoris} setProdForm={setProdForm} setProdImage={setProdImage} setProdModal={setProdModal} delProd={delProd} />}
-          {page === "riwayat" && <RiwayatPage filtHist={histPaged} histSearch={histSearch} setHistSearch={setHistSearch} filterDate={filterDate} setFilterDate={setFilterDate} filterDateEnd={filterDateEnd} setFilterDateEnd={setFilterDateEnd} setHistReceipt={setHistReceipt} totalCount={filtHist.length} page={histPage} setPage={setHistPage} totalPages={histTotalPages} perPage={HIST_PER_PAGE} />}
+          {page === "riwayat" && <RiwayatPage filtHist={histPaged} histSearch={histSearch} setHistSearch={setHistSearch} filterDate={filterDate} setFilterDate={setFilterDate} filterDateEnd={filterDateEnd} setFilterDateEnd={setFilterDateEnd} filterStatus={filterStatus} setFilterStatus={setFilterStatus} setHistReceipt={setHistReceipt} totalCount={filtHist.length} page={histPage} setPage={setHistPage} totalPages={histTotalPages} perPage={HIST_PER_PAGE} />}
           {page === "stok" && <StokPage filtProd={filtProd} searchProd={searchProd} setSearchProd={setSearchProd} filterCat={filterCat} setFilterCat={setFilterCat} kategoris={kategoris} isSuperAdmin={isSuperAdmin} setRestockModal={setRestockModal} setRestockQty={setRestockQty} />}
           {page === "laporan" && <Suspense fallback={<div className="flex justify-center py-20"><Spin /></div>}><LaporanPage rptMonth={rptMonth} setRptMonth={setRptMonth} rptYear={rptYear} setRptYear={setRptYear} rptTrx={rptTrx} rptRev={rptRev} dayData={dayData} catData={catData} topProds={topProds} kategoris={kategoris} products={products} /></Suspense>}
           {page === "supplier" && <SupplierPage suppliers={suppliers} products={products} exportExcel={exportExcel} setSupForm={setSupForm} setSupModal={setSupModal} delSup={delSup} />}
@@ -790,7 +807,8 @@ function Main({ currentUser, onLogout, isOffline }) {
 
       {/* MODALS */}
       <ConfirmModal confirm={confirm} onConfirm={() => { confirmResolve.current?.(true); setConfirm(null); }} onCancel={() => { confirmResolve.current?.(false); setConfirm(null); }} />
-      <HistReceiptModal histReceipt={histReceipt} onClose={() => setHistReceipt(null)} />
+      <HistReceiptModal histReceipt={histReceipt} onClose={() => setHistReceipt(null)} currentUser={currentUser} onVoid={(trx) => { setHistReceipt(null); setVoidTarget(trx); }} />
+      <VoidModal transaction={voidTarget} currentUser={currentUser} onConfirm={handleVoidConfirm} onClose={() => setVoidTarget(null)} loading={loading} />
       <ReceiptModal receipt={receipt} customerName={customerName} onClose={() => setReceipt(null)} />
       <ProdukModal prodModal={prodModal} prodForm={prodForm} setProdForm={setProdForm} prodImage={prodImage} setProdImage={setProdImage} kategoris={kategoris} satuans={satuans} suppliers={suppliers} saveProd={saveProd} onClose={() => setProdModal(null)} />
       <SupplierModal supModal={supModal} supForm={supForm} setSupForm={setSupForm} saveSup={saveSup} onClose={() => setSupModal(null)} />

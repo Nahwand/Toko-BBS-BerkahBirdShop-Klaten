@@ -54,3 +54,17 @@ export const fmt = (n) =>
   }).format(n);
 
 export const fmtN = (n) => new Intl.NumberFormat("id-ID").format(n);
+
+// Void/Cancel Transaksi helpers
+export function canVoid(currentUser, transaction) {
+  if (!currentUser || !transaction) return false;
+  if (transaction.status === 'void') return false;
+  if (currentUser.role === 'superadmin') return true;
+  if (currentUser.role === 'admin') return transaction.date === TODAY;
+  return false;
+}
+
+export function validateVoidReason(input) {
+  if (!input) return false;
+  return input.trim() !== '';
+}

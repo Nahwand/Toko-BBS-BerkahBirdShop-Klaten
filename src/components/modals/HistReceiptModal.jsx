@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { fmt } from '../../utils/constants';
+import { fmt, canVoid } from '../../utils/constants';
 
 const StrukContent = ({ data }) => {
   const subtotal = (data.items || []).reduce((s, i) => s + i.price * i.qty, 0);
@@ -44,9 +44,13 @@ const StrukContent = ({ data }) => {
   );
 };
 
-export default function HistReceiptModal({ histReceipt, onClose }) {
+export default function HistReceiptModal({ histReceipt, onClose, currentUser, onVoid }) {
   const [printSize, setPrintSize] = useState('80');
   if (!histReceipt) return null;
+
+  const isVoid = histReceipt.status === 'void';
+  const showVoidBtn = canVoid(currentUser, histReceipt);
+
   const handlePrint = () => {
     const s = document.createElement('style');
     s.id = 'print-size-override';
@@ -58,6 +62,19 @@ export default function HistReceiptModal({ histReceipt, onClose }) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-999" onClick={onClose}>
       <div className="bg-white  rounded-2xl p-6 w-[320px] max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
+
+        {/* Badge VOID */}
+        {isVoid && (
+          <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4 text-center">
+            <div className="text-red-600 font-extrabold text-base mb-1">🚫 TRANSAKSI VOID</div>
+            <div className="text-[11px] text-gray-500 mb-0.5">Alasan: <span className="font-semibold text-gray-700">{histReceipt.void_reason}</span></div>
+            <div className="text-[11px] text-gray-500 mb-0.5">Oleh: <span className="font-semibold text-gray-700">{histReceipt.voided_by}</span></div>
+            <div className="text-[11px] text-gray-500">Waktu: <span className="font-semibold text-gray-700">
+              {histReceipt.voided_at ? new Date(histReceipt.voided_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-'}
+            </span></div>
+          </div>
+        )}
+
         <StrukContent data={histReceipt} />
         <div className="flex items-center gap-2 my-3">
           <span className="text-[11px] font-bold text-gray-500 ">Ukuran kertas:</span>
@@ -68,10 +85,18 @@ export default function HistReceiptModal({ histReceipt, onClose }) {
             </button>
           ))}
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 mb-2">
           <button className="flex-1 py-2.5 text-sm font-bold bg-[#f0f5f0]  text-bbs-green  rounded-xl border-none cursor-pointer" onClick={handlePrint}>🖨️ Cetak</button>
           <button className="flex-1 py-2.5 text-sm font-bold bg-bbs-green text-white rounded-xl border-none cursor-pointer" onClick={onClose}>✅ Tutup</button>
         </div>
+        {showVoidBtn && (
+          <button
+            className="w-full py-2.5 text-sm font-bold bg-red-50 text-red-600 border border-red-200 rounded-xl cursor-pointer hover:bg-red-100 transition-colors"
+            onClick={() => onVoid?.(histReceipt)}
+          >
+            🚫 Void Transaksi
+          </button>
+        )}
       </div>
     </div>
   );

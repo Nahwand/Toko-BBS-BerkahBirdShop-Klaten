@@ -221,3 +221,10 @@ ON CONFLICT (key) DO NOTHING;
 -- Add jenis and varian columns to products table
 ALTER TABLE products ADD COLUMN IF NOT EXISTS jenis TEXT DEFAULT '';
 ALTER TABLE products ADD COLUMN IF NOT EXISTS varian TEXT DEFAULT '';
+
+-- 11. PATCH: Void/Cancel Transaksi
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'aktif';
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS void_reason TEXT DEFAULT NULL;
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS voided_by TEXT DEFAULT NULL;
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS voided_at TIMESTAMPTZ DEFAULT NULL;
+CREATE INDEX IF NOT EXISTS idx_transactions_status ON transactions(status);
