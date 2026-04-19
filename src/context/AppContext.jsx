@@ -276,7 +276,7 @@ export function AppProvider({ currentUser, isOffline, children }) {
       notif, showNotif, logActivity, sendStockNotif, loadAll,
       todayTrx, todayRev, weekTrx, weekRev, outStock, lowStock,
       realtimeUsers, voidTransaction,
-      loadingSection, setLoadingSection,
+      loadingSection,
     }}>
       {children}
     </AppContext.Provider>

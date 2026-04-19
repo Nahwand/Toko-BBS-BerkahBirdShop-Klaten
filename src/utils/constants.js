@@ -1,28 +1,3 @@
-export const CATS = [
-  "Semua",
-  "Pakan Jadi",
-  "Pakan Kiloan",
-  "Pakan Segar",
-  "Cemilan Hewan",
-  "Suplemen",
-  "Pakan Kucing",
-];
-
-export const MONTHS = [
-  "Januari",
-  "Februari",
-  "Maret",
-  "April",
-  "Mei",
-  "Juni",
-  "Juli",
-  "Agustus",
-  "September",
-  "Oktober",
-  "November",
-  "Desember",
-];
-
 export const BADGE = {
   "Pakan Jadi": { bg: "#e8f5e9", c: "#2e7d32" },
   "Pakan Kiloan": { bg: "#fff8e1", c: "#e65100" },

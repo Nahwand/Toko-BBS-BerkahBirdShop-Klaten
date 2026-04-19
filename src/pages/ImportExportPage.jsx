@@ -79,7 +79,8 @@ export default function ImportExportPage({ products, transactions, suppliers, ka
         ]), "Supplier");
       }
 
-      const fn = type === "laporan" ? `BBS_Laporan_${MONTHS[rptMonth]}_${rptYear}.xlsx`
+      const fileLabel = rptDateStart && rptDateEnd ? `${rptDateStart}_sd_${rptDateEnd}` : TODAY;
+      const fn = type === "laporan" ? `BBS_Laporan_${fileLabel}.xlsx`
         : type === "template" ? "BBS_Template.xlsx"
         : `BBS_${type}_${TODAY}.xlsx`;
       XL.writeFile(wb, fn);

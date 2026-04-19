@@ -54,15 +54,6 @@ export default function HistReceiptModal({ histReceipt, onClose, currentUser, on
   const isVoid = histReceipt.status === 'void';
   const showVoidBtn = canVoid(currentUser, histReceipt);
 
-  const handlePrint = () => {
-    const s = document.createElement('style');
-    s.id = 'print-size-override';
-    s.innerHTML = buildPrintStyle(printSize);
-    document.head.appendChild(s);
-    window.print();
-    setTimeout(() => document.getElementById('print-size-override')?.remove(), 1500);
-  };
-
   const handleDirectPrint = () => {
     if (!canPrint) return;
     const s = document.createElement('style');
