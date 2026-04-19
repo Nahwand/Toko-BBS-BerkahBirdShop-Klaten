@@ -93,21 +93,19 @@ export default function HistReceiptModal({ histReceipt, onClose, currentUser, on
         {!canPrint && (
           <div className="text-[11px] text-red-500 mb-2">Fitur cetak tidak didukung oleh browser ini.</div>
         )}
-        <div className="flex gap-2 mb-2">
-          <button className="flex-1 py-2.5 text-sm font-bold bg-bbs-green text-white rounded-xl border-none cursor-pointer" onClick={onClose}>✅ Tutup</button>
-        </div>
         <button className="w-full py-2.5 text-sm font-bold bg-amber-500 text-white rounded-xl border-none cursor-pointer disabled:opacity-50 mb-2"
           onClick={handleDirectPrint} disabled={!canPrint}>
           ⚡ Cetak Langsung
         </button>
         {showVoidBtn && (
           <button
-            className="w-full py-2.5 text-sm font-bold bg-red-50 text-red-600 border border-red-200 rounded-xl cursor-pointer hover:bg-red-100 transition-colors"
+            className="w-full py-2.5 text-sm font-bold bg-red-50 text-red-600 border border-red-200 rounded-xl cursor-pointer hover:bg-red-100 transition-colors mb-2"
             onClick={() => onVoid?.(histReceipt)}
           >
             🚫 Void Transaksi
           </button>
         )}
+        <button className="w-full py-2.5 text-sm font-bold bg-bbs-green text-white rounded-xl border-none cursor-pointer" onClick={onClose}>✅ Tutup</button>
       </div>
     </div>
   );
