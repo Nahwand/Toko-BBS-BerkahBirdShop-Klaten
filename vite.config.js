@@ -5,11 +5,14 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  test: {
+    environment: 'node',
+    globals: true,
+  },
   plugins: [
     tailwindcss(),
     react(),
-    VitePWA({
-      registerType: 'autoUpdate',
+    VitePWA({      registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt', 'pwa-icon.svg'],
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],

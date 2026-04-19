@@ -55,11 +55,15 @@ export function buildDayData(rptTrx, start, end) {
   const startDate = new Date(start + 'T00:00:00');
   const endDate = new Date(end + 'T00:00:00');
   for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-    const ds = d.toISOString().slice(0, 10);
+    // Gunakan komponen lokal agar tidak terpengaruh timezone
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const ds = `${year}-${month}-${day}`;
     const rev = rptTrx
       .filter(t => t.date === ds)
       .reduce((s, t) => s + t.total, 0);
-    const label = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const label = `${day}/${month}`;
     days.push({ dateStr: label, rev });
   }
   return days;

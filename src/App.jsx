@@ -19,6 +19,8 @@ import SupplierPage from './pages/SupplierPage';
 import RestockLogPage from './pages/RestockLogPage';
 import SettingsPage from './pages/SettingsPage';
 import AuditLogPage from './pages/AuditLogPage';
+import PageErrorBoundary from './components/PageErrorBoundary';
+import PageErrorBoundary from './components/PageErrorBoundary';
 
 const LaporanPage = lazy(() => import('./pages/LaporanPage'));
 const ImportExportPage = lazy(() => import('./pages/ImportExportPage'));
@@ -791,19 +793,45 @@ function Main({ currentUser, onLogout, isOffline }) {
         </header>
 
         <div className="bbs-content">
-          {page === "dashboard" && <DashboardPage transactions={transactions} products={products} activityLogs={activityLogs} todayTrx={todayTrx} todayRev={todayRev} weekTrx={weekTrx} weekRev={weekRev} outStock={outStock} lowStock={lowStock} loadingSection={loadingSection} />}
-          {page === "kasir" && <KasirPage filtProd={filtProd} searchProd={searchProd} setSearchProd={setSearchProd} filterCat={filterCat} setFilterCat={setFilterCat} kategoris={kategoris} cart={cart} customerName={customerName} setCustomerName={setCustomerName} paymentInput={paymentInput} setPaymentInput={setPaymentInput} cartTotal={cartTotal} payNum={payNum} addToCart={addToCart} updCart={updCart} processPayment={processPayment} setCart={setCart} isOffline={isOffline} discount={discount} setDiscount={setDiscount} />}
-          {page === "produk" && <ProdukPage filtProd={filtProd} suppliers={suppliers} searchProd={searchProd} setSearchProd={setSearchProd} filterCat={filterCat} setFilterCat={setFilterCat} kategoris={kategoris} setProdForm={setProdForm} setProdImage={setProdImage} setProdModal={setProdModal} delProd={delProd} />}
-          {page === "riwayat" && <RiwayatPage filtHist={histPaged} histSearch={histSearch} setHistSearch={setHistSearch} filterDate={filterDate} setFilterDate={setFilterDate} filterDateEnd={filterDateEnd} setFilterDateEnd={setFilterDateEnd} filterStatus={filterStatus} setFilterStatus={setFilterStatus} setHistReceipt={setHistReceipt} totalCount={filtHist.length} page={histPage} setPage={setHistPage} totalPages={histTotalPages} perPage={HIST_PER_PAGE} />}
-          {page === "stok" && <StokPage filtProd={filtProd} searchProd={searchProd} setSearchProd={setSearchProd} filterCat={filterCat} setFilterCat={setFilterCat} kategoris={kategoris} isSuperAdmin={isSuperAdmin} setRestockModal={setRestockModal} setRestockQty={setRestockQty} />}
-          {page === "laporan" && <Suspense fallback={<div className="flex justify-center py-20"><Spin /></div>}><LaporanPage rptDateStart={rptDateStart} setRptDateStart={setRptDateStart} rptDateEnd={rptDateEnd} setRptDateEnd={setRptDateEnd} rptTrx={rptTrx} rptRev={rptRev} dayData={dayData} catData={catData} topProds={topProds} kategoris={kategoris} products={products} /></Suspense>}
-          {page === "supplier" && <SupplierPage suppliers={suppliers} products={products} exportExcel={exportExcel} setSupForm={setSupForm} setSupModal={setSupModal} delSup={delSup} />}
-          {page === "excel" && <Suspense fallback={<div className="flex justify-center py-20"><Spin /></div>}><ImportExportPage products={products} transactions={transactions} suppliers={suppliers} sb={sb} showNotif={showNotif} logActivity={logActivity} rptDateStart={rptDateStart} rptDateEnd={rptDateEnd} onReload={loadAll} /></Suspense>}
-          {page === "users" && <UsersPage sb={sb} showNotif={showNotif} currentUser={currentUser} logActivity={logActivity} />}
-          {page === "masterdata" && <MasterDataPage sb={sb} showNotif={showNotif} kategoris={kategoris} satuans={satuans} onReload={loadAll} logActivity={logActivity} />}
-          {page === "restocklog" && <RestockLogPage restockLogs={restockLogs} products={products} />}
-          {page === "settings" && <SettingsPage sb={sb} showNotif={showNotif} products={products} transactions={transactions} suppliers={suppliers} kategoris={kategoris} satuans={satuans} onRestore={loadAll} />}
-          {page === "auditlog" && <AuditLogPage sb={sb} />}
+          <PageErrorBoundary pageName="Dashboard" key={`dashboard-${page}`}>
+            {page === "dashboard" && <DashboardPage transactions={transactions} products={products} activityLogs={activityLogs} todayTrx={todayTrx} todayRev={todayRev} weekTrx={weekTrx} weekRev={weekRev} outStock={outStock} lowStock={lowStock} loadingSection={loadingSection} />}
+          </PageErrorBoundary>
+          <PageErrorBoundary pageName="Kasir" key={`kasir-${page}`}>
+            {page === "kasir" && <KasirPage filtProd={filtProd} searchProd={searchProd} setSearchProd={setSearchProd} filterCat={filterCat} setFilterCat={setFilterCat} kategoris={kategoris} cart={cart} customerName={customerName} setCustomerName={setCustomerName} paymentInput={paymentInput} setPaymentInput={setPaymentInput} cartTotal={cartTotal} payNum={payNum} addToCart={addToCart} updCart={updCart} processPayment={processPayment} setCart={setCart} isOffline={isOffline} discount={discount} setDiscount={setDiscount} />}
+          </PageErrorBoundary>
+          <PageErrorBoundary pageName="Produk" key={`produk-${page}`}>
+            {page === "produk" && <ProdukPage filtProd={filtProd} suppliers={suppliers} searchProd={searchProd} setSearchProd={setSearchProd} filterCat={filterCat} setFilterCat={setFilterCat} kategoris={kategoris} setProdForm={setProdForm} setProdImage={setProdImage} setProdModal={setProdModal} delProd={delProd} />}
+          </PageErrorBoundary>
+          <PageErrorBoundary pageName="Riwayat" key={`riwayat-${page}`}>
+            {page === "riwayat" && <RiwayatPage filtHist={histPaged} histSearch={histSearch} setHistSearch={setHistSearch} filterDate={filterDate} setFilterDate={setFilterDate} filterDateEnd={filterDateEnd} setFilterDateEnd={setFilterDateEnd} filterStatus={filterStatus} setFilterStatus={setFilterStatus} setHistReceipt={setHistReceipt} totalCount={filtHist.length} page={histPage} setPage={setHistPage} totalPages={histTotalPages} perPage={HIST_PER_PAGE} />}
+          </PageErrorBoundary>
+          <PageErrorBoundary pageName="Stok" key={`stok-${page}`}>
+            {page === "stok" && <StokPage filtProd={filtProd} searchProd={searchProd} setSearchProd={setSearchProd} filterCat={filterCat} setFilterCat={setFilterCat} kategoris={kategoris} isSuperAdmin={isSuperAdmin} setRestockModal={setRestockModal} setRestockQty={setRestockQty} />}
+          </PageErrorBoundary>
+          <PageErrorBoundary pageName="Laporan" key={`laporan-${page}`}>
+            {page === "laporan" && <Suspense fallback={<div className="flex justify-center py-20"><Spin /></div>}><LaporanPage rptDateStart={rptDateStart} setRptDateStart={setRptDateStart} rptDateEnd={rptDateEnd} setRptDateEnd={setRptDateEnd} rptTrx={rptTrx} rptRev={rptRev} dayData={dayData} catData={catData} topProds={topProds} kategoris={kategoris} products={products} /></Suspense>}
+          </PageErrorBoundary>
+          <PageErrorBoundary pageName="Supplier" key={`supplier-${page}`}>
+            {page === "supplier" && <SupplierPage suppliers={suppliers} products={products} exportExcel={exportExcel} setSupForm={setSupForm} setSupModal={setSupModal} delSup={delSup} />}
+          </PageErrorBoundary>
+          <PageErrorBoundary pageName="Import/Export" key={`excel-${page}`}>
+            {page === "excel" && <Suspense fallback={<div className="flex justify-center py-20"><Spin /></div>}><ImportExportPage products={products} transactions={transactions} suppliers={suppliers} sb={sb} showNotif={showNotif} logActivity={logActivity} rptDateStart={rptDateStart} rptDateEnd={rptDateEnd} onReload={loadAll} /></Suspense>}
+          </PageErrorBoundary>
+          <PageErrorBoundary pageName="Kelola Akun" key={`users-${page}`}>
+            {page === "users" && <UsersPage sb={sb} showNotif={showNotif} currentUser={currentUser} logActivity={logActivity} />}
+          </PageErrorBoundary>
+          <PageErrorBoundary pageName="Master Data" key={`masterdata-${page}`}>
+            {page === "masterdata" && <MasterDataPage sb={sb} showNotif={showNotif} kategoris={kategoris} satuans={satuans} onReload={loadAll} logActivity={logActivity} />}
+          </PageErrorBoundary>
+          <PageErrorBoundary pageName="Riwayat Restock" key={`restocklog-${page}`}>
+            {page === "restocklog" && <RestockLogPage restockLogs={restockLogs} products={products} />}
+          </PageErrorBoundary>
+          <PageErrorBoundary pageName="Pengaturan" key={`settings-${page}`}>
+            {page === "settings" && <SettingsPage sb={sb} showNotif={showNotif} products={products} transactions={transactions} suppliers={suppliers} kategoris={kategoris} satuans={satuans} onRestore={loadAll} />}
+          </PageErrorBoundary>
+          <PageErrorBoundary pageName="Audit Login" key={`auditlog-${page}`}>
+            {page === "auditlog" && <AuditLogPage sb={sb} />}
+          </PageErrorBoundary>
         </div>
       </div>
 
