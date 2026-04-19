@@ -62,8 +62,8 @@ Implementasi fitur void transaksi di atas arsitektur yang sudah ada: migrasi dat
 - [x] 3. Checkpoint — Pastikan semua tests helper lulus
   - Pastikan semua tests lulus, tanya user jika ada pertanyaan.
 
-- [-] 4. Tambah fungsi `voidTransaction` ke `src/context/AppContext.jsx`
-  - [ ] 4.1 Implementasi fungsi `voidTransaction(trxId, alasan)`
+- [x] 4. Tambah fungsi `voidTransaction` ke `src/context/AppContext.jsx`
+  - [x] 4.1 Implementasi fungsi `voidTransaction(trxId, alasan)`
     - Import `canVoid` dan `validateVoidReason` dari `constants.js`
     - Validasi role dengan `canVoid`; throw error jika tidak diizinkan
     - Validasi alasan dengan `validateVoidReason`; throw error jika kosong

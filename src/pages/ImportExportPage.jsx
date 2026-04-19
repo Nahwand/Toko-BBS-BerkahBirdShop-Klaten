@@ -1,9 +1,9 @@
 import { useRef, useState } from 'react';
 import styles from '../styles/App.module.css';
 import Spin from '../components/Spin';
-import { MONTHS, TODAY } from '../utils/constants';
+import { TODAY } from '../utils/constants';
 
-export default function ImportExportPage({ products, transactions, suppliers, kategoris, satuans, sb, showNotif, logActivity, rptMonth, rptYear, onReload }) {
+export default function ImportExportPage({ products, transactions, suppliers, kategoris, satuans, sb, showNotif, logActivity, rptDateStart, rptDateEnd, onReload }) {
   const fileRef = useRef();
   const [exportingTitle, setExportingTitle] = useState(null);
   const [importingState, setImportingState] = useState(null);
@@ -47,10 +47,13 @@ export default function ImportExportPage({ products, transactions, suppliers, ka
 
       if (type === "laporan") {
         const rptTrx = transactions.filter((t) => {
-          const [y, m] = t.date.split("-").map(Number);
-          return y === rptYear && m === rptMonth + 1;
+          if (t.status === 'void') return false;
+          if (rptDateStart && t.date < rptDateStart) return false;
+          if (rptDateEnd && t.date > rptDateEnd) return false;
+          return true;
         });
         const rptRev = rptTrx.reduce((s, t) => s + t.total, 0);
+        const fileLabel = rptDateStart && rptDateEnd ? `${rptDateStart}_sd_${rptDateEnd}` : 'custom';
         XL.utils.book_append_sheet(wb, XL.utils.json_to_sheet(
           rptTrx.map((t) => ({ ID: t.trx_code, Tanggal: t.date, Pelanggan: t.customer, Total: t.total }))
         ), "Transaksi");
@@ -59,6 +62,12 @@ export default function ImportExportPage({ products, transactions, suppliers, ka
           { Keterangan: "Jumlah Transaksi", Nilai: rptTrx.length },
           { Keterangan: "Rata-rata", Nilai: rptTrx.length ? Math.round(rptRev / rptTrx.length) : 0 },
         ]), "Ringkasan");
+        XL.writeFile(wb, `BBS_Laporan_${fileLabel}.xlsx`);
+        const labelMap2 = { all: "Semua Data", laporan: "Laporan", transaksi: "Transaksi", produk: "Produk", stok: "Stok", supplier: "Supplier", template: "Template Import" };
+        await logActivity("Export Excel", "Import/Export", `${labelMap2[type] || type} → BBS_Laporan_${fileLabel}.xlsx`);
+        showNotif("Export berhasil: BBS_Laporan_" + fileLabel + ".xlsx");
+        setExportingTitle(null);
+        return;
       }
 
       if (type === "template") {
@@ -134,7 +143,7 @@ export default function ImportExportPage({ products, transactions, suppliers, ka
 
   const exportItems = [
     { label: "📦 Semua Data", sub: "4 sheet sekaligus", type: "all", cls: "bg-bbs-green text-white" },
-    { label: "📈 Laporan Bulanan", sub: `${MONTHS[rptMonth]} ${rptYear}`, type: "laporan", cls: "bg-[#1565c0] text-white" },
+    { label: "📈 Laporan Periode Aktif", sub: `${rptDateStart || '...'} s/d ${rptDateEnd || '...'}`, type: "laporan", cls: "bg-[#1565c0] text-white" },
     { label: "📋 Transaksi", sub: "Riwayat transaksi", type: "transaksi", cls: "border border-bbs-green text-bbs-green bg-transparent" },
     { label: "📦 Produk", sub: "Daftar produk", type: "produk", cls: "border border-bbs-green text-bbs-green bg-transparent" },
     { label: "📊 Stok", sub: "Status stok", type: "stok", cls: "border border-bbs-green text-bbs-green bg-transparent" },

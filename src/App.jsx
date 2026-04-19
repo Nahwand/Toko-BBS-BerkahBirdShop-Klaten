@@ -3,6 +3,7 @@ import { sb } from './config/supabase';
 import styles from './styles/App.module.css';
 import { ACCESS, fmt } from './utils/constants';
 import { AppProvider, useApp } from './context/AppContext';
+import { filterByDateRange, buildDayData } from './utils/reportUtils';
 
 import Spin from './components/Spin';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -204,8 +205,11 @@ function Main({ currentUser, onLogout, isOffline }) {
   const [supForm, setSupForm] = useState({
     name: "", contact: "", phone: "", email: "", address: "", category: "", status: "Aktif", notes: "",
   });
-  const [rptMonth, setRptMonth] = useState(new Date().getMonth());
-  const [rptYear, setRptYear] = useState(new Date().getFullYear());
+  const [rptDateStart, setRptDateStart] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+  });
+  const [rptDateEnd, setRptDateEnd] = useState(() => new Date().toISOString().slice(0, 10));
   const [showLogout, setShowLogout] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -591,17 +595,9 @@ function Main({ currentUser, onLogout, isOffline }) {
     }
   };
 
-  const rptTrx = transactions.filter((t) => {
-    const [y, m] = t.date.split("-").map(Number);
-    return y === rptYear && m === rptMonth + 1;
-  });
+  const rptTrx = filterByDateRange(transactions, rptDateStart, rptDateEnd);
   const rptRev = rptTrx.reduce((s, t) => s + t.total, 0);
-  const daysInMonth = new Date(rptYear, rptMonth + 1, 0).getDate();
-  const dayData = Array.from({ length: daysInMonth }, (_, i) => {
-    const ds = `${rptYear}-${String(rptMonth + 1).padStart(2, "0")}-${String(i + 1).padStart(2, "0")}`;
-    const tt = rptTrx.filter((t) => t.date === ds);
-    return { day: i + 1, rev: tt.reduce((s, t) => s + t.total, 0) };
-  });
+  const dayData = buildDayData(rptTrx, rptDateStart, rptDateEnd);
   const catData = kategoris
     .map((kat) => {
       let rev = 0;
@@ -795,9 +791,9 @@ function Main({ currentUser, onLogout, isOffline }) {
           {page === "produk" && <ProdukPage filtProd={filtProd} suppliers={suppliers} searchProd={searchProd} setSearchProd={setSearchProd} filterCat={filterCat} setFilterCat={setFilterCat} kategoris={kategoris} setProdForm={setProdForm} setProdImage={setProdImage} setProdModal={setProdModal} delProd={delProd} />}
           {page === "riwayat" && <RiwayatPage filtHist={histPaged} histSearch={histSearch} setHistSearch={setHistSearch} filterDate={filterDate} setFilterDate={setFilterDate} filterDateEnd={filterDateEnd} setFilterDateEnd={setFilterDateEnd} filterStatus={filterStatus} setFilterStatus={setFilterStatus} setHistReceipt={setHistReceipt} totalCount={filtHist.length} page={histPage} setPage={setHistPage} totalPages={histTotalPages} perPage={HIST_PER_PAGE} />}
           {page === "stok" && <StokPage filtProd={filtProd} searchProd={searchProd} setSearchProd={setSearchProd} filterCat={filterCat} setFilterCat={setFilterCat} kategoris={kategoris} isSuperAdmin={isSuperAdmin} setRestockModal={setRestockModal} setRestockQty={setRestockQty} />}
-          {page === "laporan" && <Suspense fallback={<div className="flex justify-center py-20"><Spin /></div>}><LaporanPage rptMonth={rptMonth} setRptMonth={setRptMonth} rptYear={rptYear} setRptYear={setRptYear} rptTrx={rptTrx} rptRev={rptRev} dayData={dayData} catData={catData} topProds={topProds} kategoris={kategoris} products={products} /></Suspense>}
+          {page === "laporan" && <Suspense fallback={<div className="flex justify-center py-20"><Spin /></div>}><LaporanPage rptDateStart={rptDateStart} setRptDateStart={setRptDateStart} rptDateEnd={rptDateEnd} setRptDateEnd={setRptDateEnd} rptTrx={rptTrx} rptRev={rptRev} dayData={dayData} catData={catData} topProds={topProds} kategoris={kategoris} products={products} /></Suspense>}
           {page === "supplier" && <SupplierPage suppliers={suppliers} products={products} exportExcel={exportExcel} setSupForm={setSupForm} setSupModal={setSupModal} delSup={delSup} />}
-          {page === "excel" && <Suspense fallback={<div className="flex justify-center py-20"><Spin /></div>}><ImportExportPage products={products} transactions={transactions} suppliers={suppliers} sb={sb} showNotif={showNotif} logActivity={logActivity} rptMonth={rptMonth} rptYear={rptYear} onReload={loadAll} /></Suspense>}
+          {page === "excel" && <Suspense fallback={<div className="flex justify-center py-20"><Spin /></div>}><ImportExportPage products={products} transactions={transactions} suppliers={suppliers} sb={sb} showNotif={showNotif} logActivity={logActivity} rptDateStart={rptDateStart} rptDateEnd={rptDateEnd} onReload={loadAll} /></Suspense>}
           {page === "users" && <UsersPage sb={sb} showNotif={showNotif} currentUser={currentUser} logActivity={logActivity} />}
           {page === "masterdata" && <MasterDataPage sb={sb} showNotif={showNotif} kategoris={kategoris} satuans={satuans} onReload={loadAll} logActivity={logActivity} />}
           {page === "restocklog" && <RestockLogPage restockLogs={restockLogs} products={products} />}

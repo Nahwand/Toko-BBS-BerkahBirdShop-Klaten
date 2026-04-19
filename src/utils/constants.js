@@ -68,3 +68,26 @@ export function validateVoidReason(input) {
   if (!input) return false;
   return input.trim() !== '';
 }
+
+/**
+ * Hasilkan CSS @media print untuk printer thermal.
+ * @param {'58'|'80'} printSize
+ * @returns {string}
+ */
+export function buildPrintStyle(printSize) {
+  const size = printSize === '58' ? '58' : '80';
+  const contentWidth = parseInt(size) - 4;
+  return `
+@media print {
+  @page { size: ${size}mm auto; margin: 2mm; }
+  body > *:not(#struk-print-wrapper) { display: none !important; }
+  #struk-print-wrapper { display: block !important; }
+  #struk-print {
+    display: block !important;
+    width: ${contentWidth}mm !important;
+    font-family: monospace, sans-serif;
+    font-size: 10pt;
+    line-height: 1.3;
+  }
+}`.trim();
+}

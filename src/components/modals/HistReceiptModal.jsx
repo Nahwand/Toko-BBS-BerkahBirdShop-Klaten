@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { fmt, canVoid } from '../../utils/constants';
+import { fmt, canVoid, buildPrintStyle } from '../../utils/constants';
+import { usePrintSize } from '../../hooks/usePrintSize';
 
 const StrukContent = ({ data }) => {
   const subtotal = (data.items || []).reduce((s, i) => s + i.price * i.qty, 0);
@@ -45,7 +46,9 @@ const StrukContent = ({ data }) => {
 };
 
 export default function HistReceiptModal({ histReceipt, onClose, currentUser, onVoid }) {
-  const [printSize, setPrintSize] = useState('80');
+  const [printSize, setPrintSize] = usePrintSize();
+  const canPrint = typeof window !== 'undefined' && typeof window.print === 'function';
+
   if (!histReceipt) return null;
 
   const isVoid = histReceipt.status === 'void';
@@ -54,10 +57,21 @@ export default function HistReceiptModal({ histReceipt, onClose, currentUser, on
   const handlePrint = () => {
     const s = document.createElement('style');
     s.id = 'print-size-override';
-    s.innerHTML = `@media print { @page { size: ${printSize}mm auto; margin: 2mm; } #struk-print { width: ${parseInt(printSize) - 4}mm !important; } }`;
+    s.innerHTML = buildPrintStyle(printSize);
     document.head.appendChild(s);
     window.print();
-    setTimeout(() => document.getElementById('print-size-override')?.remove(), 1000);
+    setTimeout(() => document.getElementById('print-size-override')?.remove(), 1500);
+  };
+
+  const handleDirectPrint = () => {
+    if (!canPrint) return;
+    const s = document.createElement('style');
+    s.id = 'print-size-override';
+    s.innerHTML = buildPrintStyle(printSize);
+    document.head.appendChild(s);
+    window.print();
+    setTimeout(() => document.getElementById('print-size-override')?.remove(), 1500);
+    // HistReceiptModal tidak auto-close
   };
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-999" onClick={onClose}>
@@ -85,10 +99,17 @@ export default function HistReceiptModal({ histReceipt, onClose, currentUser, on
             </button>
           ))}
         </div>
+        {!canPrint && (
+          <div className="text-[11px] text-red-500 mb-2">Fitur cetak tidak didukung oleh browser ini.</div>
+        )}
         <div className="flex gap-2 mb-2">
-          <button className="flex-1 py-2.5 text-sm font-bold bg-[#f0f5f0]  text-bbs-green  rounded-xl border-none cursor-pointer" onClick={handlePrint}>🖨️ Cetak</button>
+          <button className="flex-1 py-2.5 text-sm font-bold bg-[#f0f5f0]  text-bbs-green  rounded-xl border-none cursor-pointer" onClick={handlePrint} disabled={!canPrint}>🖨️ Cetak</button>
           <button className="flex-1 py-2.5 text-sm font-bold bg-bbs-green text-white rounded-xl border-none cursor-pointer" onClick={onClose}>✅ Tutup</button>
         </div>
+        <button className="w-full py-2.5 text-sm font-bold bg-amber-500 text-white rounded-xl border-none cursor-pointer disabled:opacity-50 mb-2"
+          onClick={handleDirectPrint} disabled={!canPrint}>
+          ⚡ Cetak Langsung
+        </button>
         {showVoidBtn && (
           <button
             className="w-full py-2.5 text-sm font-bold bg-red-50 text-red-600 border border-red-200 rounded-xl cursor-pointer hover:bg-red-100 transition-colors"

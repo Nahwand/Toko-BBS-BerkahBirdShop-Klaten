@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { fmt, TODAY } from '../../utils/constants';
+import { fmt, TODAY, buildPrintStyle } from '../../utils/constants';
+import { usePrintSize } from '../../hooks/usePrintSize';
 
 const StrukContent = ({ data, customerName }) => (
   <div id="struk-print">
@@ -64,21 +65,59 @@ const PrintButtons = ({ printSize, setPrintSize, handlePrint, onClose, closeLabe
 );
 
 export default function ReceiptModal({ receipt, customerName, onClose }) {
-  const [printSize, setPrintSize] = useState('80');
+  const [printSize, setPrintSize] = usePrintSize();
+  const [autoCloseMsg, setAutoCloseMsg] = useState(false);
+  const canPrint = typeof window !== 'undefined' && typeof window.print === 'function';
+
   if (!receipt) return null;
+
   const handlePrint = () => {
     const s = document.createElement('style');
     s.id = 'print-size-override';
-    s.innerHTML = `@media print { @page { size: ${printSize}mm auto; margin: 2mm; } #struk-print { width: ${parseInt(printSize) - 4}mm !important; } }`;
+    s.innerHTML = buildPrintStyle(printSize);
     document.head.appendChild(s);
     window.print();
-    setTimeout(() => document.getElementById('print-size-override')?.remove(), 1000);
+    setTimeout(() => document.getElementById('print-size-override')?.remove(), 1500);
+  };
+
+  const handleDirectPrint = () => {
+    if (!canPrint) return;
+    const s = document.createElement('style');
+    s.id = 'print-size-override';
+    s.innerHTML = buildPrintStyle(printSize);
+    document.head.appendChild(s);
+    window.print();
+    setTimeout(() => document.getElementById('print-size-override')?.remove(), 1500);
+    setAutoCloseMsg(true);
+    setTimeout(() => { setAutoCloseMsg(false); onClose(); }, 2000);
   };
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-999" onClick={onClose}>
-      <div className="bg-white  rounded-2xl p-6 w-[320px] max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white rounded-2xl p-6 w-[320px] max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <StrukContent data={receipt} customerName={customerName} />
-        <PrintButtons printSize={printSize} setPrintSize={setPrintSize} handlePrint={handlePrint} onClose={onClose} />
+        <div className="flex items-center gap-2 my-3">
+          <span className="text-[11px] font-bold text-gray-500">Ukuran kertas:</span>
+          {['58', '80'].map(size => (
+            <button key={size} onClick={() => setPrintSize(size)}
+              className={`px-3.5 py-1 rounded-lg text-xs font-bold cursor-pointer transition-all border-2 ${printSize === size ? 'border-bbs-green bg-green-50 text-bbs-green-dark font-extrabold' : 'border-gray-200 bg-white text-gray-500'}`}>
+              {size}mm
+            </button>
+          ))}
+        </div>
+        {!canPrint && (
+          <div className="text-[11px] text-red-500 mb-2">Fitur cetak tidak didukung oleh browser ini.</div>
+        )}
+        {autoCloseMsg && (
+          <div className="text-[11px] text-bbs-green text-center mb-2 font-semibold">✅ Mencetak... modal akan tertutup otomatis.</div>
+        )}
+        <div className="flex gap-2 mb-2">
+          <button className="flex-1 py-2.5 text-sm font-bold bg-[#f0f5f0] text-bbs-green rounded-xl border-none cursor-pointer" onClick={handlePrint} disabled={!canPrint}>🖨️ Cetak</button>
+          <button className="flex-1 py-2.5 text-sm font-bold bg-bbs-green text-white rounded-xl border-none cursor-pointer" onClick={onClose}>✅ Tutup</button>
+        </div>
+        <button className="w-full py-2.5 text-sm font-bold bg-amber-500 text-white rounded-xl border-none cursor-pointer disabled:opacity-50"
+          onClick={handleDirectPrint} disabled={!canPrint}>
+          ⚡ Cetak Langsung
+        </button>
       </div>
     </div>
   );

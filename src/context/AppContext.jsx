@@ -196,6 +196,7 @@ export function AppProvider({ currentUser, isOffline, children }) {
     const trx = transactions.find(t => t.id === trxId);
     if (!trx) throw new Error('Transaksi tidak ditemukan.');
     if (!canVoid(currentUser, trx)) {
+      if (trx.status === 'void') throw new Error('Transaksi ini sudah dibatalkan.');
       if (currentUser.role === 'pegawai') throw new Error('Anda tidak memiliki izin untuk membatalkan transaksi.');
       throw new Error('Hanya transaksi hari ini yang dapat dibatalkan oleh Admin.');
     }
