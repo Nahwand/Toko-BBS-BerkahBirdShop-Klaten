@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styles from '../styles/App.module.css';
 import Badge from '../components/Badge';
 import { fmt } from '../utils/constants';
@@ -9,7 +9,9 @@ export default function KasirPage({
   cartTotal, payNum, addToCart, updCart, processPayment, setCart, isOffline,
   discount, setDiscount,
 }) {
-  const [discountType, setDiscountType] = useState('persen'); // 'persen' | 'nominal'
+  const [discountType, setDiscountType] = useState('persen');
+  const searchRef = useRef(null);
+  const paymentRef = useRef(null);
   const catList = ["Semua", ...(kategoris || []).map(k => k.nama)];
 
   const discountAmount = discountType === 'persen'
@@ -18,13 +20,44 @@ export default function KasirPage({
 
   const totalAfterDiscount = cartTotal - discountAmount;
 
+  // Shortcut keyboard
+  useEffect(() => {
+    const handleKey = (e) => {
+      // F2 → fokus ke search produk
+      if (e.key === 'F2') {
+        e.preventDefault();
+        searchRef.current?.focus();
+        searchRef.current?.select();
+      }
+      // F3 → fokus ke input pembayaran
+      if (e.key === 'F3') {
+        e.preventDefault();
+        paymentRef.current?.focus();
+        paymentRef.current?.select();
+      }
+      // Enter di input pembayaran → proses bayar
+      if (e.key === 'Enter' && document.activeElement === paymentRef.current) {
+        e.preventDefault();
+        if (cart.length > 0 && payNum >= totalAfterDiscount) {
+          processPayment(discountAmount, totalAfterDiscount);
+        }
+      }
+      // Escape → kosongkan search
+      if (e.key === 'Escape' && document.activeElement === searchRef.current) {
+        setSearchProd('');
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [cart, payNum, totalAfterDiscount, discountAmount, processPayment]);
+
   return (
     <div className="kasir-grid">
       {/* Produk grid */}
       <div>
         <div className="flex gap-2 mb-3.5 items-center">
-          <input id="kasir-search" name="kasir-search" className={`${styles.inp} w-[200px]`}
-            placeholder="🔍 Cari produk..." value={searchProd} onChange={(e) => setSearchProd(e.target.value)} />
+          <input id="kasir-search" name="kasir-search" ref={searchRef} className={`${styles.inp} w-[200px]`}
+            placeholder="🔍 Cari produk... (F2)" value={searchProd} onChange={(e) => setSearchProd(e.target.value)} />
           <select id="kasir-cat" name="kasir-cat" className={`${styles.inp} w-[150px]`} value={filterCat} onChange={(e) => setFilterCat(e.target.value)}>
             {catList.map((c) => <option key={c}>{c}</option>)}
           </select>
@@ -131,8 +164,8 @@ export default function KasirPage({
                 </div>
               </div>
 
-              <input id="kasir-payment" name="kasir-payment" className={`${styles.inp} mb-2 text-[15px] font-bold`}
-                type="number" placeholder="Nominal pembayaran..." value={paymentInput} onChange={(e) => setPaymentInput(e.target.value)} />
+              <input id="kasir-payment" name="kasir-payment" ref={paymentRef} className={`${styles.inp} mb-2 text-[15px] font-bold`}
+                type="number" placeholder="Nominal pembayaran... (F3)" value={paymentInput} onChange={(e) => setPaymentInput(e.target.value)} />
               {payNum > 0 && (
                 <div className={`flex justify-between text-[13px] mb-2.5 font-extrabold ${payNum >= totalAfterDiscount ? "text-bbs-green" : "text-red-500"}`}>
                   <span>Kembalian</span>
@@ -147,6 +180,9 @@ export default function KasirPage({
                 onClick={() => { setCart([]); setDiscount(''); }}>
                 🗑 Kosongkan
               </button>
+              <div className="mt-2 text-[10px] text-gray-300 text-center">
+                F2 = Cari Produk · F3 = Input Bayar · Enter = Proses
+              </div>
             </div>
           </>
         )}

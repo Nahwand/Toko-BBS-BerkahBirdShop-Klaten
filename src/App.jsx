@@ -159,7 +159,7 @@ function Main({ currentUser, onLogout, isOffline }) {
     activityLogs, restockLogs, loading, setLoading,
     notif, showNotif, logActivity, sendStockNotif, loadAll,
     todayTrx, todayRev, weekTrx, weekRev, outStock, lowStock,
-    realtimeUsers, voidTransaction,
+    realtimeUsers, voidTransaction, loadingSection,
   } = useApp();
 
   const [page, setPage] = useState(allowedPages[0]);
@@ -780,7 +780,10 @@ function Main({ currentUser, onLogout, isOffline }) {
                 </div>
               )}
             </div>
-            <button className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-[#e8f0e8] text-bbs-green border-none cursor-pointer" onClick={loadAll}>🔄 Refresh</button>
+            <button className={`px-2.5 py-1 text-[11px] font-bold rounded-lg bg-[#e8f0e8] text-bbs-green border-none cursor-pointer ${loading ? 'opacity-60' : ''}`}
+              onClick={loadAll} disabled={loading}>
+              {loading ? '⏳' : '🔄'} Refresh
+            </button>
             <div className="hide-mobile text-[11px] text-gray-400">
               {new Date().toLocaleDateString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
             </div>
@@ -788,7 +791,7 @@ function Main({ currentUser, onLogout, isOffline }) {
         </header>
 
         <div className="bbs-content">
-          {page === "dashboard" && <DashboardPage transactions={transactions} products={products} activityLogs={activityLogs} todayTrx={todayTrx} todayRev={todayRev} weekTrx={weekTrx} weekRev={weekRev} outStock={outStock} lowStock={lowStock} />}
+          {page === "dashboard" && <DashboardPage transactions={transactions} products={products} activityLogs={activityLogs} todayTrx={todayTrx} todayRev={todayRev} weekTrx={weekTrx} weekRev={weekRev} outStock={outStock} lowStock={lowStock} loadingSection={loadingSection} />}
           {page === "kasir" && <KasirPage filtProd={filtProd} searchProd={searchProd} setSearchProd={setSearchProd} filterCat={filterCat} setFilterCat={setFilterCat} kategoris={kategoris} cart={cart} customerName={customerName} setCustomerName={setCustomerName} paymentInput={paymentInput} setPaymentInput={setPaymentInput} cartTotal={cartTotal} payNum={payNum} addToCart={addToCart} updCart={updCart} processPayment={processPayment} setCart={setCart} isOffline={isOffline} discount={discount} setDiscount={setDiscount} />}
           {page === "produk" && <ProdukPage filtProd={filtProd} suppliers={suppliers} searchProd={searchProd} setSearchProd={setSearchProd} filterCat={filterCat} setFilterCat={setFilterCat} kategoris={kategoris} setProdForm={setProdForm} setProdImage={setProdImage} setProdModal={setProdModal} delProd={delProd} />}
           {page === "riwayat" && <RiwayatPage filtHist={histPaged} histSearch={histSearch} setHistSearch={setHistSearch} filterDate={filterDate} setFilterDate={setFilterDate} filterDateEnd={filterDateEnd} setFilterDateEnd={setFilterDateEnd} filterStatus={filterStatus} setFilterStatus={setFilterStatus} setHistReceipt={setHistReceipt} totalCount={filtHist.length} page={histPage} setPage={setHistPage} totalPages={histTotalPages} perPage={HIST_PER_PAGE} />}

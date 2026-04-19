@@ -16,6 +16,8 @@ export function AppProvider({ currentUser, isOffline, children }) {
   const [loading, setLoading] = useState(true);
   const [notif, setNotif] = useState(null);
   const [realtimeUsers, setRealtimeUsers] = useState([]);
+  // Loading per-section
+  const [loadingSection, setLoadingSection] = useState({});
 
   const showNotif = useCallback((msg, type = 'success') => {
     setNotif({ msg, type });
@@ -169,6 +171,7 @@ export function AppProvider({ currentUser, isOffline, children }) {
       if (trxs) {
         setTransactions(trxs.map(t => ({ ...t, items: t.transaction_items || [] })));
       }
+      setLoadingSection({});
     } catch (e) {
       console.error('LoadAll Error:', e);
       try {
@@ -273,6 +276,7 @@ export function AppProvider({ currentUser, isOffline, children }) {
       notif, showNotif, logActivity, sendStockNotif, loadAll,
       todayTrx, todayRev, weekTrx, weekRev, outStock, lowStock,
       realtimeUsers, voidTransaction,
+      loadingSection, setLoadingSection,
     }}>
       {children}
     </AppContext.Provider>

@@ -1,5 +1,6 @@
 import styles from '../styles/App.module.css';
 import { fmt, fmtN } from '../utils/constants';
+import SectionSpin from '../components/SectionSpin';
 
 const ACTIVITY_COLORS = {
   "Transaksi Baru": { bg: "#e8f5e9", c: "#2e7d32" }, "Tambah Produk": { bg: "#e3f2fd", c: "#1565c0" },
@@ -12,7 +13,7 @@ const ACTIVITY_COLORS = {
 };
 const ACTIVITY_ICONS = { Kasir: "🤝", Produk: "📦", Stok: "📊", Supplier: "🤝", Akun: "👥", "Master Data": "🗂️", "Import/Export": "📗" };
 
-export default function DashboardPage({ transactions, products, activityLogs, todayTrx, todayRev, weekTrx, weekRev, outStock, lowStock }) {
+export default function DashboardPage({ transactions, products, activityLogs, todayTrx, todayRev, weekTrx, weekRev, outStock, lowStock, loadingSection }) {
   const stats = [
     { label: "Pendapatan Hari Ini", value: fmt(todayRev), sub: `${todayTrx.length} transaksi`, bg: "bg-green-100 ", color: "text-green-800 " },
     { label: "Pendapatan Minggu Ini", value: fmt(weekRev), sub: `${weekTrx.length} transaksi`, bg: "bg-amber-100 ", color: "text-amber-700 " },
@@ -97,6 +98,8 @@ export default function DashboardPage({ transactions, products, activityLogs, to
         </div>
         {activityLogs.length === 0 ? (
           <div className="p-6 text-center text-gray-300 text-[13px]">Belum ada aktivitas tercatat</div>
+        ) : loadingSection?.activityLogs ? (
+          <SectionSpin />
         ) : (
           <div className="max-h-[320px] overflow-y-auto">
             {activityLogs.map((log) => {
