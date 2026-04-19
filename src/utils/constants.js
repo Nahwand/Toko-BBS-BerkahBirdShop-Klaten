@@ -80,10 +80,12 @@ export function buildPrintStyle(printSize) {
   return `
 @media print {
   @page { size: ${size}mm auto; margin: 2mm; }
-  body > *:not(#struk-print-wrapper) { display: none !important; }
-  #struk-print-wrapper { display: block !important; }
+  body * { visibility: hidden !important; }
+  #struk-print, #struk-print * { visibility: visible !important; }
   #struk-print {
-    display: block !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
     width: ${contentWidth}mm !important;
     font-family: monospace, sans-serif;
     font-size: 10pt;

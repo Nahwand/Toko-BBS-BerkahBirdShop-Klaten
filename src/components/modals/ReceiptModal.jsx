@@ -111,7 +111,6 @@ export default function ReceiptModal({ receipt, customerName, onClose }) {
           <div className="text-[11px] text-bbs-green text-center mb-2 font-semibold">✅ Mencetak... modal akan tertutup otomatis.</div>
         )}
         <div className="flex gap-2 mb-2">
-          <button className="flex-1 py-2.5 text-sm font-bold bg-[#f0f5f0] text-bbs-green rounded-xl border-none cursor-pointer" onClick={handlePrint} disabled={!canPrint}>🖨️ Cetak</button>
           <button className="flex-1 py-2.5 text-sm font-bold bg-bbs-green text-white rounded-xl border-none cursor-pointer" onClick={onClose}>✅ Tutup</button>
         </div>
         <button className="w-full py-2.5 text-sm font-bold bg-amber-500 text-white rounded-xl border-none cursor-pointer disabled:opacity-50"
