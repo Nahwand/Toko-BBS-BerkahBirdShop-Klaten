@@ -35,11 +35,11 @@ export const BADGE = {
 export const ACCESS = {
   superadmin: [
     "dashboard", "kasir", "produk", "riwayat", "stok", "restocklog",
-    "laporan", "supplier", "excel", "users", "masterdata", "settings",
+    "laporan", "supplier", "excel", "users", "masterdata", "settings", "auditlog",
   ],
   admin: [
     "dashboard", "kasir", "produk", "riwayat", "stok", "restocklog",
-    "laporan", "excel", "masterdata",
+    "laporan", "excel", "masterdata", "auditlog",
   ],
   pegawai: ["dashboard", "kasir", "produk", "stok"],
 };

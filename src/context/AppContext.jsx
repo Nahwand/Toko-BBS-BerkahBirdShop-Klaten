@@ -41,17 +41,38 @@ export function AppProvider({ currentUser, isOffline, children }) {
       const cfg = {};
       settingsData.forEach(s => { cfg[s.key] = s.value; });
       if (cfg.notif_tg_enabled !== 'true') return;
-      const habis = prods.filter(p => Number(p.stock) === 0);
-      if (!habis.length) return;
+      if (!cfg.notif_tg_bot_token || !cfg.notif_tg_chat_id) return;
+
       const today = new Date().toISOString().slice(0, 10);
       const cacheKey = `bbs_notif_sent_${today}`;
       const alreadySent = JSON.parse(localStorage.getItem(cacheKey) || '[]').map(String);
-      const belumDinotif = habis.filter(p => !alreadySent.includes(String(p.id)));
-      if (!belumDinotif.length) return;
-      localStorage.setItem(cacheKey, JSON.stringify([...alreadySent, ...belumDinotif.map(p => String(p.id))]));
-      if (!cfg.notif_tg_bot_token || !cfg.notif_tg_chat_id) return;
+
+      // Stok habis (stock === 0)
+      const habis = prods.filter(p => Number(p.stock) === 0 && !alreadySent.includes(`habis_${p.id}`));
+      // Stok menipis (0 < stock <= min_stock)
+      const menipis = prods.filter(p => Number(p.stock) > 0 && Number(p.stock) <= Number(p.min_stock) && !alreadySent.includes(`menipis_${p.id}`));
+
+      if (!habis.length && !menipis.length) return;
+
+      // Update cache
+      const newSent = [
+        ...alreadySent,
+        ...habis.map(p => `habis_${p.id}`),
+        ...menipis.map(p => `menipis_${p.id}`),
+      ];
+      localStorage.setItem(cacheKey, JSON.stringify(newSent));
+
       const now = new Date().toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' });
-      const tgMsg = `🌿 <b>BerkahBirdShop - Peringatan Stok!</b>\n━━━━━━━━━━━━━━━━\n🚨 <b>${belumDinotif.length} Produk Stok HABIS</b>\n\n${belumDinotif.map((p, i) => `${i + 1}. ❌ ${p.name}`).join('\n')}\n\n━━━━━━━━━━━━━━━━\n📅 ${now}\n\n⚡ Segera lakukan restock!\n\n<i>Notifikasi otomatis dari sistem Toko BBS</i>`;
+      let tgMsg = `🌿 <b>BerkahBirdShop - Peringatan Stok!</b>\n━━━━━━━━━━━━━━━━\n`;
+
+      if (habis.length) {
+        tgMsg += `🚨 <b>${habis.length} Produk Stok HABIS</b>\n${habis.map((p, i) => `${i + 1}. ❌ ${p.name}`).join('\n')}\n\n`;
+      }
+      if (menipis.length) {
+        tgMsg += `⚠️ <b>${menipis.length} Produk Stok MENIPIS</b>\n${menipis.map((p, i) => `${i + 1}. 🟡 ${p.name} (sisa: ${p.stock} ${p.unit || ''}, min: ${p.min_stock})`).join('\n')}\n\n`;
+      }
+      tgMsg += `━━━━━━━━━━━━━━━━\n📅 ${now}\n\n⚡ Segera lakukan restock!\n\n<i>Notifikasi otomatis dari sistem Toko BBS</i>`;
+
       await fetch(`https://api.telegram.org/bot${cfg.notif_tg_bot_token}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

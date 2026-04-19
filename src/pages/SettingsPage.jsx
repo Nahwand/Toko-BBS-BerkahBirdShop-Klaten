@@ -116,7 +116,7 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
       {/* NOTIFIKASI TELEGRAM */}
       <div className={styles.card}>
         <div style={{ fontWeight: 800, fontSize: 15, color: "#1a4a1a", marginBottom: 4 }}>✈️ Notifikasi Telegram</div>
-        <div style={{ fontSize: 12, color: "#888", marginBottom: 16 }}>Kirim peringatan stok habis via Telegram Bot secara instan</div>
+        <div style={{ fontSize: 12, color: "#888", marginBottom: 16 }}>Kirim peringatan stok habis & menipis via Telegram Bot secara instan</div>
 
         <div style={{ marginBottom: 12 }}>
           <div style={{ fontSize: 11, fontWeight: 800, color: "#555", marginBottom: 4 }}>Status Notifikasi</div>

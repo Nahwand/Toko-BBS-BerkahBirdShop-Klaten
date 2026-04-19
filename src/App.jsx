@@ -18,6 +18,7 @@ import StokPage from './pages/StokPage';
 import SupplierPage from './pages/SupplierPage';
 import RestockLogPage from './pages/RestockLogPage';
 import SettingsPage from './pages/SettingsPage';
+import AuditLogPage from './pages/AuditLogPage';
 
 const LaporanPage = lazy(() => import('./pages/LaporanPage'));
 const ImportExportPage = lazy(() => import('./pages/ImportExportPage'));
@@ -669,6 +670,7 @@ function Main({ currentUser, onLogout, isOffline }) {
     { id: "users", icon: "👥", label: "Kelola Akun" },
     { id: "masterdata", icon: "🗂️", label: "Master Data" },
     { id: "settings", icon: "⚙️", label: "Pengaturan" },
+    { id: "auditlog", icon: "🔐", label: "Audit Login" },
   ];
   const navs = allNavs.filter((n) => allowedPages.includes(n.id));
 
@@ -798,6 +800,7 @@ function Main({ currentUser, onLogout, isOffline }) {
           {page === "masterdata" && <MasterDataPage sb={sb} showNotif={showNotif} kategoris={kategoris} satuans={satuans} onReload={loadAll} logActivity={logActivity} />}
           {page === "restocklog" && <RestockLogPage restockLogs={restockLogs} products={products} />}
           {page === "settings" && <SettingsPage sb={sb} showNotif={showNotif} products={products} transactions={transactions} suppliers={suppliers} kategoris={kategoris} satuans={satuans} onRestore={loadAll} />}
+          {page === "auditlog" && <AuditLogPage sb={sb} />}
         </div>
       </div>
 
