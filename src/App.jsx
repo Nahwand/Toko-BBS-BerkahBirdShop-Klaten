@@ -20,7 +20,6 @@ import RestockLogPage from './pages/RestockLogPage';
 import SettingsPage from './pages/SettingsPage';
 import AuditLogPage from './pages/AuditLogPage';
 import PageErrorBoundary from './components/PageErrorBoundary';
-import PageErrorBoundary from './components/PageErrorBoundary';
 
 const LaporanPage = lazy(() => import('./pages/LaporanPage'));
 const ImportExportPage = lazy(() => import('./pages/ImportExportPage'));
