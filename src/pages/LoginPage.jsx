@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import bcrypt from "bcryptjs";
 import { sb } from "../config/supabase";
 import Spin from "../components/Spin";

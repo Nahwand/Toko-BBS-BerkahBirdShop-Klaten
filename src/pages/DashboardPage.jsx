@@ -14,11 +14,11 @@ const ACTIVITY_ICONS = { Kasir: "🤝", Produk: "📦", Stok: "📊", Supplier: 
 
 export default function DashboardPage({ transactions, products, activityLogs, todayTrx, todayRev, weekTrx, weekRev, outStock, lowStock }) {
   const stats = [
-    { label: "Pendapatan Hari Ini", value: fmt(todayRev), sub: `${todayTrx.length} transaksi`, bg: "bg-green-100 dark:bg-green-900/30", color: "text-green-800 dark:text-green-300" },
-    { label: "Pendapatan Minggu Ini", value: fmt(weekRev), sub: `${weekTrx.length} transaksi`, bg: "bg-amber-100 dark:bg-amber-900/30", color: "text-amber-700 dark:text-amber-300" },
-    { label: "Total Produk", value: fmtN(products.length), sub: "jenis produk", bg: "bg-blue-100 dark:bg-blue-900/30", color: "text-blue-800 dark:text-blue-300" },
-    { label: "Stok Habis", value: fmtN(outStock.length), sub: "item kosong", bg: outStock.length > 0 ? "bg-red-100 dark:bg-red-900/30" : "bg-green-50 dark:bg-green-900/20", color: outStock.length > 0 ? "text-red-700 dark:text-red-300" : "text-green-700 dark:text-green-400" },
-    { label: "Stok Menipis", value: fmtN(lowStock.length), sub: "perlu restock", bg: lowStock.length > 0 ? "bg-orange-100 dark:bg-orange-900/30" : "bg-green-50 dark:bg-green-900/20", color: lowStock.length > 0 ? "text-orange-700 dark:text-orange-300" : "text-green-700 dark:text-green-400" },
+    { label: "Pendapatan Hari Ini", value: fmt(todayRev), sub: `${todayTrx.length} transaksi`, bg: "bg-green-100 ", color: "text-green-800 " },
+    { label: "Pendapatan Minggu Ini", value: fmt(weekRev), sub: `${weekTrx.length} transaksi`, bg: "bg-amber-100 ", color: "text-amber-700 " },
+    { label: "Total Produk", value: fmtN(products.length), sub: "jenis produk", bg: "bg-blue-100 ", color: "text-blue-800 " },
+    { label: "Stok Habis", value: fmtN(outStock.length), sub: "item kosong", bg: outStock.length > 0 ? "bg-red-100 " : "bg-green-50 ", color: outStock.length > 0 ? "text-red-700 " : "text-green-700 " },
+    { label: "Stok Menipis", value: fmtN(lowStock.length), sub: "perlu restock", bg: lowStock.length > 0 ? "bg-orange-100 " : "bg-green-50 ", color: lowStock.length > 0 ? "text-orange-700 " : "text-green-700 " },
   ];
 
   return (
@@ -38,9 +38,9 @@ export default function DashboardPage({ transactions, products, activityLogs, to
       <div className="dash-grid">
         {/* Transaksi terbaru */}
         <div className={styles.card}>
-          <div className="font-extrabold text-sm text-bbs-green-dark dark:text-[#a8e063] mb-3.5">Transaksi Terbaru</div>
+          <div className="font-extrabold text-sm text-bbs-green-dark  mb-3.5">Transaksi Terbaru</div>
           {transactions.slice(0, 7).map((t) => (
-            <div key={t.id} className="flex justify-between py-2 border-b border-[#f0f5f0] dark:border-[#243424] items-center">
+            <div key={t.id} className="flex justify-between py-2 border-b border-[#f0f5f0]  items-center">
               <div>
                 <div className="font-bold text-[13px]">{t.trx_code} — {t.customer}</div>
                 <div className="text-[10px] text-gray-400">{t.date} · {(t.items || []).length} item</div>
@@ -53,11 +53,11 @@ export default function DashboardPage({ transactions, products, activityLogs, to
         {/* Stok habis */}
         {outStock.length > 0 && (
           <div className={`${styles.card} border-l-4 border-red-500`}>
-            <div className="font-extrabold text-sm text-red-700 dark:text-red-400 mb-3.5">❌ Stok Habis (Segera Restock!)</div>
+            <div className="font-extrabold text-sm text-red-700  mb-3.5">❌ Stok Habis (Segera Restock!)</div>
             {outStock.slice(0, 10).map((p) => (
-              <div key={p.id} className="flex justify-between py-2 border-b border-red-50 dark:border-red-900/20">
+              <div key={p.id} className="flex justify-between py-2 border-b border-red-50 ">
                 <div>
-                  <div className="font-bold text-[13px] text-red-700 dark:text-red-400">{p.name}</div>
+                  <div className="font-bold text-[13px] text-red-700 ">{p.name}</div>
                   <div className="text-[10px] text-gray-400">{p.category}</div>
                 </div>
                 <div className="text-right">
@@ -71,11 +71,11 @@ export default function DashboardPage({ transactions, products, activityLogs, to
 
         {/* Stok menipis */}
         <div className={styles.card}>
-          <div className="font-extrabold text-sm text-bbs-green-dark dark:text-[#a8e063] mb-3.5">⚠ Stok Menipis</div>
+          <div className="font-extrabold text-sm text-bbs-green-dark  mb-3.5">⚠ Stok Menipis</div>
           {lowStock.length === 0 ? (
             <div className="text-gray-300 text-[13px] text-center py-5">✅ Semua stok aman</div>
           ) : lowStock.slice(0, 7).map((p) => (
-            <div key={p.id} className="flex justify-between py-2 border-b border-[#f0f5f0] dark:border-[#243424]">
+            <div key={p.id} className="flex justify-between py-2 border-b border-[#f0f5f0] ">
               <div>
                 <div className="font-bold text-[13px]">{p.name}</div>
                 <div className="text-[10px] text-gray-400">{p.category}</div>
@@ -90,9 +90,9 @@ export default function DashboardPage({ transactions, products, activityLogs, to
       </div>
 
       {/* Activity log */}
-      <div className="mt-4 bg-white dark:bg-[#1a2a1a] rounded-xl border border-bbs-border dark:border-[#2d4a2d]">
-        <div className="px-5 py-4 border-b border-bbs-border dark:border-[#2d4a2d] flex justify-between items-center">
-          <div className="font-extrabold text-sm text-bbs-green-dark dark:text-[#a8e063]">📋 Aktivitas Terbaru</div>
+      <div className="mt-4 bg-white  rounded-xl border border-bbs-border ">
+        <div className="px-5 py-4 border-b border-bbs-border  flex justify-between items-center">
+          <div className="font-extrabold text-sm text-bbs-green-dark ">📋 Aktivitas Terbaru</div>
           <div className="text-[11px] text-gray-400">30 aktivitas terakhir</div>
         </div>
         {activityLogs.length === 0 ? (
@@ -105,14 +105,14 @@ export default function DashboardPage({ transactions, products, activityLogs, to
               const roleLabel = log.user_role === "superadmin" ? "👑 Super Admin" : log.user_role === "admin" ? "🛡️ Admin" : "👤 Pegawai";
               const roleCls = log.user_role === "superadmin" ? "bg-purple-100 text-purple-800" : log.user_role === "admin" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-800";
               return (
-                <div key={log.id} className="flex items-center gap-3 px-5 py-3 border-b border-gray-50 dark:border-[#1f2d1a] hover:bg-green-50 dark:hover:bg-[#1f2d1a] transition-colors">
+                <div key={log.id} className="flex items-center gap-3 px-5 py-3 border-b border-gray-50  hover:bg-green-50  transition-colors">
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0" style={{ background: clr.bg }}>
                     {ACTIVITY_ICONS[log.kategori] || "📝"}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                       <span className="px-2 py-0.5 rounded-full text-[11px] font-extrabold" style={{ background: clr.bg, color: clr.c }}>{log.aksi}</span>
-                      <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{log.user_nama}</span>
+                      <span className="text-xs font-bold text-gray-700 ">{log.user_nama}</span>
                       <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${roleCls}`}>{roleLabel}</span>
                     </div>
                     {log.detail && <div className="text-xs text-gray-400 truncate">{log.detail}</div>}

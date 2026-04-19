@@ -1,26 +1,23 @@
 @reference "tailwindcss";
 
-/* ── Force class-based dark mode ── */
-@variant dark (&:where(.dark, .dark *));
-
 /* Card */
 .card {
-  @apply bg-white dark:bg-[#1a2a1a] rounded-xl p-5 border border-[#e4ede4] dark:border-[#2d4a2d] text-gray-900 dark:text-[#e8f5e8];
+  @apply bg-white rounded-xl p-5 border border-[#e4ede4] text-gray-900;
 }
 
 /* Input */
 .inp {
-  @apply w-full px-3 py-2 rounded-lg border border-[#cde4cd] dark:border-[#3a5a3a] text-sm outline-none bg-white dark:bg-[#1e2e1e] text-gray-900 dark:text-[#e8f5e8] placeholder-gray-400 dark:placeholder-[#4a6a4a];
+  @apply w-full px-3 py-2 rounded-lg border border-[#cde4cd] text-sm outline-none bg-white text-gray-900 placeholder-gray-400;
 }
 
 /* Table header */
 .th {
-  @apply px-3 py-2 bg-[#f0f5f0] dark:bg-[#1a2a1a] font-bold text-left text-[11px] text-gray-500 dark:text-[#a8c8a8] border-b border-[#e4ede4] dark:border-[#2d4a2d] whitespace-nowrap;
+  @apply px-3 py-2 bg-[#f0f5f0] font-bold text-left text-[11px] text-gray-500 border-b border-[#e4ede4] whitespace-nowrap;
 }
 
 /* Table cell */
 .td {
-  @apply px-3 py-2 border-b border-[#f0f5f0] dark:border-[#243424] align-middle text-xs text-gray-800 dark:text-[#e8f5e8];
+  @apply px-3 py-2 border-b border-[#f0f5f0] align-middle text-xs text-gray-800;
 }
 
 /* Overlay */
@@ -30,7 +27,7 @@
 
 /* Modal */
 .modal {
-  @apply bg-white dark:bg-[#1a2a1a] rounded-2xl p-6 w-[420px] max-h-[90vh] overflow-y-auto shadow-2xl text-gray-900 dark:text-[#e8f5e8];
+  @apply bg-white rounded-2xl p-6 w-[420px] max-h-[90vh] overflow-y-auto shadow-2xl text-gray-900;
   animation: fadeIn 0.2s ease;
 }
 

@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { fmt } from '../../utils/constants';
 
-const StrukContent = ({ data }) => (
+const StrukContent = ({ data }) => {
+  const subtotal = (data.items || []).reduce((s, i) => s + i.price * i.qty, 0);
+  const discount = subtotal - data.total;
+
+  return (
   <div id="struk-print">
     <div style={{ textAlign: "center", marginBottom: 8 }}>
       <div style={{ fontSize: 22, fontWeight: 900, color: "#2d7a2d", letterSpacing: 1 }}>🌿 BBS</div>
@@ -24,6 +28,12 @@ const StrukContent = ({ data }) => (
     <div style={{ margin: "6px 0", borderTop: "1px dashed #ccc" }} />
     <table style={{ width: "100%", fontSize: 10, borderCollapse: "collapse" }}>
       <tbody>
+        {discount > 0 && (
+          <>
+            <tr><td style={{ color: "#555" }}>Subtotal</td><td style={{ textAlign: "right", color: "#555" }}>{fmt(subtotal)}</td></tr>
+            <tr><td style={{ color: "#e65100", fontWeight: 700 }}>🏷️ Diskon</td><td style={{ textAlign: "right", color: "#e65100", fontWeight: 700 }}>− {fmt(discount)}</td></tr>
+          </>
+        )}
         <tr><td style={{ fontWeight: 900, fontSize: 13, paddingBottom: 3 }}>TOTAL</td><td style={{ fontWeight: 900, fontSize: 13, textAlign: "right", color: "#2d7a2d", paddingBottom: 3 }}>{fmt(data.total)}</td></tr>
         <tr><td style={{ color: "#555" }}>Bayar</td><td style={{ textAlign: "right", color: "#555" }}>{fmt(data.payment)}</td></tr>
         <tr><td style={{ fontWeight: 700 }}>Kembalian</td><td style={{ textAlign: "right", fontWeight: 700 }}>{fmt(data.change_amt)}</td></tr>
@@ -31,7 +41,8 @@ const StrukContent = ({ data }) => (
     </table>
     <div style={{ textAlign: "center", marginTop: 8, fontSize: 9, color: "#aaa" }}>Terima kasih sudah berbelanja!</div>
   </div>
-);
+  );
+};
 
 export default function HistReceiptModal({ histReceipt, onClose }) {
   const [printSize, setPrintSize] = useState('80');
@@ -46,19 +57,19 @@ export default function HistReceiptModal({ histReceipt, onClose }) {
   };
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-999" onClick={onClose}>
-      <div className="bg-white dark:bg-[#1a2a1a] rounded-2xl p-6 w-[320px] max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white  rounded-2xl p-6 w-[320px] max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <StrukContent data={histReceipt} />
         <div className="flex items-center gap-2 my-3">
-          <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400">Ukuran kertas:</span>
+          <span className="text-[11px] font-bold text-gray-500 ">Ukuran kertas:</span>
           {['58', '80'].map(size => (
             <button key={size} onClick={() => setPrintSize(size)}
-              className={`px-3.5 py-1 rounded-lg text-xs font-bold cursor-pointer transition-all border-2 ${printSize === size ? 'border-bbs-green bg-green-50 dark:bg-[#2d4a2d] text-bbs-green-dark dark:text-[#a8e063] font-extrabold' : 'border-gray-200 dark:border-[#3a5a3a] bg-white dark:bg-[#1e2e1e] text-gray-500'}`}>
+              className={`px-3.5 py-1 rounded-lg text-xs font-bold cursor-pointer transition-all border-2 ${printSize === size ? 'border-bbs-green bg-green-50  text-bbs-green-dark  font-extrabold' : 'border-gray-200  bg-white  text-gray-500'}`}>
               {size}mm
             </button>
           ))}
         </div>
         <div className="flex gap-2">
-          <button className="flex-1 py-2.5 text-sm font-bold bg-[#f0f5f0] dark:bg-[#2d4a2d] text-bbs-green dark:text-[#a8e063] rounded-xl border-none cursor-pointer" onClick={handlePrint}>🖨️ Cetak</button>
+          <button className="flex-1 py-2.5 text-sm font-bold bg-[#f0f5f0]  text-bbs-green  rounded-xl border-none cursor-pointer" onClick={handlePrint}>🖨️ Cetak</button>
           <button className="flex-1 py-2.5 text-sm font-bold bg-bbs-green text-white rounded-xl border-none cursor-pointer" onClick={onClose}>✅ Tutup</button>
         </div>
       </div>

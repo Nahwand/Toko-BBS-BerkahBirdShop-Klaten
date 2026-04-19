@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import bcrypt from "bcryptjs";
 import styles from "../styles/UsersPage.module.css";
+import ConfirmModal from "../components/modals/ConfirmModal";
 
 export default function UsersPage({ sb, showNotif, currentUser, logActivity }) {
   const [users, setUsers] = useState([]);
@@ -13,6 +14,12 @@ export default function UsersPage({ sb, showNotif, currentUser, logActivity }) {
     status: "Aktif",
   });
   const [loading, setLoading] = useState(false);
+  const [confirm, setConfirm] = useState(null);
+  const confirmResolve = React.useRef(null);
+  const showConfirm = (opts) => new Promise((resolve) => {
+    confirmResolve.current = resolve;
+    setConfirm(opts);
+  });
 
   const loadUsers = async () => {
     const { data } = await sb.from("users").select("*").order("id");
@@ -107,11 +114,16 @@ export default function UsersPage({ sb, showNotif, currentUser, logActivity }) {
       showNotif("Tidak bisa hapus akun sendiri!", "error");
       return;
     }
-    if (!window.confirm("Hapus akun ini?")) return;
     const u = users.find((x) => x.id === id);
+    const ok = await showConfirm({
+      icon: "🗑️",
+      title: "Hapus Akun?",
+      message: `Akun "${u?.nama}" akan dihapus permanen.`,
+      confirmLabel: "Ya, Hapus",
+    });
+    if (!ok) return;
     await sb.from("users").delete().eq("id", id);
-    if (logActivity)
-      await logActivity("Hapus Akun", "Akun", u?.nama || "");
+    if (logActivity) await logActivity("Hapus Akun", "Akun", u?.nama || "");
     await loadUsers();
     showNotif("Akun dihapus!");
   };
@@ -415,6 +427,11 @@ export default function UsersPage({ sb, showNotif, currentUser, logActivity }) {
           </div>
         </div>
       )}
+      <ConfirmModal
+        confirm={confirm}
+        onConfirm={() => { confirmResolve.current?.(true); setConfirm(null); }}
+        onCancel={() => { confirmResolve.current?.(false); setConfirm(null); }}
+      />
     </div>
   );
 }

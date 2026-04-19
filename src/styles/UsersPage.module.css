@@ -1,7 +1,5 @@
 ﻿@reference "tailwindcss";
 
-/* ── Force class-based dark mode ── */
-@variant dark (&:where(.dark, .dark *));
 .header { @apply flex justify-between items-center mb-4; }
 .accountCount { @apply text-[13px] text-gray-500; }
 .btnPrimary { @apply px-4 py-1.5 rounded-lg cursor-pointer text-xs font-bold border-none bg-[#2d7a2d] text-white; }
@@ -9,12 +7,12 @@
 .btnDanger { @apply px-2.5 py-1 rounded-lg cursor-pointer text-[11px] font-bold bg-[#dc3545] text-white border-none; }
 .btnDefault { @apply p-3 rounded-lg cursor-pointer text-sm font-bold bg-[#e8f0e8] text-[#2d7a2d] border-none flex-1; }
 .saveBtn { @apply p-3 rounded-lg cursor-pointer text-sm font-bold bg-[#2d7a2d] text-white border-none flex-1; }
-.tableContainer { @apply bg-white dark:bg-[#1a2a1a] rounded-xl border border-[#e4ede4] dark:border-[#2d4a2d] overflow-auto; }
+.tableContainer { @apply bg-white rounded-xl border border-[#e4ede4] overflow-auto; }
 .table { @apply w-full border-collapse; }
-.th { @apply px-3.5 py-2.5 bg-[#f0f5f0] dark:bg-[#1a2a1a] font-bold text-left text-[11px] text-gray-500 dark:text-gray-400 border-b border-[#e4ede4] dark:border-[#2d4a2d]; }
-.tr { @apply bg-white dark:bg-[#1a2a1a]; }
-.trCurrentUser { @apply bg-green-50 dark:bg-[#1a2e1a]; }
-.td { @apply px-3.5 py-2.5 border-b border-[#f0f5f0] dark:border-[#243424] text-[13px] text-gray-800 dark:text-[#e8f5e8]; }
+.th { @apply px-3.5 py-2.5 bg-[#f0f5f0] font-bold text-left text-[11px] text-gray-500 border-b border-[#e4ede4]; }
+.tr { @apply bg-white; }
+.trCurrentUser { @apply bg-green-50; }
+.td { @apply px-3.5 py-2.5 border-b border-[#f0f5f0] text-[13px] text-gray-800; }
 .youBadge { @apply ml-1.5 text-[10px] bg-green-100 text-green-800 px-1.5 py-0.5 rounded-xl font-bold; }
 .roleBadge { @apply px-2.5 py-0.5 rounded-full text-[10px] font-extrabold; }
 .roleBadgeSuperAdmin { @apply bg-purple-100 text-purple-800; }
@@ -25,15 +23,15 @@
 .statusBadgeNonaktif { @apply bg-red-100 text-red-600; }
 .actionBtns { @apply flex gap-1; }
 .roleGrid { @apply mt-5 grid gap-4; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
-.roleCard { @apply bg-white dark:bg-[#1a2a1a] rounded-xl p-4 border border-[#e4ede4] dark:border-[#2d4a2d]; }
+.roleCard { @apply bg-white rounded-xl p-4 border border-[#e4ede4]; }
 .roleCardTitle { @apply font-extrabold text-sm mb-2.5; }
 .roleAccessList { @apply flex flex-wrap gap-1.5; }
 .roleAccessBadge { @apply px-2.5 py-0.5 rounded-full text-[11px] font-semibold; }
 .modalOverlay { @apply fixed inset-0 bg-black/50 flex items-center justify-center z-[999]; }
-.modal { @apply bg-white dark:bg-[#1a2a1a] rounded-2xl p-6 w-[400px] shadow-2xl text-gray-900 dark:text-[#e8f5e8]; animation: fadeIn 0.2s ease; }
-.modalHeader { @apply text-base font-extrabold mb-4 text-[#1a4a1a] dark:text-[#a8e063]; }
+.modal { @apply bg-white rounded-2xl p-6 w-[400px] shadow-2xl text-gray-900; animation: fadeIn 0.2s ease; }
+.modalHeader { @apply text-base font-extrabold mb-4 text-[#1a4a1a]; }
 .formGroup { @apply mb-3; }
 .formGroupSelect { @apply mb-5; }
-.label { @apply block text-[11px] font-extrabold text-gray-500 dark:text-gray-400 mb-1; }
-.inputField { @apply w-full px-3 py-2 rounded-lg border border-[#cde4cd] dark:border-[#3a5a3a] text-[13px] outline-none bg-white dark:bg-[#1e2e1e] text-gray-900 dark:text-[#e8f5e8] box-border; }
+.label { @apply block text-[11px] font-extrabold text-gray-500 mb-1; }
+.inputField { @apply w-full px-3 py-2 rounded-lg border border-[#cde4cd] text-[13px] outline-none bg-white text-gray-900 box-border; }
 .modalActions { @apply flex gap-2.5; }

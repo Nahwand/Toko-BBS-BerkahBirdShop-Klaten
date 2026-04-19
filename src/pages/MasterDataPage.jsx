@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import { useState, useRef } from "react";
 import styles from "../styles/MasterDataPage.module.css";
+import ConfirmModal from "../components/modals/ConfirmModal";
 
 function MasterDataPage({
   sb,
@@ -16,6 +17,12 @@ function MasterDataPage({
     warna_bg: "#e8f5e9",
     warna_text: "#2e7d32",
     keterangan: "",
+  });
+  const [confirm, setConfirm] = useState(null);
+  const confirmResolve = useRef(null);
+  const showConfirm = (opts) => new Promise((resolve) => {
+    confirmResolve.current = resolve;
+    setConfirm(opts);
   });
 
   const WARNA_PRESETS = [
@@ -82,8 +89,14 @@ function MasterDataPage({
   };
 
   const delKategori = async (id) => {
-    if (!window.confirm("Hapus kategori ini?")) return;
     const kat = kategoris.find((k) => k.id === id);
+    const ok = await showConfirm({
+      icon: "🗑️",
+      title: "Hapus Kategori?",
+      message: `Kategori "${kat?.nama}" akan dihapus permanen.`,
+      confirmLabel: "Ya, Hapus",
+    });
+    if (!ok) return;
     const { error } = await sb.from("kategoris").delete().eq("id", id);
     if (error) {
       showNotif("Gagal hapus: " + error.message, "error");
@@ -147,8 +160,14 @@ function MasterDataPage({
   };
 
   const delSatuan = async (id) => {
-    if (!window.confirm("Hapus satuan ini?")) return;
     const sat = satuans.find((s) => s.id === id);
+    const ok = await showConfirm({
+      icon: "🗑️",
+      title: "Hapus Satuan?",
+      message: `Satuan "${sat?.nama}" akan dihapus permanen.`,
+      confirmLabel: "Ya, Hapus",
+    });
+    if (!ok) return;
     const { error } = await sb.from("satuans").delete().eq("id", id);
     if (error) {
       showNotif("Gagal hapus: " + error.message, "error");
@@ -630,6 +649,11 @@ function MasterDataPage({
           )}
         </div>
       )}
+      <ConfirmModal
+        confirm={confirm}
+        onConfirm={() => { confirmResolve.current?.(true); setConfirm(null); }}
+        onCancel={() => { confirmResolve.current?.(false); setConfirm(null); }}
+      />
     </div>
   );
 }

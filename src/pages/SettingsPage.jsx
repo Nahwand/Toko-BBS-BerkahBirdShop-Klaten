@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styles from '../styles/App.module.css';
+import ConfirmModal from '../components/modals/ConfirmModal';
 
 export default function SettingsPage({ sb, showNotif, products, transactions, suppliers, kategoris, satuans, onRestore }) {
   const [settings, setSettings] = useState({
@@ -9,6 +10,12 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
   const [testingTg, setTestingTg] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [showTgToken, setShowTgToken] = useState(false);
+  const [confirm, setConfirm] = useState(null);
+  const confirmResolve = useRef(null);
+  const showConfirm = (opts) => new Promise((resolve) => {
+    confirmResolve.current = resolve;
+    setConfirm(opts);
+  });
 
   useEffect(() => {
     sb.from('settings').select('*').then(({ data }) => {
@@ -76,24 +83,31 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
   const handleRestore = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (!window.confirm('⚠️ Restore akan MENIMPA data produk, supplier, kategori, dan satuan yang ada. Lanjutkan?')) { e.target.value = ''; return; }
-    setRestoring(true);
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-      try {
-        const data = JSON.parse(ev.target.result);
-        if (!data.version || !data.products) throw new Error('File backup tidak valid!');
-        if (data.kategoris?.length) for (const k of data.kategoris) { const { id, created_at, ...p } = k; await sb.from('kategoris').upsert(p, { onConflict: 'nama' }); }
-        if (data.satuans?.length) for (const s of data.satuans) { const { id, created_at, ...p } = s; await sb.from('satuans').upsert(p, { onConflict: 'nama' }); }
-        if (data.suppliers?.length) for (const s of data.suppliers) { const { id, created_at, ...p } = s; await sb.from('suppliers').upsert(p, { onConflict: 'name' }); }
-        if (data.products?.length) for (const p of data.products) { const { id, created_at, updated_at, ...payload } = p; await sb.from('products').upsert(payload, { onConflict: 'name' }); }
-        showNotif(`Restore selesai! ${data.products?.length || 0} produk dipulihkan.`);
-        onRestore();
-      } catch (err) { showNotif('Gagal restore: ' + err.message, 'error'); }
-      setRestoring(false);
-      e.target.value = '';
-    };
-    reader.readAsText(file);
+    showConfirm({
+      icon: "⚠️",
+      title: "Restore Data?",
+      message: "Restore akan MENIMPA data produk, supplier, kategori, dan satuan yang ada.",
+      confirmLabel: "Ya, Restore",
+    }).then(async (ok) => {
+      if (!ok) { e.target.value = ''; return; }
+      setRestoring(true);
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        try {
+          const data = JSON.parse(ev.target.result);
+          if (!data.version || !data.products) throw new Error('File backup tidak valid!');
+          if (data.kategoris?.length) for (const k of data.kategoris) { const { id, created_at, ...p } = k; await sb.from('kategoris').upsert(p, { onConflict: 'nama' }); }
+          if (data.satuans?.length) for (const s of data.satuans) { const { id, created_at, ...p } = s; await sb.from('satuans').upsert(p, { onConflict: 'nama' }); }
+          if (data.suppliers?.length) for (const s of data.suppliers) { const { id, created_at, ...p } = s; await sb.from('suppliers').upsert(p, { onConflict: 'name' }); }
+          if (data.products?.length) for (const p of data.products) { const { id, created_at, updated_at, ...payload } = p; await sb.from('products').upsert(payload, { onConflict: 'name' }); }
+          showNotif(`Restore selesai! ${data.products?.length || 0} produk dipulihkan.`);
+          onRestore();
+        } catch (err) { showNotif('Gagal restore: ' + err.message, 'error'); }
+        setRestoring(false);
+        e.target.value = '';
+      };
+      reader.readAsText(file);
+    });
   };
 
   return (
@@ -123,7 +137,7 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
           </label>
           <div style={{ position: "relative" }}>
             <input id="settings-tg-token" name="settings-tg-token" className={styles.inp}
-              style={{ filter: showTgToken ? "none" : "blur(4px)", transition: "filter 0.2s", userSelect: showTgToken ? "auto" : "none" }}
+              style={{ filter: showTgToken ? "none" : "blur(4px)", color: "#000", transition: "filter 0.2s", userSelect: showTgToken ? "auto" : "none" }}
               type="text"
               placeholder="123456789:ABCdef..."
               value={settings.notif_tg_bot_token}
@@ -199,6 +213,11 @@ export default function SettingsPage({ sb, showNotif, products, transactions, su
           </button>
         </div>
       </div>
+      <ConfirmModal
+        confirm={confirm}
+        onConfirm={() => { confirmResolve.current?.(true); setConfirm(null); }}
+        onCancel={() => { confirmResolve.current?.(false); setConfirm(null); }}
+      />
     </div>
   );
 }

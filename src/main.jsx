@@ -4,7 +4,6 @@ import App from './App.jsx'
 import './styles/global.css'
 import { registerSW } from 'virtual:pwa-register'
 
-// Register service worker for PWA
 registerSW({ immediate: true })
 
 ReactDOM.createRoot(document.getElementById('root')).render(

@@ -1,12 +1,11 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import * as XL from 'xlsx';
+import { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
 import { sb } from './config/supabase';
 import styles from './styles/App.module.css';
-import { CATS, MONTHS, ACCESS, TODAY, fmt } from './utils/constants';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import { ACCESS, fmt } from './utils/constants';
+import { AppProvider, useApp } from './context/AppContext';
 
 import Spin from './components/Spin';
+import ErrorBoundary from './components/ErrorBoundary';
 import LoginPage from './pages/LoginPage';
 import UsersPage from './pages/UsersPage';
 import MasterDataPage from './pages/MasterDataPage';
@@ -15,11 +14,12 @@ import KasirPage from './pages/KasirPage';
 import ProdukPage from './pages/ProdukPage';
 import RiwayatPage from './pages/RiwayatPage';
 import StokPage from './pages/StokPage';
-import LaporanPage from './pages/LaporanPage';
 import SupplierPage from './pages/SupplierPage';
-import ImportExportPage from './pages/ImportExportPage';
 import RestockLogPage from './pages/RestockLogPage';
 import SettingsPage from './pages/SettingsPage';
+
+const LaporanPage = lazy(() => import('./pages/LaporanPage'));
+const ImportExportPage = lazy(() => import('./pages/ImportExportPage'));
 import ReceiptModal from './components/modals/ReceiptModal';
 import HistReceiptModal from './components/modals/HistReceiptModal';
 import ProdukModal from './components/modals/ProdukModal';
@@ -83,39 +83,67 @@ function App() {
   };
 
   // Session timeout: auto logout setelah 30 menit tidak ada aktivitas
+  // Warning muncul 2 menit sebelum logout
+  const [sessionWarning, setSessionWarning] = useState(false);
+  const [sessionCountdown, setSessionCountdown] = useState(120);
   useEffect(() => {
     if (!currentUser) return;
-    const TIMEOUT = 30 * 60 * 1000; // 30 menit
-    let timer = setTimeout(() => {
-      sessionStorage.removeItem("bbs_user");
-      setCurrentUser(null);
-      alert("Sesi Anda telah berakhir karena tidak ada aktivitas selama 30 menit. Silakan login kembali.");
-    }, TIMEOUT);
-    const reset = () => {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
+    const TIMEOUT = 30 * 60 * 1000;
+    const WARN_BEFORE = 2 * 60 * 1000;
+    let warnTimer, logoutTimer, countdownInterval;
+
+    const startTimers = () => {
+      clearTimeout(warnTimer); clearTimeout(logoutTimer); clearInterval(countdownInterval);
+      setSessionWarning(false);
+      warnTimer = setTimeout(() => {
+        setSessionWarning(true);
+        setSessionCountdown(120);
+        countdownInterval = setInterval(() => {
+          setSessionCountdown(prev => { if (prev <= 1) { clearInterval(countdownInterval); return 0; } return prev - 1; });
+        }, 1000);
+      }, TIMEOUT - WARN_BEFORE);
+      logoutTimer = setTimeout(() => {
         sessionStorage.removeItem("bbs_user");
         setCurrentUser(null);
-        alert("Sesi Anda telah berakhir karena tidak ada aktivitas selama 30 menit. Silakan login kembali.");
       }, TIMEOUT);
     };
+
+    startTimers();
+    const reset = () => startTimers();
     const events = ['mousedown', 'keydown', 'touchstart', 'scroll'];
     events.forEach(e => window.addEventListener(e, reset));
     return () => {
-      clearTimeout(timer);
+      clearTimeout(warnTimer); clearTimeout(logoutTimer); clearInterval(countdownInterval);
       events.forEach(e => window.removeEventListener(e, reset));
     };
   }, [currentUser]);
 
   return (
-    <>
+    <ErrorBoundary>
       {isOffline && (
         <div className="bg-red-600 text-white text-center px-4 py-2 text-[13px] font-bold z-9999 relative tracking-wide">
           ⚠️ Koneksi Internet Terputus: Kasir Berjalan dalam Mode Offline
         </div>
       )}
-      {!currentUser ? <LoginPage onLogin={handleLogin} /> : <Main currentUser={currentUser} onLogout={handleLogout} isOffline={isOffline} />}
-    </>
+      {sessionWarning && currentUser && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-99999">
+          <div className="bg-white rounded-2xl p-6 w-[340px] text-center shadow-2xl">
+            <div className="text-4xl mb-3">⏰</div>
+            <div className="text-[17px] font-extrabold text-bbs-green-dark mb-2">Sesi Hampir Berakhir</div>
+            <div className="text-[13px] text-gray-500 mb-4">Anda akan otomatis logout dalam <strong className="text-red-500">{sessionCountdown}</strong> detik karena tidak ada aktivitas.</div>
+            <button className="w-full py-3 bg-bbs-green text-white rounded-xl font-bold text-sm border-none cursor-pointer"
+              onClick={() => { setSessionWarning(false); window.dispatchEvent(new MouseEvent('mousedown')); }}>
+              ✅ Saya Masih Di Sini
+            </button>
+          </div>
+        </div>
+      )}
+      {!currentUser ? <LoginPage onLogin={handleLogin} /> : (
+        <AppProvider currentUser={currentUser} isOffline={isOffline}>
+          <Main currentUser={currentUser} onLogout={handleLogout} isOffline={isOffline} />
+        </AppProvider>
+      )}
+    </ErrorBoundary>
   );
 }
 
@@ -123,17 +151,15 @@ function Main({ currentUser, onLogout, isOffline }) {
   const isSuperAdmin = currentUser.role === "superadmin";
   const allowedPages = ACCESS[currentUser.role] || ACCESS.pegawai;
 
+  const {
+    products, setProducts, transactions, suppliers, kategoris, satuans,
+    activityLogs, restockLogs, loading, setLoading,
+    notif, showNotif, logActivity, sendStockNotif, loadAll,
+    todayTrx, todayRev, weekTrx, weekRev, outStock, lowStock,
+    realtimeUsers,
+  } = useApp();
 
   const [page, setPage] = useState(allowedPages[0]);
-  const [products, setProducts] = useState([]);
-  const [transactions, setTransactions] = useState([]);
-  const [suppliers, setSuppliers] = useState([]);
-  const [kategoris, setKategoris] = useState([]);
-  const [satuans, setSatuans] = useState([]);
-  const [activityLogs, setActivityLogs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [restockLogs, setRestockLogs] = useState([]);
-  const [realtimeUsers, setRealtimeUsers] = useState([]);
   const [cart, setCart] = useState([]);
   const [searchProd, setSearchProd] = useState("");
   const [filterCat, setFilterCat] = useState("Semua");
@@ -142,25 +168,18 @@ function Main({ currentUser, onLogout, isOffline }) {
   const [receipt, setReceipt] = useState(null);
   const [prodModal, setProdModal] = useState(null);
   const [prodForm, setProdForm] = useState({
-    name: "",
-    category: "Pakan Jadi",
-    unit: "",
-    price: "",
-    stock: "",
-    min_stock: "",
-    supplier_id: "",
-    jenis: "",
-    varian: "",
+    name: "", category: "Pakan Jadi", unit: "", price: "", stock: "", min_stock: "", supplier_id: "", jenis: "", varian: "",
   });
   const [prodImage, setProdImage] = useState(null);
   const [histSearch, setHistSearch] = useState("");
   const [filterDate, setFilterDate] = useState("");
+  const [filterDateEnd, setFilterDateEnd] = useState("");
   const [restockModal, setRestockModal] = useState(null);
   const [restockQty, setRestockQty] = useState("");
   const [restockCatatan, setRestockCatatan] = useState("");
   const [histReceipt, setHistReceipt] = useState(null);
-  const [notif, setNotif] = useState(null);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [discount, setDiscount] = useState('');
 
   useEffect(() => {
     const handler = (e) => {
@@ -180,36 +199,16 @@ function Main({ currentUser, onLogout, isOffline }) {
   };
   const [supModal, setSupModal] = useState(null);
   const [supForm, setSupForm] = useState({
-    name: "",
-    contact: "",
-    phone: "",
-    email: "",
-    address: "",
-    category: "",
-    status: "Aktif",
-    notes: "",
+    name: "", contact: "", phone: "", email: "", address: "", category: "", status: "Aktif", notes: "",
   });
   const [rptMonth, setRptMonth] = useState(new Date().getMonth());
   const [rptYear, setRptYear] = useState(new Date().getFullYear());
-  const [importLog, setImportLog] = useState([]);
   const [showLogout, setShowLogout] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  // Dark mode
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('bbs_dark') === 'true');
-  useEffect(() => {
-    document.body.classList.toggle('dark', darkMode);
-    localStorage.setItem('bbs_dark', darkMode);
-  }, [darkMode]);
 
   // Pagination riwayat
   const [histPage, setHistPage] = useState(1);
   const HIST_PER_PAGE = 20;
-
-  // Global search
-  const [globalSearch, setGlobalSearch] = useState("");
-  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
-  const globalSearchRef = useRef();
 
   // Confirm modal (ganti window.confirm)
   const [confirm, setConfirm] = useState(null);
@@ -219,301 +218,30 @@ function Main({ currentUser, onLogout, isOffline }) {
     setConfirm(opts);
   });
 
-  const showNotif = (msg, type = "success") => {
-    setNotif({ msg, type });
-    setTimeout(() => setNotif(null), 3200);
-  };
-
-  // Kirim notifikasi WA/email saat stok habis
-  const sendStockNotif = async (prods) => {
-    try {
-      const { data: settingsData } = await sb.from('settings').select('*');
-      if (!settingsData) return;
-      const cfg = {};
-      settingsData.forEach(s => { cfg[s.key] = s.value; });
-      if (cfg.notif_tg_enabled !== 'true') return;
-
-      const habis = prods.filter(p => Number(p.stock) === 0);
-      if (!habis.length) return;
-
-      const today = new Date().toISOString().slice(0, 10);
-      const cacheKey = `bbs_notif_sent_${today}`;
-      const alreadySent = JSON.parse(localStorage.getItem(cacheKey) || '[]').map(String);
-      const belumDinotif = habis.filter(p => !alreadySent.includes(String(p.id)));
-      if (!belumDinotif.length) return;
-
-      localStorage.setItem(cacheKey, JSON.stringify([...alreadySent, ...belumDinotif.map(p => String(p.id))]));
-
-      if (!cfg.notif_tg_bot_token || !cfg.notif_tg_chat_id) return;
-
-      const now = new Date().toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' });
-      const tgMsg = `🌿 <b>BerkahBirdShop - Peringatan Stok!</b>\n━━━━━━━━━━━━━━━━\n🚨 <b>${belumDinotif.length} Produk Stok HABIS</b>\n\n${belumDinotif.map((p, i) => `${i + 1}. ❌ ${p.name}`).join('\n')}\n\n━━━━━━━━━━━━━━━━\n📅 ${now}\n\n⚡ Segera lakukan restock!\n\n<i>Notifikasi otomatis dari sistem Toko BBS</i>`;
-      await fetch(`https://api.telegram.org/bot${cfg.notif_tg_bot_token}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: cfg.notif_tg_chat_id, text: tgMsg, parse_mode: 'HTML' }),
-      });
-    } catch (e) {
-      console.error('Notif error:', e);
-    }
-  };
-
-  const logActivity = async (aksi, kategori, detail = "") => {
-    try {
-      await sb.from("activity_logs").insert({
-        user_nama: currentUser.nama,
-        user_role: currentUser.role,
-        aksi,
-        kategori,
-        detail,
-      });
-    } catch (e) {
-      console.error("Log error:", e);
-    }
-  };
-
-  // Helper: Load all cached data from localStorage
-  const loadFromCache = () => {
-    const cachedProds = JSON.parse(localStorage.getItem('bbs_offline_products') || "[]");
-    const cachedCats = JSON.parse(localStorage.getItem('bbs_offline_cats') || "[]");
-    const cachedUnits = JSON.parse(localStorage.getItem('bbs_offline_units') || "[]");
-    const cachedSup = JSON.parse(localStorage.getItem('bbs_offline_suppliers') || "[]");
-
-    console.log('[BBS Offline] loadFromCache:', {
-      products: cachedProds.length,
-      cats: cachedCats.length,
-      units: cachedUnits.length,
-      suppliers: cachedSup.length,
-    });
-
-    setProducts(cachedProds);
-    setKategoris(cachedCats);
-    setSatuans(cachedUnits);
-    if (cachedSup.length > 0) setSuppliers(cachedSup);
-
-    return cachedProds.length > 0;
-  };
-
-  const loadAll = useCallback(async (forceOffline = false) => {
-    setLoading(true);
-
-    // Jika offline, pakai data yang sudah ada di state dulu
-    // Hanya load dari cache jika state kosong (pertama kali)
-    if (forceOffline || (!navigator.onLine)) {
-      setProducts(prev => {
-        if (prev.length > 0) return prev; // sudah ada data di memory, jangan timpa
-        const cached = JSON.parse(localStorage.getItem('bbs_offline_products') || "[]");
-        return cached;
-      });
-      setKategoris(prev => {
-        if (prev.length > 0) return prev;
-        return JSON.parse(localStorage.getItem('bbs_offline_cats') || "[]");
-      });
-      setSatuans(prev => {
-        if (prev.length > 0) return prev;
-        return JSON.parse(localStorage.getItem('bbs_offline_units') || "[]");
-      });
-      setSuppliers(prev => {
-        if (prev.length > 0) return prev;
-        return JSON.parse(localStorage.getItem('bbs_offline_suppliers') || "[]");
-      });
-      const cachedCount = JSON.parse(localStorage.getItem('bbs_offline_products') || "[]").length;
-      showNotif(
-        cachedCount > 0 ? "Mode Offline: Menggunakan data tersimpan." : "Mode Offline: Belum ada data. Sambungkan internet lalu refresh.",
-        cachedCount > 0 ? "info" : "error"
-      );
-      setLoading(false);
-      return;
-    }
-
-    try {
-      // 2. Sync Offline Queue (Hanya jika Online)
-      if (navigator.onLine) {
-        const queue = JSON.parse(localStorage.getItem('bbs_offline_queue') || "[]");
-        if (queue.length > 0) {
-          try {
-            for (const q of queue) {
-              const { trx, trxItems } = q;
-              const { id, ...trxPayload } = trx;
-              const { data: newTrx, error: e1 } = await sb.from("transactions").insert(trxPayload).select().single();
-              if (!e1 && newTrx) {
-                const itemsPayload = trxItems.map(ti => {
-                  const { transaction_id, ...rest } = ti;
-                  return { ...rest, transaction_id: newTrx.id };
-                });
-                await sb.from("transaction_items").insert(itemsPayload);
-                for (const i of trxItems) {
-                  const { data: pData } = await sb.from("products").select("stock").eq("id", i.product_id).single();
-                  if (pData) {
-                    await sb.from("products").update({ stock: pData.stock - i.qty }).eq("id", i.product_id);
-                  }
-                }
-              }
-            }
-            localStorage.removeItem('bbs_offline_queue');
-          } catch (syncErr) {
-            console.error("Sync error:", syncErr);
-          }
-        }
-      }
-
-      // 3. Auto-delete aktivitas yang lebih tua dari 31 hari
-      const cutoffDate = new Date();
-      cutoffDate.setDate(cutoffDate.getDate() - 31);
-      sb.from("activity_logs")
-        .delete()
-        .lt("created_at", cutoffDate.toISOString())
-        .then(() => { })
-        .catch(e => console.error("Gagal menghapus log lama:", e));
-
-      // 4. Fetch data dari server DENGAN timeout 8 detik
-      const fetchWithTimeout = Promise.all([
-        sb.from("products").select("*").order("name"),
-        sb.from("suppliers").select("*").order("name"),
-        sb.from("transactions").select("*").order("date", { ascending: false }).order("id", { ascending: false }),
-        sb.from("transaction_items").select("*"),
-        sb.from("kategoris").select("*").order("nama"),
-        sb.from("satuans").select("*").order("nama"),
-        sb.from("activity_logs").select("*").order("created_at", { ascending: false }).limit(30),
-        sb.from("restock_logs").select("*").order("created_at", { ascending: false }).limit(100),
-      ]);
-
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Request timeout")), 8000)
-      );
-
-      const [
-        { data: prods },
-        { data: sups },
-        { data: trxs },
-        { data: items },
-        { data: kats },
-        { data: sats },
-        { data: acts },
-        { data: rlogs },
-      ] = await Promise.race([fetchWithTimeout, timeoutPromise]);
-
-      // 5. Update state & Caching
-      if (prods) {
-        setProducts(prods);
-        localStorage.setItem('bbs_offline_products', JSON.stringify(prods));
-        // Cek notifikasi stok habis
-        sendStockNotif(prods);
-      }
-      if (sups) { setSuppliers(sups); localStorage.setItem('bbs_offline_suppliers', JSON.stringify(sups)); }
-      if (kats) { setKategoris(kats); localStorage.setItem('bbs_offline_cats', JSON.stringify(kats)); }
-      if (sats) { setSatuans(sats); localStorage.setItem('bbs_offline_units', JSON.stringify(sats)); }
-      if (acts) setActivityLogs(acts);
-      if (rlogs) setRestockLogs(rlogs);
-      if (trxs) {
-        setTransactions(trxs.map((t) => ({ ...t, items: (items || []).filter((i) => i.transaction_id === t.id) })));
-      }
-    } catch (e) {
-      console.error("LoadAll Error:", e);
-      // Fallback terakhir: SELALU coba load dari cache jika fetch gagal
-      try {
-        const hasData = loadFromCache();
-        if (hasData) {
-          showNotif("Koneksi bermasalah. Menggunakan data offline.", "info");
-        } else {
-          showNotif("Gagal terhubung ke server. Periksa koneksi Anda.", "error");
-        }
-      } catch (cacheErr) {
-        showNotif("Gagal terhubung ke server. Periksa koneksi Anda.", "error");
-      }
-    }
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    loadAll();
-  }, [loadAll]);
-
-  // Saat status offline berubah, jangan reload data — cukup notif
-  useEffect(() => {
-    if (isOffline) {
-      // Pastikan data di memory tidak hilang — jika kosong, load dari cache
-      setProducts(prev => {
-        if (prev.length > 0) return prev;
-        return JSON.parse(localStorage.getItem('bbs_offline_products') || "[]");
-      });
-      setKategoris(prev => {
-        if (prev.length > 0) return prev;
-        return JSON.parse(localStorage.getItem('bbs_offline_cats') || "[]");
-      });
-      setSatuans(prev => {
-        if (prev.length > 0) return prev;
-        return JSON.parse(localStorage.getItem('bbs_offline_units') || "[]");
-      });
-      setSuppliers(prev => {
-        if (prev.length > 0) return prev;
-        return JSON.parse(localStorage.getItem('bbs_offline_suppliers') || "[]");
-      });
-    } else {
-      // Kembali online — refresh data dari server
-      loadAll();
-    }
-  }, [isOffline]);
-
-  // Realtime: subscribe ke perubahan produk & transaksi (multi-kasir)
-  useEffect(() => {
-    if (isOffline) return;
-    const channel = sb.channel('bbs-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => { loadAll(); })
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'transactions' }, (payload) => {
-        showNotif(`🔔 Transaksi baru dari kasir lain: ${payload.new?.trx_code || ''}`, 'info');
-        loadAll();
-      })
-      .on('presence', { event: 'sync' }, () => {
-        const state = channel.presenceState();
-        setRealtimeUsers(Object.values(state).flat());
-      })
-      .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
-          await channel.track({ user: currentUser.nama, role: currentUser.role, online_at: new Date().toISOString() });
-        }
-      });
-    return () => { sb.removeChannel(channel); };
-  }, [isOffline]);
-
-  const todayTrx = transactions.filter((t) => t.date === TODAY);
-  const todayRev = todayTrx.reduce((s, t) => s + t.total, 0);
-  const weekStart = new Date(Date.now() - 7 * 86400000)
-    .toISOString()
-    .slice(0, 10);
-  const weekTrx = transactions.filter((t) => t.date >= weekStart);
-  const weekRev = weekTrx.reduce((s, t) => s + t.total, 0);
-  const outStock = (products || []).filter((p) => Number(p.stock) === 0);
-  const lowStock = (products || []).filter((p) => Number(p.stock) > 0 && Number(p.stock) <= Number(p.min_stock));
+  // Global search
+  const [globalSearch, setGlobalSearch] = useState("");
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
+  const globalSearchRef = useRef();
 
   const filtProd = useMemo(() => {
     const s = searchProd.toLowerCase();
     return products.filter((p) => {
       const mc = filterCat === "Semua" || p.category === filterCat;
       if (!s) return mc;
-
       const supplier = suppliers.find(sup => sup.id === p.supplier_id);
-      const supplierName = supplier && supplier.name ? supplier.name.toLowerCase() : "";
-
-      const pName = p.name ? p.name.toLowerCase() : "";
-      const pCat = p.category ? p.category.toLowerCase() : "";
-      const pUnit = p.unit ? p.unit.toLowerCase() : "";
-      const pPrice = p.price ? p.price.toString() : "";
-
+      const supplierName = supplier?.name?.toLowerCase() ?? "";
       const ms =
-        pName.includes(s) ||
-        pCat.includes(s) ||
-        pUnit.includes(s) ||
-        pPrice.includes(s) ||
+        (p.name?.toLowerCase() ?? "").includes(s) ||
+        (p.category?.toLowerCase() ?? "").includes(s) ||
+        (p.unit?.toLowerCase() ?? "").includes(s) ||
+        (p.price?.toString() ?? "").includes(s) ||
         supplierName.includes(s);
-
       return mc && ms;
     });
   }, [products, filterCat, searchProd, suppliers]);
 
   const cartTotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const payNum = parseInt(paymentInput) || 0;
-  const change = payNum - cartTotal;
 
   const addToCart = (prod) => {
     if (prod.stock <= 0) {
@@ -557,44 +285,31 @@ function Main({ currentUser, onLogout, isOffline }) {
       c.map((x) => (x.product_id === pid ? { ...x, qty } : x)),
     );
   };
-  const processPayment = async () => {
-    if (!cart.length) {
-      showNotif("Keranjang kosong!", "error");
-      return;
-    }
-    if (change < 0) {
-      showNotif("Pembayaran kurang!", "error");
-      return;
-    }
-    if (payNum <= 0) {
-      showNotif("Masukkan nominal pembayaran!", "error");
-      return;
-    }
+  const processPayment = async (discountAmt = 0, finalTotal = cartTotal) => {
+    if (!cart.length) { showNotif("Keranjang kosong!", "error"); return; }
+    if (payNum < finalTotal) { showNotif(payNum <= 0 ? "Masukkan nominal pembayaran!" : "Pembayaran kurang!", "error"); return; }
+    const changeAmt = payNum - finalTotal;
     setLoading(true);
 
     if (isOffline) {
       const trxCode = `OFF-${Date.now().toString().slice(-4)}`;
+      const todayDate = new Date().toISOString().slice(0, 10);
       const trx = {
         id: Date.now().toString(),
         trx_code: trxCode,
-        date: TODAY,
+        date: todayDate,
         customer: customerName || "Umum",
-        total: cartTotal,
+        total: finalTotal,
         payment: payNum,
-        change_amt: change,
+        change_amt: changeAmt,
       };
       const trxItems = cart.map((i) => ({
-        transaction_id: trx.id,
-        product_id: i.product_id,
-        product_name: i.name,
-        qty: i.qty,
-        unit: i.unit,
-        price: i.price,
+        transaction_id: trx.id, product_id: i.product_id, product_name: i.name,
+        qty: i.qty, unit: i.unit, price: i.price,
       }));
       const queue = JSON.parse(localStorage.getItem('bbs_offline_queue') || "[]");
       queue.push({ trx, trxItems });
       localStorage.setItem('bbs_offline_queue', JSON.stringify(queue));
-
       const newProducts = [...products];
       for (const i of cart) {
         const pIdx = newProducts.findIndex((x) => x.id === i.product_id);
@@ -602,19 +317,8 @@ function Main({ currentUser, onLogout, isOffline }) {
       }
       setProducts(newProducts);
       localStorage.setItem('bbs_offline_products', JSON.stringify(newProducts));
-
-      setReceipt({
-        ...trx,
-        items: cart.map((i) => ({
-          product_name: i.name,
-          qty: i.qty,
-          unit: i.unit,
-          price: i.price,
-        })),
-      });
-      setCart([]);
-      setCustomerName("");
-      setPaymentInput("");
+      setReceipt({ ...trx, discount: discountAmt, items: cart.map((i) => ({ product_name: i.name, qty: i.qty, unit: i.unit, price: i.price })) });
+      setCart([]); setCustomerName(""); setPaymentInput(""); setDiscount('');
       showNotif("Berhasil: Transaksi Tersimpan Offline!");
       setLoading(false);
       return;
@@ -622,59 +326,29 @@ function Main({ currentUser, onLogout, isOffline }) {
 
     try {
       const trxCode = `TRX${String(transactions.length + 1).padStart(4, "0")}`;
-      const { data: trx, error: e1 } = await sb
-        .from("transactions")
-        .insert({
-          trx_code: trxCode,
-          date: TODAY,
-          customer: customerName || "Umum",
-          total: cartTotal,
-          payment: payNum,
-          change_amt: change,
-        })
-        .select()
-        .single();
+      const { data: trx, error: e1 } = await sb.from("transactions").insert({
+        trx_code: trxCode,
+        date: new Date().toISOString().slice(0, 10),
+        customer: customerName || "Umum",
+        total: finalTotal,
+        payment: payNum,
+        change_amt: changeAmt,
+      }).select().single();
       if (e1) throw e1;
-      const { error: e2 } = await sb
-        .from("transaction_items")
-        .insert(
-          cart.map((i) => ({
-            transaction_id: trx.id,
-            product_id: i.product_id,
-            product_name: i.name,
-            qty: i.qty,
-            unit: i.unit,
-            price: i.price,
-          })),
-        );
+      const { error: e2 } = await sb.from("transaction_items").insert(
+        cart.map((i) => ({ transaction_id: trx.id, product_id: i.product_id, product_name: i.name, qty: i.qty, unit: i.unit, price: i.price }))
+      );
       if (e2) throw e2;
       for (const i of cart) {
         const p = products.find((x) => x.id === i.product_id);
-        await sb
-          .from("products")
-          .update({ stock: p.stock - i.qty })
-          .eq("id", i.product_id);
+        await sb.from("products").update({ stock: p.stock - i.qty }).eq("id", i.product_id);
       }
       await loadAll();
-      setReceipt({
-        ...trx,
-        items: cart.map((i) => ({
-          product_name: i.name,
-          qty: i.qty,
-          unit: i.unit,
-          price: i.price,
-        })),
-      });
-      setCart([]);
-      setCustomerName("");
-      setPaymentInput("");
-      await logActivity(
-        "Transaksi Baru",
-        "Kasir",
-        `${trxCode} - ${customerName || "Umum"} - ${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(cartTotal)}`,
-      );
+      setReceipt({ ...trx, discount: discountAmt, items: cart.map((i) => ({ product_name: i.name, qty: i.qty, unit: i.unit, price: i.price })) });
+      setCart([]); setCustomerName(""); setPaymentInput(""); setDiscount('');
+      await logActivity("Transaksi Baru", "Kasir",
+        `${trxCode} - ${customerName || "Umum"} - ${fmt(finalTotal)}${discountAmt > 0 ? ` (diskon ${fmt(discountAmt)})` : ''}`);
       showNotif("Transaksi berhasil!");
-      // Cek stok habis setelah transaksi — kirim notif jika ada yang baru habis
       const { data: freshProds } = await sb.from("products").select("*");
       if (freshProds) sendStockNotif(freshProds);
     } catch (e) {
@@ -691,11 +365,24 @@ function Main({ currentUser, onLogout, isOffline }) {
 
     let imageUrl = prodModal !== "add" ? prodModal.image_url : null;
     if (prodImage) {
-      const ext = prodImage.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
-      const { error: uploadError } = await sb.storage
-        .from("produk")
-        .upload(fileName, prodImage);
+      // Compress gambar sebelum upload (max 800px, quality 0.8)
+      const compressedBlob = await new Promise((resolve) => {
+        const img = new Image();
+        const url = URL.createObjectURL(prodImage);
+        img.onload = () => {
+          const MAX = 800;
+          const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+          URL.revokeObjectURL(url);
+          canvas.toBlob(resolve, 'image/webp', 0.8);
+        };
+        img.src = url;
+      });
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.webp`;
+      const { error: uploadError } = await sb.storage.from("produk").upload(fileName, compressedBlob, { contentType: 'image/webp' });
 
       if (uploadError) {
         setLoading(false);
@@ -874,6 +561,22 @@ function Main({ currentUser, onLogout, isOffline }) {
     showNotif("Supplier dihapus!");
   };
 
+  const exportExcel = async (type) => {
+    try {
+      const XL = await import('xlsx');
+      const wb = XL.utils.book_new();
+      if (type === "supplier")
+        XL.utils.book_append_sheet(wb, XL.utils.json_to_sheet(
+          suppliers.map(s => ({ Nama: s.name, PIC: s.contact, Telepon: s.phone, Email: s.email, Alamat: s.address, Status: s.status }))
+        ), "Supplier");
+      XL.writeFile(wb, `BBS_${type}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      await logActivity("Export Excel", "Import/Export", type);
+      showNotif("Export berhasil!");
+    } catch (e) {
+      showNotif("Gagal export: " + e.message, "error");
+    }
+  };
+
   const rptTrx = transactions.filter((t) => {
     const [y, m] = t.date.split("-").map(Number);
     return y === rptYear && m === rptMonth + 1;
@@ -885,16 +588,16 @@ function Main({ currentUser, onLogout, isOffline }) {
     const tt = rptTrx.filter((t) => t.date === ds);
     return { day: i + 1, rev: tt.reduce((s, t) => s + t.total, 0) };
   });
-  const catData = CATS.filter((c) => c !== "Semua")
-    .map((cat) => {
+  const catData = kategoris
+    .map((kat) => {
       let rev = 0;
       rptTrx.forEach((t) =>
         (t.items || []).forEach((i) => {
           const p = products.find((pr) => pr.id === i.product_id);
-          if (p && p.category === cat) rev += i.price * i.qty;
+          if (p && p.category === kat.nama) rev += i.price * i.qty;
         }),
       );
-      return { cat, rev };
+      return { cat: kat.nama, rev };
     })
     .filter((c) => c.rev > 0)
     .sort((a, b) => b.rev - a.rev);
@@ -909,264 +612,11 @@ function Main({ currentUser, onLogout, isOffline }) {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
 
-  const [showExportPDFLoading, setShowExportPDFLoading] = useState(false);
-  const [exportingTitle, setExportingTitle] = useState(null);
-  const [importingState, setImportingState] = useState(null);
-
-  const exportPDF = async () => {
-    const reportNode = document.getElementById("laporan-container");
-    if (!reportNode) return;
-    setShowExportPDFLoading(true);
-    try {
-      const actionsNode = document.getElementById("laporan-actions");
-      if (actionsNode) actionsNode.style.display = "none";
-
-      const canvas = await html2canvas(reportNode, { scale: 2, useCORS: true, logging: false });
-
-      if (actionsNode) actionsNode.style.display = "flex";
-
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Laporan_BBS_${MONTHS[rptMonth]}_${rptYear}.pdf`);
-    } catch (e) {
-      console.error(e);
-      alert("Gagal mencetak PDF");
-      const actionsNode = document.getElementById("laporan-actions");
-      if (actionsNode) actionsNode.style.display = "flex";
-    } finally {
-      setShowExportPDFLoading(false);
-    }
-  };
-
-  const exportExcel = async (type) => {
-    setExportingTitle(type);
-    try {
-      const wb = XL.utils.book_new();
-      if (type === "all" || type === "transaksi")
-        XL.utils.book_append_sheet(
-          wb,
-          XL.utils.json_to_sheet(
-            transactions.map((t) => ({
-              ID: t.trx_code,
-              Tanggal: t.date,
-              Pelanggan: t.customer,
-              Item: (t.items || [])
-                .map((i) => `${i.product_name}(${i.qty})`)
-                .join("; "),
-              Total: t.total,
-              Pembayaran: t.payment,
-              Kembalian: t.change_amt,
-            })),
-          ),
-          "Transaksi",
-        );
-      if (type === "all" || type === "produk")
-        XL.utils.book_append_sheet(
-          wb,
-          XL.utils.json_to_sheet(
-            products.map((p) => {
-              const s = suppliers.find((s) => s.id === p.supplier_id);
-              return {
-                Nama: p.name,
-                Kategori: p.category,
-                Satuan: p.unit,
-                Harga: p.price,
-                Stok: p.stock,
-                Min: p.min_stock,
-                Supplier: s?.name || "-",
-              };
-            }),
-          ),
-          "Produk",
-        );
-      if (type === "all" || type === "stok")
-        XL.utils.book_append_sheet(
-          wb,
-          XL.utils.json_to_sheet(
-            products.map((p) => ({
-              Nama: p.name,
-              Kategori: p.category,
-              Stok: p.stock,
-              Min: p.min_stock,
-              Status:
-                p.stock === 0
-                  ? "Habis"
-                  : p.stock <= p.min_stock
-                    ? "Menipis"
-                    : "Aman",
-            })),
-          ),
-          "Stok",
-        );
-      if (type === "all" || type === "supplier")
-        XL.utils.book_append_sheet(
-          wb,
-          XL.utils.json_to_sheet(
-            suppliers.map((s) => ({
-              Nama: s.name,
-              PIC: s.contact,
-              Telepon: s.phone,
-              Email: s.email,
-              Alamat: s.address,
-              Status: s.status,
-            })),
-          ),
-          "Supplier",
-        );
-      if (type === "laporan") {
-        XL.utils.book_append_sheet(
-          wb,
-          XL.utils.json_to_sheet(
-            rptTrx.map((t) => ({
-              ID: t.trx_code,
-              Tanggal: t.date,
-              Pelanggan: t.customer,
-              Total: t.total,
-            })),
-          ),
-          "Transaksi",
-        );
-        XL.utils.book_append_sheet(
-          wb,
-          XL.utils.json_to_sheet([
-            { Keterangan: "Total Pendapatan", Nilai: rptRev },
-            { Keterangan: "Jumlah Transaksi", Nilai: rptTrx.length },
-            {
-              Keterangan: "Rata-rata",
-              Nilai: rptTrx.length ? Math.round(rptRev / rptTrx.length) : 0,
-            },
-          ]),
-          "Ringkasan",
-        );
-      }
-      if (type === "template") {
-        XL.utils.book_append_sheet(
-          wb,
-          XL.utils.json_to_sheet([
-            {
-              "Nama Produk": "",
-              Kategori: "Pakan Jadi",
-              Satuan: "kg",
-              Harga: 0,
-              Stok: 0,
-              "Min Stok": 5,
-            },
-          ]),
-          "Produk",
-        );
-        XL.utils.book_append_sheet(
-          wb,
-          XL.utils.json_to_sheet([
-            {
-              "Nama Supplier": "",
-              "Kontak PIC": "",
-              Telepon: "",
-              Email: "",
-              Alamat: "",
-              Status: "Aktif",
-            },
-          ]),
-          "Supplier",
-        );
-      }
-      const fn =
-        type === "laporan"
-          ? `BBS_Laporan_${MONTHS[rptMonth]}_${rptYear}.xlsx`
-          : type === "template"
-            ? "BBS_Template.xlsx"
-            : `BBS_${type}_${TODAY}.xlsx`;
-      XL.writeFile(wb, fn);
-      const labelMap = {
-        all: "Semua Data",
-        laporan: "Laporan Bulanan",
-        transaksi: "Transaksi",
-        produk: "Produk",
-        stok: "Stok",
-        supplier: "Supplier",
-        template: "Template Import",
-      };
-      await logActivity(
-        "Export Excel",
-        "Import/Export",
-        `${labelMap[type] || type} → ${fn}`,
-      );
-      showNotif("Export berhasil: " + fn);
-    } catch (e) {
-      console.error(e);
-      showNotif("Gagal melakukan export data", "error");
-    } finally {
-      setExportingTitle(null);
-    }
-  };
-
-  const handleImport = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setImportingState("Membaca file Excel...");
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-      try {
-        const wb = XL.read(ev.target.result, { type: "array" });
-        const logs = [];
-        const sp = wb.SheetNames.find((n) => n === "Produk");
-        if (sp) {
-          const rows = XL.utils.sheet_to_json(wb.Sheets[sp]);
-          let added = 0,
-            updated = 0;
-          for (let i = 0; i < rows.length; i++) {
-            const r = rows[i];
-            setImportingState(`Memproses data ${i + 1} / ${rows.length}...`);
-            if (!r["Nama Produk"] || !r["Harga"]) continue;
-            const ex = products.find(
-              (p) =>
-                p.name.toLowerCase() ===
-                String(r["Nama Produk"]).toLowerCase(),
-            );
-            const payload = {
-              name: String(r["Nama Produk"]),
-              category: r["Kategori"] || "Pakan Jadi",
-              unit: r["Satuan"] || "pcs",
-              price: parseInt(r["Harga"]) || 0,
-              stock: parseInt(r["Stok"]) || 0,
-              min_stock: parseInt(r["Min Stok"]) || 5,
-            };
-            if (ex) {
-              await sb.from("products").update(payload).eq("id", ex.id);
-              updated++;
-            } else {
-              await sb.from("products").insert(payload);
-              added++;
-            }
-          }
-          logs.push(
-            `✅ Produk: ${added} ditambahkan, ${updated} diperbarui`,
-          );
-        }
-        if (!logs.length)
-          logs.push("⚠️ Sheet tidak ditemukan. Gunakan template.");
-        setImportLog(logs);
-        setImportingState("Menyinkronkan data...");
-        await loadAll();
-        const summary = logs.join(" | ");
-        await logActivity("Import Excel", "Import/Export", summary);
-        showNotif("Import selesai!");
-      } catch (err) {
-        setImportLog([`❌ Error: ${err.message}`]);
-        showNotif("Gagal import!", "error");
-      } finally {
-        setImportingState(null);
-      }
-    };
-    reader.readAsArrayBuffer(file);
-    e.target.value = "";
-  };
-
   const filtHist = transactions.filter((t) => {
-    const md = !filterDate || t.date === filterDate;
+    const md = (!filterDate && !filterDateEnd) ||
+      (filterDate && filterDateEnd ? t.date >= filterDate && t.date <= filterDateEnd :
+       filterDate ? t.date === filterDate :
+       t.date <= filterDateEnd);
     const ms =
       t.trx_code?.toLowerCase().includes(histSearch.toLowerCase()) ||
       t.customer?.toLowerCase().includes(histSearch.toLowerCase());
@@ -1174,7 +624,7 @@ function Main({ currentUser, onLogout, isOffline }) {
   });
 
   // Reset ke halaman 1 saat filter berubah
-  useEffect(() => { setHistPage(1); }, [histSearch, filterDate]);
+  useEffect(() => { setHistPage(1); }, [histSearch, filterDate, filterDateEnd]);
 
   const histTotalPages = Math.ceil(filtHist.length / HIST_PER_PAGE);
   const histPaged = filtHist.slice((histPage - 1) * HIST_PER_PAGE, histPage * HIST_PER_PAGE);
@@ -1215,7 +665,7 @@ function Main({ currentUser, onLogout, isOffline }) {
       {sidebarOpen && <div className="bbs-overlay open" onClick={() => setSidebarOpen(false)} />}
 
       {loading && (
-        <div className="fixed inset-0 bg-white/75 dark:bg-black/60 z-9999 flex flex-col items-center justify-center gap-3">
+        <div className="fixed inset-0 bg-white/75 z-9999 flex flex-col items-center justify-center gap-3">
           <Spin />
           <div className="text-[13px] text-bbs-green font-bold">Memuat data...</div>
         </div>
@@ -1274,12 +724,12 @@ function Main({ currentUser, onLogout, isOffline }) {
 
       {/* MAIN */}
       <div className="bbs-main">
-        <header className="bg-white dark:bg-[#162016] px-4 py-3 border-b border-bbs-border dark:border-[#2d4a2d] flex justify-between items-center shrink-0 shadow-sm">
+        <header className="bg-white px-4 py-3 border-b border-bbs-border flex justify-between items-center shrink-0 shadow-sm">
           <div className="flex items-center gap-2.5">
             <button className="bbs-hamburger" onClick={() => setSidebarOpen(!sidebarOpen)}>
               <span className="text-xl leading-none">☰</span>
             </button>
-            <div className="text-base font-extrabold text-bbs-green-dark dark:text-[#a8e063]">
+            <div className="text-base font-extrabold text-bbs-green-dark">
               {allNavs.find((n) => n.id === page)?.icon} {allNavs.find((n) => n.id === page)?.label}
             </div>
           </div>
@@ -1295,32 +745,27 @@ function Main({ currentUser, onLogout, isOffline }) {
                 onBlur={() => setTimeout(() => { setShowGlobalSearch(false); setGlobalSearch(""); }, 200)}
               />
               {showGlobalSearch && globalResults.length > 0 && (
-                <div className="absolute top-full right-0 w-[300px] bg-white dark:bg-[#1a2a1a] rounded-xl shadow-xl border border-bbs-border dark:border-[#2d4a2d] z-999 mt-1 overflow-hidden">
+                <div className="absolute top-full right-0 w-[300px] bg-white rounded-xl shadow-xl border border-bbs-border z-999 mt-1 overflow-hidden">
                   {globalResults.map((r, i) => (
                     <div key={i} onMouseDown={r.action}
-                      className="px-3.5 py-2.5 cursor-pointer border-b border-gray-50 dark:border-[#243424] flex gap-2.5 items-center hover:bg-green-50 dark:hover:bg-[#1f2d1a] transition-colors">
+                      className="px-3.5 py-2.5 cursor-pointer border-b border-gray-50 flex gap-2.5 items-center hover:bg-green-50 transition-colors">
                       <span className="text-lg">{r.icon}</span>
                       <div className="flex-1 min-w-0">
-                        <div className="text-[13px] font-bold text-bbs-green-dark dark:text-[#a8e063]">{r.label}</div>
+                        <div className="text-[13px] font-bold text-bbs-green-dark">{r.label}</div>
                         <div className="text-[11px] text-gray-400 truncate">{r.sub}</div>
                       </div>
-                      <span className="text-[10px] text-gray-400 bg-gray-100 dark:bg-[#243424] px-1.5 py-0.5 rounded-xl">{r.type}</span>
+                      <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-xl">{r.type}</span>
                     </div>
                   ))}
                 </div>
               )}
               {showGlobalSearch && globalSearch.length >= 2 && globalResults.length === 0 && (
-                <div className="absolute top-full right-0 w-[240px] bg-white dark:bg-[#1a2a1a] rounded-xl shadow-xl border border-bbs-border dark:border-[#2d4a2d] z-999 mt-1 p-3.5 text-center text-gray-400 text-xs">
+                <div className="absolute top-full right-0 w-[240px] bg-white rounded-xl shadow-xl border border-bbs-border z-999 mt-1 p-3.5 text-center text-gray-400 text-xs">
                   Tidak ada hasil untuk "{globalSearch}"
                 </div>
               )}
             </div>
-            <button className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-[#e8f0e8] dark:bg-[#2d4a2d] text-bbs-green dark:text-[#a8e063] border-none cursor-pointer" onClick={loadAll}>🔄 Refresh</button>
-            <button onClick={() => setDarkMode(d => !d)}
-              className={`px-2.5 py-1 text-sm rounded-lg border-none cursor-pointer leading-none ${darkMode ? "bg-[#2d4a2d] text-[#a8e063]" : "bg-[#f0f5f0] text-gray-600"}`}
-              title={darkMode ? "Mode Terang" : "Mode Gelap"}>
-              {darkMode ? "☀️" : "🌙"}
-            </button>
+            <button className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-[#e8f0e8] text-bbs-green border-none cursor-pointer" onClick={loadAll}>🔄 Refresh</button>
             <div className="hide-mobile text-[11px] text-gray-400">
               {new Date().toLocaleDateString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
             </div>
@@ -1329,13 +774,13 @@ function Main({ currentUser, onLogout, isOffline }) {
 
         <div className="bbs-content">
           {page === "dashboard" && <DashboardPage transactions={transactions} products={products} activityLogs={activityLogs} todayTrx={todayTrx} todayRev={todayRev} weekTrx={weekTrx} weekRev={weekRev} outStock={outStock} lowStock={lowStock} />}
-          {page === "kasir" && <KasirPage filtProd={filtProd} searchProd={searchProd} setSearchProd={setSearchProd} filterCat={filterCat} setFilterCat={setFilterCat} cart={cart} customerName={customerName} setCustomerName={setCustomerName} paymentInput={paymentInput} setPaymentInput={setPaymentInput} cartTotal={cartTotal} payNum={payNum} change={change} addToCart={addToCart} updCart={updCart} processPayment={processPayment} setCart={setCart} isOffline={isOffline} />}
-          {page === "produk" && <ProdukPage filtProd={filtProd} suppliers={suppliers} searchProd={searchProd} setSearchProd={setSearchProd} filterCat={filterCat} setFilterCat={setFilterCat} setProdForm={setProdForm} setProdImage={setProdImage} setProdModal={setProdModal} delProd={delProd} />}
-          {page === "riwayat" && <RiwayatPage filtHist={histPaged} histSearch={histSearch} setHistSearch={setHistSearch} filterDate={filterDate} setFilterDate={setFilterDate} exportExcel={exportExcel} setHistReceipt={setHistReceipt} totalCount={filtHist.length} page={histPage} setPage={setHistPage} totalPages={histTotalPages} perPage={HIST_PER_PAGE} />}
-          {page === "stok" && <StokPage filtProd={filtProd} searchProd={searchProd} setSearchProd={setSearchProd} filterCat={filterCat} setFilterCat={setFilterCat} isSuperAdmin={isSuperAdmin} exportExcel={exportExcel} setRestockModal={setRestockModal} setRestockQty={setRestockQty} />}
-          {page === "laporan" && <LaporanPage rptMonth={rptMonth} setRptMonth={setRptMonth} rptYear={rptYear} setRptYear={setRptYear} rptTrx={rptTrx} rptRev={rptRev} dayData={dayData} catData={catData} topProds={topProds} exportExcel={exportExcel} exportPDF={exportPDF} showExportPDFLoading={showExportPDFLoading} />}
+          {page === "kasir" && <KasirPage filtProd={filtProd} searchProd={searchProd} setSearchProd={setSearchProd} filterCat={filterCat} setFilterCat={setFilterCat} kategoris={kategoris} cart={cart} customerName={customerName} setCustomerName={setCustomerName} paymentInput={paymentInput} setPaymentInput={setPaymentInput} cartTotal={cartTotal} payNum={payNum} addToCart={addToCart} updCart={updCart} processPayment={processPayment} setCart={setCart} isOffline={isOffline} discount={discount} setDiscount={setDiscount} />}
+          {page === "produk" && <ProdukPage filtProd={filtProd} suppliers={suppliers} searchProd={searchProd} setSearchProd={setSearchProd} filterCat={filterCat} setFilterCat={setFilterCat} kategoris={kategoris} setProdForm={setProdForm} setProdImage={setProdImage} setProdModal={setProdModal} delProd={delProd} />}
+          {page === "riwayat" && <RiwayatPage filtHist={histPaged} histSearch={histSearch} setHistSearch={setHistSearch} filterDate={filterDate} setFilterDate={setFilterDate} filterDateEnd={filterDateEnd} setFilterDateEnd={setFilterDateEnd} setHistReceipt={setHistReceipt} totalCount={filtHist.length} page={histPage} setPage={setHistPage} totalPages={histTotalPages} perPage={HIST_PER_PAGE} />}
+          {page === "stok" && <StokPage filtProd={filtProd} searchProd={searchProd} setSearchProd={setSearchProd} filterCat={filterCat} setFilterCat={setFilterCat} kategoris={kategoris} isSuperAdmin={isSuperAdmin} setRestockModal={setRestockModal} setRestockQty={setRestockQty} />}
+          {page === "laporan" && <Suspense fallback={<div className="flex justify-center py-20"><Spin /></div>}><LaporanPage rptMonth={rptMonth} setRptMonth={setRptMonth} rptYear={rptYear} setRptYear={setRptYear} rptTrx={rptTrx} rptRev={rptRev} dayData={dayData} catData={catData} topProds={topProds} kategoris={kategoris} products={products} /></Suspense>}
           {page === "supplier" && <SupplierPage suppliers={suppliers} products={products} exportExcel={exportExcel} setSupForm={setSupForm} setSupModal={setSupModal} delSup={delSup} />}
-          {page === "excel" && <ImportExportPage exportExcel={exportExcel} exportingTitle={exportingTitle} handleImport={handleImport} importingState={importingState} importLog={importLog} rptMonth={rptMonth} rptYear={rptYear} />}
+          {page === "excel" && <Suspense fallback={<div className="flex justify-center py-20"><Spin /></div>}><ImportExportPage products={products} transactions={transactions} suppliers={suppliers} sb={sb} showNotif={showNotif} logActivity={logActivity} rptMonth={rptMonth} rptYear={rptYear} onReload={loadAll} /></Suspense>}
           {page === "users" && <UsersPage sb={sb} showNotif={showNotif} currentUser={currentUser} logActivity={logActivity} />}
           {page === "masterdata" && <MasterDataPage sb={sb} showNotif={showNotif} kategoris={kategoris} satuans={satuans} onReload={loadAll} logActivity={logActivity} />}
           {page === "restocklog" && <RestockLogPage restockLogs={restockLogs} products={products} />}
@@ -1353,13 +798,13 @@ function Main({ currentUser, onLogout, isOffline }) {
 
       {showLogout && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-999" onClick={() => setShowLogout(false)}>
-          <div className="bg-white dark:bg-[#1a2a1a] rounded-2xl p-6 w-[340px] text-center shadow-2xl text-gray-900 dark:text-[#e8f5e8]" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl p-6 w-[340px] text-center shadow-2xl text-gray-900" onClick={(e) => e.stopPropagation()}>
             <div className="text-4xl mb-3">🚪</div>
-            <div className="text-[17px] font-extrabold text-bbs-green-dark dark:text-[#a8e063] mb-2">Keluar dari Sistem?</div>
+            <div className="text-[17px] font-extrabold text-bbs-green-dark mb-2">Keluar dari Sistem?</div>
             <div className="text-[13px] text-gray-400 mb-6">Anda akan kembali ke halaman login.<br />Pastikan semua transaksi sudah disimpan.</div>
             <div className="flex gap-2.5">
               <button className="flex-1 py-3 text-sm font-bold bg-[#dc3545] text-white rounded-xl border-none cursor-pointer" onClick={onLogout}>🚪 Ya, Keluar</button>
-              <button className="flex-1 py-3 text-sm font-bold bg-[#f0f5f0] dark:bg-[#2d4a2d] text-bbs-green dark:text-[#a8e063] rounded-xl border-none cursor-pointer" onClick={() => setShowLogout(false)}>Batal</button>
+              <button className="flex-1 py-3 text-sm font-bold bg-[#f0f5f0] text-bbs-green rounded-xl border-none cursor-pointer" onClick={() => setShowLogout(false)}>Batal</button>
             </div>
           </div>
         </div>
