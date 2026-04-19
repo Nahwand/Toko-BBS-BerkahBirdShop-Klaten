@@ -1,9 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { fmt, validateVoidReason } from '../../utils/constants';
 
 export default function VoidModal({ transaction, currentUser, onConfirm, onClose, loading }) {
   const [alasan, setAlasan] = useState('');
   const [error, setError] = useState('');
+
+  // Reset form setiap kali modal dibuka untuk transaksi baru
+  useEffect(() => {
+    setAlasan('');
+    setError('');
+  }, [transaction?.id]);
 
   if (!transaction) return null;
 
